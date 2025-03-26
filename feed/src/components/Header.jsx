@@ -127,7 +127,7 @@ const Header = ({ currentUser, handleSignOut }) => {
                     </>
                   ) : (
                     <>
-                      <Link to="/login" className="block hover:text-green-600" onClick={toggleMenu}>Sign In</Link>
+                      <Link to="/signin" className="block hover:text-green-600" onClick={toggleMenu}>Sign In</Link>
                       <Link to="/signup" className="block hover:text-green-600" onClick={toggleMenu}>Sign Up</Link>
                       <Link to="/profile" className="block hover:text-green-600" onClick={toggleMenu}>Profile</Link>
                     </>

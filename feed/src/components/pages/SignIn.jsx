@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { FcGoogle } from "react-icons/fc";
+import { Link, useNavigate } from "react-router-dom";
 import { BsFillEyeFill, BsFillEyeSlashFill } from "react-icons/bs";
+import { FcGoogle } from "react-icons/fc";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
@@ -9,15 +9,37 @@ export default function Login() {
     email: "",
     password: ""
   });
+  const [errors, setErrors] = useState({});
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
+    setErrors({ ...errors, [e.target.id]: "" });
+  };
+
+  const validate = () => {
+    let tempErrors = {};
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!formData.email) {
+      tempErrors.email = "Email is required";
+    } else if (!emailRegex.test(formData.email)) {
+      tempErrors.email = "Please enter a valid email address";
+    }
+
+    if (!formData.password) {
+      tempErrors.password = "Password is required";
+    }
+
+    setErrors(tempErrors);
+    return Object.keys(tempErrors).length === 0;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Handle login logic here
+    if (!validate()) return;
     console.log("Login form submitted:", formData);
+    navigate("/");
   };
 
   return (
@@ -26,7 +48,6 @@ export default function Login() {
         <h2 className="text-center text-3xl font-extrabold text-gray-900">
           Login to your account
         </h2>
-        
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
@@ -64,6 +85,7 @@ export default function Login() {
                   value={formData.email}
                   onChange={handleChange}
                 />
+                {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
               </div>
             </div>
 
@@ -94,6 +116,7 @@ export default function Login() {
                     <BsFillEyeFill className="h-5 w-5 text-gray-400" />
                   )}
                 </button>
+                {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
               </div>
             </div>
 

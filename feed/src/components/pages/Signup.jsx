@@ -10,18 +10,38 @@ export default function SignUpPage() {
     email: "",
     password: ""
   });
+  const [errors, setErrors] = useState({});
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
+    setErrors({ ...errors, [e.target.id]: "" });
+  };
+
+  const validate = () => {
+    let tempErrors = {};
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!formData.username || formData.username.length < 3)
+      tempErrors.username = "Username must be at least 3 characters long";
+
+    if (!formData.email)
+      tempErrors.email = "Email is required";
+    else if (!emailRegex.test(formData.email))
+      tempErrors.email = "Please enter a valid email address";
+
+    if (!formData.password)
+      tempErrors.password = "Password is required";
+
+    setErrors(tempErrors);
+    return Object.keys(tempErrors).length === 0;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Handle form submission logic here
+    if (!validate()) return;
     console.log("Form submitted:", formData);
-    // Redirect to login after successful signup
-    navigate("/login");
+    navigate("/");
   };
 
   return (
@@ -50,6 +70,7 @@ export default function SignUpPage() {
                   value={formData.username}
                   onChange={handleChange}
                 />
+                {errors.username && <p className="text-red-500 text-sm mt-1">{errors.username}</p>}
               </div>
             </div>
 
@@ -69,6 +90,7 @@ export default function SignUpPage() {
                   value={formData.email}
                   onChange={handleChange}
                 />
+                {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
               </div>
             </div>
 
@@ -99,6 +121,7 @@ export default function SignUpPage() {
                     <BsFillEyeFill className="h-5 w-5 text-gray-400" />
                   )}
                 </button>
+                {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
               </div>
             </div>
 
@@ -152,11 +175,11 @@ export default function SignUpPage() {
       <div className="mt-8 text-center">
         <Link to="/" className="text-2xl font-bold text-gray-900">
           <span className="px-2 py-1 text-white rounded-lg bg-gradient-to-r from-green-700 via-green-500 to-green-400">
-            Green
+            Eco
           </span>
-          <span className="ml-1">Track</span>
+          <span className="ml-1">Hub</span>
         </Link>
       </div>
     </div>
-  );
+  ); 
 }
