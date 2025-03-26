@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 
 const Header = ({ currentUser, handleSignOut }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAvatarOpen, setIsAvatarOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -25,35 +26,82 @@ const Header = ({ currentUser, handleSignOut }) => {
     navigate("/faq"); // Navigate to the FAQ page when the button is clicked
   };
 
+  // Check if current path matches the link
+  const isActive = (path) => {
+    return location.pathname === path;
+  };
+
   return (
-    <header className="bg-green-200 text-gray-900 p-4 shadow-md">
-      <div className="container mx-auto flex justify-between items-center relative">
+    <header className="p-4 text-gray-900 bg-green-200 shadow-md">
+      <div className="container relative flex items-center justify-between mx-auto">
         <h1 className="text-2xl font-bold">Eco Hub</h1>
 
         {/* Desktop Navigation */}
         <nav className="hidden md:block">
           <ul className="flex space-x-6">
-            <li><Link to="/" className="hover:text-green-600">Home</Link></li>
-            <li><Link to="/marketplace" className="hover:text-green-600">Marketplace</Link></li>
-            <li><Link to="/chatbot" className="hover:text-green-600">Chatbot</Link></li>
-            <li><Link to="/aboutus" className="hover:text-green-600">About Us</Link></li>
-            <li><Link to="/contactus" className="hover:text-green-600">Contact Us</Link></li>
-            <li><Link to="/faq" className="hover:text-green-600">FAQ</Link></li>
+            <li>
+              <Link 
+                to="/" 
+                className={`hover:text-green-600 transition-all duration-200 ${isActive('/') ? 'border-b-2 border-green-600' : 'hover:border-b-2 hover:border-green-400'}`}
+              >
+                Home
+              </Link>
+            </li>
+            <li>
+              <Link 
+                to="/marketplace" 
+                className={`hover:text-green-600 transition-all duration-200 ${isActive('/marketplace') ? 'border-b-2 border-green-600' : 'hover:border-b-2 hover:border-green-400'}`}
+              >
+                Marketplace
+              </Link>
+            </li>
+            <li>
+              <Link 
+                to="/chatbot" 
+                className={`hover:text-green-600 transition-all duration-200 ${isActive('/chatbot') ? 'border-b-2 border-green-600' : 'hover:border-b-2 hover:border-green-400'}`}
+              >
+                Chatbot
+              </Link>
+            </li>
+            <li>
+              <Link 
+                to="/aboutus" 
+                className={`hover:text-green-600 transition-all duration-200 ${isActive('/aboutus') ? 'border-b-2 border-green-600' : 'hover:border-b-2 hover:border-green-400'}`}
+              >
+                About Us
+              </Link>
+            </li>
+            <li>
+              <Link 
+                to="/contactus" 
+                className={`hover:text-green-600 transition-all duration-200 ${isActive('/contactus') ? 'border-b-2 border-green-600' : 'hover:border-b-2 hover:border-green-400'}`}
+              >
+                Contact Us
+              </Link>
+            </li>
+            <li>
+              <Link 
+                to="/faq" 
+                className={`hover:text-green-600 transition-all duration-200 ${isActive('/faq') ? 'border-b-2 border-green-600' : 'hover:border-b-2 hover:border-green-400'}`}
+              >
+                FAQ
+              </Link>
+            </li>
           </ul>
         </nav>
 
         {/* Desktop Avatar */}
-        <div className="hidden md:flex items-center space-x-6 relative">
+        <div className="relative items-center hidden space-x-6 md:flex">
           <button
             onClick={toggleAvatarMenu}
-            className="w-10 h-10 rounded-full border-2 border-green-600 bg-green-500 flex items-center justify-center text-white focus:outline-none"
+            className="flex items-center justify-center w-10 h-10 text-white bg-green-500 border-2 border-green-600 rounded-full focus:outline-none"
           >
             {currentUser ? (
               currentUser.profilePicture ? (
                 <img
                   src={currentUser.profilePicture}
                   alt="User Avatar"
-                  className="w-full h-full rounded-full object-cover"
+                  className="object-cover w-full h-full rounded-full"
                 />
               ) : (
                 <span>{currentUser.username?.charAt(0).toUpperCase() || 'U'}</span>
@@ -65,24 +113,44 @@ const Header = ({ currentUser, handleSignOut }) => {
 
           {/* Avatar Dropdown - Desktop */}
           {isAvatarOpen && (
-            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-white text-gray-900 p-2 rounded shadow-md z-20 w-48 text-sm space-y-1">
+            <div className="absolute z-20 w-48 p-2 space-y-1 text-sm text-gray-900 -translate-x-1/2 bg-white rounded shadow-md top-full left-1/2">
               {currentUser ? (
                 <>
                   <div className="text-sm font-medium">@{currentUser.username}</div>
-                  <div className="text-xs text-gray-600 mb-1">{currentUser.email}</div>
-                  <Link to="/profile" className="block text-green-700 hover:text-green-900">Profile</Link>
+                  <div className="mb-1 text-xs text-gray-600">{currentUser.email}</div>
+                  <Link 
+                    to="/profile" 
+                    className={`block text-green-700 hover:text-green-900 ${isActive('/profile') ? 'border-b-2 border-green-600' : 'hover:border-b-2 hover:border-green-400'}`}
+                  >
+                    Profile
+                  </Link>
                   <button
                     onClick={handleLogout}
-                    className="block text-red-600 hover:text-red-800 w-full text-left"
+                    className="block w-full text-left text-red-600 hover:text-red-800"
                   >
                     Logout
                   </button>
                 </>
               ) : (
                 <>
-                  <Link to="/signin" className="block text-green-700 hover:text-green-900">Sign In</Link>
-                  <Link to="/signup" className="block text-green-700 hover:text-green-900">Sign Up</Link>
-                  <Link to="/profile" className="block text-green-700 hover:text-green-900">Profile</Link>
+                  <Link 
+                    to="/signin" 
+                    className={`block text-green-700 hover:text-green-900 ${isActive('/signin') ? 'border-b-2 border-green-600' : 'hover:border-b-2 hover:border-green-400'}`}
+                  >
+                    Sign In
+                  </Link>
+                  <Link 
+                    to="/signup" 
+                    className={`block text-green-700 hover:text-green-900 ${isActive('/signup') ? 'border-b-2 border-green-600' : 'hover:border-b-2 hover:border-green-400'}`}
+                  >
+                    Sign Up
+                  </Link>
+                  <Link 
+                    to="/profile" 
+                    className={`block text-green-700 hover:text-green-900 ${isActive('/profile') ? 'border-b-2 border-green-600' : 'hover:border-b-2 hover:border-green-400'}`}
+                  >
+                    Profile
+                  </Link>
                 </>
               )}
             </div>
@@ -90,17 +158,17 @@ const Header = ({ currentUser, handleSignOut }) => {
         </div>
 
         {/* Mobile Avatar & Menu Toggle */}
-        <div className="md:hidden flex items-center space-x-4 relative">
+        <div className="relative flex items-center space-x-4 md:hidden">
           <button
             onClick={toggleAvatarMenu}
-            className="w-9 h-9 rounded-full border-2 border-green-600 bg-green-500 text-white flex items-center justify-center"
+            className="flex items-center justify-center text-white bg-green-500 border-2 border-green-600 rounded-full w-9 h-9"
           >
             {currentUser ? (
               currentUser.profilePicture ? (
                 <img
                   src={currentUser.profilePicture}
                   alt="User Avatar"
-                  className="w-full h-full rounded-full object-cover"
+                  className="object-cover w-full h-full rounded-full"
                 />
               ) : (
                 <span>{currentUser.username?.charAt(0).toUpperCase() || 'U'}</span>
@@ -133,24 +201,48 @@ const Header = ({ currentUser, handleSignOut }) => {
 
           {/* Avatar Dropdown - Mobile */}
           {isAvatarOpen && (
-            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-white p-2 rounded shadow-md text-sm space-y-1 z-20 w-48 sm:w-56 md:w-64">
+            <div className="absolute z-20 w-48 p-2 space-y-1 text-sm -translate-x-1/2 bg-white rounded shadow-md top-full left-1/2 sm:w-56 md:w-64">
               {currentUser ? (
                 <>
                   <div className="font-medium">@{currentUser.username}</div>
-                  <div className="text-gray-600 text-xs mb-1">{currentUser.email}</div>
-                  <Link to="/profile" className="block text-green-700 hover:text-green-900" onClick={() => setIsAvatarOpen(false)}>Profile</Link>
+                  <div className="mb-1 text-xs text-gray-600">{currentUser.email}</div>
+                  <Link 
+                    to="/profile" 
+                    className={`block text-green-700 hover:text-green-900 ${isActive('/profile') ? 'border-b-2 border-green-600' : 'hover:border-b-2 hover:border-green-400'}`} 
+                    onClick={() => setIsAvatarOpen(false)}
+                  >
+                    Profile
+                  </Link>
                   <button
                     onClick={handleLogout}
-                    className="block text-red-600 hover:text-red-800 w-full text-left"
+                    className="block w-full text-left text-red-600 hover:text-red-800"
                   >
                     Logout
                   </button>
                 </>
               ) : (
                 <>
-                  <Link to="/signin" className="block text-green-700 hover:text-green-900" onClick={() => setIsAvatarOpen(false)}>Sign In</Link>
-                  <Link to="/signup" className="block text-green-700 hover:text-green-900" onClick={() => setIsAvatarOpen(false)}>Sign Up</Link>
-                  <Link to="/profile" className="block text-green-700 hover:text-green-900" onClick={() => setIsAvatarOpen(false)}>Profile</Link>
+                  <Link 
+                    to="/signin" 
+                    className={`block text-green-700 hover:text-green-900 ${isActive('/signin') ? 'border-b-2 border-green-600' : 'hover:border-b-2 hover:border-green-400'}`} 
+                    onClick={() => setIsAvatarOpen(false)}
+                  >
+                    Sign In
+                  </Link>
+                  <Link 
+                    to="/signup" 
+                    className={`block text-green-700 hover:text-green-900 ${isActive('/signup') ? 'border-b-2 border-green-600' : 'hover:border-b-2 hover:border-green-400'}`} 
+                    onClick={() => setIsAvatarOpen(false)}
+                  >
+                    Sign Up
+                  </Link>
+                  <Link 
+                    to="/profile" 
+                    className={`block text-green-700 hover:text-green-900 ${isActive('/profile') ? 'border-b-2 border-green-600' : 'hover:border-b-2 hover:border-green-400'}`} 
+                    onClick={() => setIsAvatarOpen(false)}
+                  >
+                    Profile
+                  </Link>
                 </>
               )}
             </div>
@@ -160,14 +252,63 @@ const Header = ({ currentUser, handleSignOut }) => {
 
       {/* Mobile Navigation Links */}
       {isMenuOpen && (
-        <div className="md:hidden mt-2">
+        <div className="mt-2 md:hidden">
           <nav className="px-2 pt-2 pb-4">
             <ul className="flex flex-col space-y-3">
-              <li><Link to="/" className="block hover:text-green-600" onClick={toggleMenu}>Home</Link></li>
-              <li><Link to="/marketplace" className="block hover:text-green-600" onClick={toggleMenu}>Marketplace</Link></li>
-              <li><Link to="/contactus" className="block hover:text-green-600" onClick={toggleMenu}>Contact Us</Link></li>
-              <li><Link to="/aboutus" className="block hover:text-green-600" onClick={toggleMenu}>About Us</Link></li>
-              <li><Link to="/chatbot" className="block hover:text-green-600" onClick={toggleMenu}>Chatbot</Link></li>
+              <li>
+                <Link 
+                  to="/" 
+                  className={`block hover:text-green-600 ${isActive('/') ? 'border-b-2 border-green-600' : 'hover:border-b-2 hover:border-green-400'}`} 
+                  onClick={toggleMenu}
+                >
+                  Home
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  to="/marketplace" 
+                  className={`block hover:text-green-600 ${isActive('/marketplace') ? 'border-b-2 border-green-600' : 'hover:border-b-2 hover:border-green-400'}`} 
+                  onClick={toggleMenu}
+                >
+                  Marketplace
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  to="/contactus" 
+                  className={`block hover:text-green-600 ${isActive('/contactus') ? 'border-b-2 border-green-600' : 'hover:border-b-2 hover:border-green-400'}`} 
+                  onClick={toggleMenu}
+                >
+                  Contact Us
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  to="/aboutus" 
+                  className={`block hover:text-green-600 ${isActive('/aboutus') ? 'border-b-2 border-green-600' : 'hover:border-b-2 hover:border-green-400'}`} 
+                  onClick={toggleMenu}
+                >
+                  About Us
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  to="/chatbot" 
+                  className={`block hover:text-green-600 ${isActive('/chatbot') ? 'border-b-2 border-green-600' : 'hover:border-b-2 hover:border-green-400'}`} 
+                  onClick={toggleMenu}
+                >
+                  Chatbot
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  to="/faq" 
+                  className={`block hover:text-green-600 ${isActive('/faq') ? 'border-b-2 border-green-600' : 'hover:border-b-2 hover:border-green-400'}`} 
+                  onClick={toggleMenu}
+                >
+                  FAQ
+                </Link>
+              </li>
             </ul>
           </nav>
         </div>
@@ -175,12 +316,12 @@ const Header = ({ currentUser, handleSignOut }) => {
       
       {/* FAQ Button in the bottom-right corner with position: fixed */}
       <div
-        className="fixed bottom-4 right-4 cursor-pointer"
-        onClick={handleFaqClick} // Navigate to /faq when clicked
+        className="fixed cursor-pointer bottom-4 right-4"
+        onClick={handleFaqClick}
         style={{
           width: "60px",
           height: "60px",
-          backgroundImage: `url("/faq1.jpg")`, // Add your FAQ image here
+          backgroundImage: `url("/faq1.jpg")`,
           backgroundSize: "cover",
           backgroundPosition: "center",
           borderRadius: "50%",
