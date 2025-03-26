@@ -65,7 +65,7 @@ const Header = ({ currentUser, handleSignOut }) => {
 
           {/* Avatar Dropdown - Desktop */}
           {isAvatarOpen && (
-            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-white text-gray-900 p-2 rounded shadow-md z-20 w-fit text-sm space-y-1">
+            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-white text-gray-900 p-2 rounded shadow-md z-20 w-6 text-sm space-y-1">
               {currentUser ? (
                 <>
                   <div className="text-sm font-medium">@{currentUser.username}</div>
