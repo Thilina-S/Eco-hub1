@@ -168,9 +168,9 @@ export default function ProductGrid() {
           </div>
           <button
             onClick={() => setShowMyItems(!showMyItems)}
-            className={`px-4 py-2 rounded shadow ${
-              showMyItems ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700"
-            } hover:bg-blue-500 hover:text-white`}
+            className={`px-4 py-2 rounded shadow hover:bg-green-600 ${
+              showMyItems ? "bg-green-600 text-white" : "bg-green-500 text-white"
+            }`}
           >
             My Items
           </button>
