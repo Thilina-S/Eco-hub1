@@ -38,6 +38,7 @@ const Header = ({ currentUser, handleSignOut }) => {
             <li><Link to="/chatbot" className="hover:text-green-600">Chatbot</Link></li>
             <li><Link to="/aboutus" className="hover:text-green-600">About Us</Link></li>
             <li><Link to="/contactus" className="hover:text-green-600">Contact Us</Link></li>
+            <li><Link to="/faq" className="hover:text-green-600">FAQ</Link></li>
           </ul>
         </nav>
 
