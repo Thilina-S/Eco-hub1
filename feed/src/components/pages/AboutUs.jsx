@@ -74,31 +74,31 @@ export default function AboutUs() {
     <section className="bg-white">
       {/* Top Banner Image */}
       <div className="w-full h-[400px]">
-        <img src="../../../public/Aboutusbanner.png" alt="About Us Banner" className="w-full h-full object-cover" />
+        <img src="../../../public/Aboutusbanner.png" alt="About Us Banner" className="object-cover w-full h-full" />
       </div>
 
       {/* Hero Section */}
       <div className="min-h-[70vh] bg-white flex flex-col lg:flex-row items-center justify-between px-6 md:px-16 py-20">
-        <div className="lg:w-1/2 mb-10 lg:mb-0">
-          <h2 className="text-5xl font-bold text-gray-800 mb-6 leading-snug">Join <span className="text-green-600">EcoHub</span></h2>
-          <p className="text-gray-700 mb-6 text-lg leading-relaxed">
+        <div className="mb-10 lg:w-1/2 lg:mb-0">
+          <h2 className="mb-6 text-5xl font-bold leading-snug text-gray-800">Join <span className="text-green-600">EcoHub</span></h2>
+          <p className="mb-6 text-lg leading-relaxed text-gray-700">
             As EcoHub, we simplify the complexity of waste management and city cleaning processes which are the common problems of people from all over the world. Join us to make the world simpler and more livable with EcoHub solutions.
           </p>
-          <a href="" className="inline-block mt-4 bg-green-600 text-white font-semibold px-6 py-3 rounded hover:bg-green-700 transition">REVIEW JOBS</a>
+          <a href="" className="inline-block px-6 py-3 mt-4 font-semibold text-white transition bg-green-600 rounded hover:bg-green-700">REVIEW JOBS</a>
         </div>
-        <div className="lg:w-1/2 flex justify-center">
+        <div className="flex justify-center lg:w-1/2">
           <img src="../../../public/interviews.jpg" alt="Eco Hub Crew" className="w-full h-[400px] object-cover rounded-xl shadow-md" />
         </div>
       </div>
 
       {/* Core Details Section */}
-      <div className="px-6 md:px-16 py-20 flex flex-col lg:flex-row-reverse items-center gap-12">
+      <div className="flex flex-col items-center gap-12 px-6 py-20 md:px-16 lg:flex-row-reverse">
         <div className="lg:w-1/2">
-          <h3 className="text-3xl font-semibold text-gray-800 mb-4">Our pioneering role encourages us to be always better!</h3>
-          <p className="text-gray-700 mb-4 text-lg">
+          <h3 className="mb-4 text-3xl font-semibold text-gray-800">Our pioneering role encourages us to be always better!</h3>
+          <p className="mb-4 text-lg text-gray-700">
             EcoHub designs digitized and end-to-end waste management solutions with a focus on operational excellence in the waste management industry.
           </p>
-          <p className="text-gray-700 text-lg">
+          <p className="text-lg text-gray-700">
             EcoHub improves integrated platforms to utilize software and hardware innovations as well as works in cooperation with waste management companies, local authorities, and municipalities all over the world for a more sustainable and digital process management.
           </p>
         </div>
@@ -108,35 +108,35 @@ export default function AboutUs() {
       </div>
 
       {/* Statistics Section */}
-      <div ref={statsRef} className="bg-gray-50 py-20 text-center">
-        <p className="text-gray-700 max-w-3xl mx-auto mb-10 px-4 text-lg">
+      <div ref={statsRef} className="py-20 text-center bg-green-200">
+        <p className="max-w-3xl px-4 mx-auto mb-10 text-lg text-gray-700">
           EcoHub reaches millions of people and provides services to waste companies, smart cities, and municipalities with smart solutions by taking the best practices of waste management companies as a reference.
         </p>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-10 max-w-6xl mx-auto px-4">
+        <div className="grid max-w-6xl grid-cols-2 gap-10 px-4 mx-auto md:grid-cols-4">
           <div className="flex flex-col items-center">
             <h4 className="text-4xl font-extrabold text-green-600">{counts.users.toLocaleString()}+</h4>
-            <p className="text-gray-600 text-lg mt-2">Users</p>
+            <p className="mt-2 text-lg text-gray-600">Users</p>
           </div>
           <div className="flex flex-col items-center">
             <h4 className="text-4xl font-extrabold text-green-600">{counts.reaches.toLocaleString()}+</h4>
-            <p className="text-gray-600 text-lg mt-2">Reaches</p>
+            <p className="mt-2 text-lg text-gray-600">Reaches</p>
           </div>
           <div className="flex flex-col items-center">
             <h4 className="text-4xl font-extrabold text-green-600">{counts.offices}+</h4>
-            <p className="text-gray-600 text-lg mt-2">Global Offices</p>
+            <p className="mt-2 text-lg text-gray-600">Global Offices</p>
           </div>
           <div className="flex flex-col items-center">
             <h4 className="text-4xl font-extrabold text-green-600">{counts.countries}+</h4>
-            <p className="text-gray-600 text-lg mt-2">Countries</p>
+            <p className="mt-2 text-lg text-gray-600">Countries</p>
           </div>
         </div>
       </div>
 
       {/* Values Section */}
-      <div className="px-6 md:px-16 py-20 flex flex-col lg:flex-row items-center gap-12">
+      <div className="flex flex-col items-center gap-12 px-6 py-20 md:px-16 lg:flex-row">
         <div className="lg:w-1/2">
-          <h3 className="text-3xl font-semibold text-gray-800 mb-4">We produce digital solutions with Love!</h3>
-          <p className="text-gray-700 text-lg">
+          <h3 className="mb-4 text-3xl font-semibold text-gray-800">We produce digital solutions with Love!</h3>
+          <p className="text-lg text-gray-700">
             At EcoHub, we have core values meaning much more than just words, which reveal themselves in each step of our business, lead us to success, and make you trust us. In such a way, we manage to be always better following the Sustainable Development Goals of the United Nations to serve sustainability in our business, and Women's Empowerment Principles to promote gender equality in all aspects of working life.
           </p>
         </div>
@@ -148,7 +148,7 @@ export default function AboutUs() {
       {showScrollTop && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-6 right-6 z-50 bg-green-600 hover:bg-green-700 text-white p-3 rounded-full shadow-lg transition"
+          className="fixed z-50 p-3 text-white transition bg-green-600 rounded-full shadow-lg bottom-6 right-6 hover:bg-green-700"
         >
           ↑
         </button>
