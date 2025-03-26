@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { FaHeart, FaShoppingCart } from "react-icons/fa";
 
 const initialProducts = [
   {
@@ -39,6 +40,18 @@ export default function ProductGrid() {
   });
   const [popupIndex, setPopupIndex] = useState(null);
   const [editIndex, setEditIndex] = useState(null);
+  const [message, setMessage] = useState("");
+  const [wishlist, setWishlist] = useState([]);
+  const [cart, setCart] = useState([]);
+
+  useEffect(() => {
+    if (message) {
+      const timeout = setTimeout(() => setMessage(""), 3000);
+      return () => clearTimeout(timeout);
+    }
+  }, [message]);
+
+  const showPopup = (msg) => setMessage(msg);
 
   const handleInputChange = (e) => {
     const { name, value, files } = e.target;
@@ -71,9 +84,11 @@ export default function ProductGrid() {
       const updated = [...products];
       updated[editIndex] = newProduct;
       setProducts(updated);
+      showPopup("Post updated successfully!");
       setEditIndex(null);
     } else {
       setProducts([...products, newProduct]);
+      showPopup("Post added successfully!");
     }
 
     setFormData({ title: "", price: "", discount: "", image: null, imageUrl: "" });
@@ -84,6 +99,7 @@ export default function ProductGrid() {
     const updated = products.filter((_, i) => i !== index);
     setProducts(updated);
     setPopupIndex(null);
+    showPopup("Post deleted successfully!");
   };
 
   const handleEdit = (index) => {
@@ -100,21 +116,62 @@ export default function ProductGrid() {
     setPopupIndex(null);
   };
 
+  const toggleWishlist = (index) => {
+    if (wishlist.includes(index)) {
+      setWishlist(wishlist.filter(i => i !== index));
+    } else {
+      setWishlist([...wishlist, index]);
+    }
+  };
+
+  const toggleCart = (index) => {
+    if (cart.includes(index)) {
+      setCart(cart.filter(i => i !== index));
+    } else {
+      setCart([...cart, index]);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-100 px-6 py-8">
+    <div className="min-h-screen bg-gray-100 px-6 py-8 relative">
+      {/* Popup */}
+      {message && (
+        <div className="fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow z-50 transition-all duration-300">
+          {message}
+        </div>
+      )}
+
       {/* Top Bar */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-green-600">Suggestions For You</h1>
-        <button
-          onClick={() => {
-            setShowForm(!showForm);
-            setEditIndex(null);
-            setFormData({ title: "", price: "", discount: "", image: null, imageUrl: "" });
-          }}
-          className="bg-green-500 text-white px-4 py-2 rounded shadow hover:bg-green-600"
-        >
-          {showForm ? "Cancel" : "Add Post"}
-        </button>
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <FaHeart className="text-red-500 text-xl cursor-pointer" />
+            {wishlist.length > 0 && (
+              <span className="absolute -top-2 -right-2 text-xs bg-red-500 text-white rounded-full px-1">
+                {wishlist.length}
+              </span>
+            )}
+          </div>
+          <div className="relative">
+            <FaShoppingCart className="text-blue-600 text-xl cursor-pointer" />
+            {cart.length > 0 && (
+              <span className="absolute -top-2 -right-2 text-xs bg-blue-600 text-white rounded-full px-1">
+                {cart.length}
+              </span>
+            )}
+          </div>
+          <button
+            onClick={() => {
+              setShowForm(!showForm);
+              setEditIndex(null);
+              setFormData({ title: "", price: "", discount: "", image: null, imageUrl: "" });
+            }}
+            className="bg-green-500 text-white px-4 py-2 rounded shadow hover:bg-green-600"
+          >
+            {showForm ? "Cancel" : "Add Post"}
+          </button>
+        </div>
       </div>
 
       {/* Add Post Form */}
@@ -212,6 +269,22 @@ export default function ProductGrid() {
               <h2 className="text-sm font-medium mt-2 line-clamp-2">{product.title}</h2>
               <p className="text-green-600 font-semibold">Rs.{product.price}</p>
               <p className="text-sm text-gray-500">-{product.discount}%</p>
+
+              {/* Wishlist & Cart Icons */}
+              <div className="absolute bottom-2 right-2 flex gap-3">
+                <FaHeart
+                  onClick={() => toggleWishlist(index)}
+                  className={`cursor-pointer text-lg ${
+                    wishlist.includes(index) ? "text-red-500" : "text-gray-400"
+                  }`}
+                />
+                <FaShoppingCart
+                  onClick={() => toggleCart(index)}
+                  className={`cursor-pointer text-lg ${
+                    cart.includes(index) ? "text-blue-600" : "text-gray-400"
+                  }`}
+                />
+              </div>
             </div>
           );
         })}
