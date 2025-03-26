@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 const Header = ({ currentUser, handleSignOut }) => {
@@ -18,6 +18,11 @@ const Header = ({ currentUser, handleSignOut }) => {
     handleSignOut();
     setIsAvatarOpen(false);
     navigate("/signin");
+  };
+
+  // FAQ Button Click Handler
+  const handleFaqClick = () => {
+    navigate("/faq"); // Navigate to the FAQ page when the button is clicked
   };
 
   return (
@@ -166,6 +171,21 @@ const Header = ({ currentUser, handleSignOut }) => {
           </nav>
         </div>
       )}
+      
+      {/* FAQ Button in the bottom-right corner with position: fixed */}
+      <div
+        className="fixed bottom-4 right-4 cursor-pointer"
+        onClick={handleFaqClick} // Navigate to /faq when clicked
+        style={{
+          width: "60px",
+          height: "60px",
+          backgroundImage: `url("/faq1.jpg")`, // Add your FAQ image here
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          borderRadius: "50%",
+          boxShadow: "0 4px 10px rgba(0, 0, 0, 0.2)",
+        }}
+      />
     </header>
   );
 };

@@ -8,7 +8,9 @@ import AboutUs from "../src/components/pages/AboutUs.jsx"
 import Chatbot from "../src/components/pages/Chatbot.jsx";
 import SignIn from "./components/pages/SignIn.jsx";
 import Signup from "../src/components/pages/Signup.jsx";
-import Profile from "../src/components/pages/Profile.jsx"
+import Profile from "../src/components/pages/Profile.jsx";
+import Faq from "./components/pages/Faq.jsx";
+
 
 function App() {
   return (
@@ -25,6 +27,9 @@ function App() {
             <Route path="/signin" element={<SignIn />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/faq" element={<Faq />} />
+
+
           </Routes>
         </main>
         <Footer />
