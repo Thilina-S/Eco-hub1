@@ -3,29 +3,29 @@ import { FaHeart, FaShoppingCart } from "react-icons/fa";
 
 const initialProducts = [
   {
-    title: "Versatile Sweatpants Hoodies Sportswear",
-    price: 1738,
-    discount: 78,
-    image: "https://via.placeholder.com/150"
+    title: " Leaf Rake",
+    price: 1275,
+    discount: 15,
+    image: "../../../public/leaf-rake.jpg"
   },
   {
-    title: "i12 TWS Wireless Bluetooth Earbuds",
-    price: 790,
-    discount: 76,
-    image: "https://via.placeholder.com/150"
+    title: "Rake",
+    price: 1600,
+    discount: 20,
+    image: "../../../public/rake.jpg"
   },
   {
-    title: "PulsePro Wireless Speaker",
-    price: 3151,
-    discount: 37,
-    image: "https://via.placeholder.com/150"
+    title: "Recycle Bins",
+    price: 2400,
+    discount: 20,
+    image: "../../../public/recycle bins.jpeg"
   },
   {
-    title: "4L Perfume Rose Flavor",
-    price: 790,
-    discount: 61,
-    image: "https://via.placeholder.com/150"
-  }
+    title: "Vaccum Garbage Collector",
+    price: 12750,
+    discount: 15,
+    image: "../../../public/vaccum garbage collector.jpeg"
+  },
 ];
 
 export default function ProductGrid() {
