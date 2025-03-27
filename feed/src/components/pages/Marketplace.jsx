@@ -49,6 +49,7 @@ export default function ProductGrid() {
   const [message, setMessage] = useState("");
   const [wishlist, setWishlist] = useState([]);
   const [cart, setCart] = useState([]);
+  const [showMyItems, setShowMyItems] = useState(false);
 
   useEffect(() => {
     if (message) {
@@ -138,42 +139,54 @@ export default function ProductGrid() {
     }
   };
 
+  const filteredProducts = showMyItems 
+    ? products.filter((_, index) => index >= initialProducts.length)
+    : products;
+
   return (
-    <div className="min-h-screen bg-gray-100 px-6 py-8 relative">
+    <div className="relative min-h-screen px-6 py-8 bg-gray-100">
       {/* Popup */}
       {message && (
-        <div className="fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow z-50 transition-all duration-300">
+        <div className="fixed z-50 px-4 py-2 text-white transition-all duration-300 bg-green-500 rounded shadow top-4 right-4">
           {message}
         </div>
       )}
 
       {/* Top Bar */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-green-600">Suggestions For You</h1>
         <div className="flex items-center gap-4">
           <div className="relative">
-            <FaHeart className="text-red-500 text-xl cursor-pointer" />
+            <FaHeart className="text-xl text-red-500 cursor-pointer" />
             {wishlist.length > 0 && (
-              <span className="absolute -top-2 -right-2 text-xs bg-red-500 text-white rounded-full px-1">
+              <span className="absolute px-1 text-xs text-white bg-red-500 rounded-full -top-2 -right-2">
                 {wishlist.length}
               </span>
             )}
           </div>
           <div className="relative">
-            <FaShoppingCart className="text-blue-600 text-xl cursor-pointer" />
+            <FaShoppingCart className="text-xl text-blue-600 cursor-pointer" />
             {cart.length > 0 && (
-              <span className="absolute -top-2 -right-2 text-xs bg-blue-600 text-white rounded-full px-1">
+              <span className="absolute px-1 text-xs text-white bg-blue-600 rounded-full -top-2 -right-2">
                 {cart.length}
               </span>
             )}
           </div>
+          <button
+            onClick={() => setShowMyItems(!showMyItems)}
+            className={`px-4 py-2 rounded shadow hover:bg-green-600 ${
+              showMyItems ? "bg-green-600 text-white" : "bg-green-500 text-white"
+            }`}
+          >
+            My Items
+          </button>
           <button
             onClick={() => {
               setShowForm(!showForm);
               setEditIndex(null);
               setFormData({ title: "", price: "", discount: "", image: null, imageUrl: "" });
             }}
-            className="bg-green-500 text-white px-4 py-2 rounded shadow hover:bg-green-600"
+            className="px-4 py-2 text-white bg-green-500 rounded shadow hover:bg-green-600"
           >
             {showForm ? "Cancel" : "Add Post"}
           </button>
@@ -182,15 +195,15 @@ export default function ProductGrid() {
 
       {/* Add Post Form */}
       {showForm && (
-        <form onSubmit={handleAddProduct} className="bg-white p-4 rounded shadow mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <form onSubmit={handleAddProduct} className="p-4 mb-6 bg-white rounded shadow">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <input
               type="text"
               name="title"
               placeholder="Title"
               value={formData.title}
               onChange={handleInputChange}
-              className="border p-2 rounded w-full"
+              className="w-full p-2 border rounded"
               required
             />
             <input
@@ -199,7 +212,7 @@ export default function ProductGrid() {
               placeholder="Original Price"
               value={formData.price}
               onChange={handleInputChange}
-              className="border p-2 rounded w-full"
+              className="w-full p-2 border rounded"
               required
             />
             <input
@@ -208,7 +221,7 @@ export default function ProductGrid() {
               placeholder="Discount %"
               value={formData.discount}
               onChange={handleInputChange}
-              className="border p-2 rounded w-full"
+              className="w-full p-2 border rounded"
               min="0"
               max="100"
               required
@@ -218,13 +231,13 @@ export default function ProductGrid() {
               name="image"
               accept="image/*"
               onChange={handleInputChange}
-              className="border p-2 rounded w-full"
+              className="w-full p-2 border rounded"
               required={!formData.imageUrl}
             />
           </div>
           <button
             type="submit"
-            className="mt-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+            className="px-4 py-2 mt-4 text-white bg-green-600 rounded hover:bg-green-700"
           >
             {editIndex !== null ? "Update Post" : "Submit Post"}
           </button>
@@ -232,35 +245,37 @@ export default function ProductGrid() {
       )}
 
       {/* Product Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        {products.map((product, index) => {
-          const isCustomAdded = index >= initialProducts.length;
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+        {filteredProducts.map((product, index) => {
+          // For filtered products, we need to find the original index to maintain wishlist/cart functionality
+          const originalIndex = products.findIndex(p => p === product);
+          const isCustomAdded = originalIndex >= initialProducts.length;
 
           return (
-            <div key={index} className="bg-white shadow p-3 rounded-lg relative">
+            <div key={originalIndex} className="relative p-3 bg-white rounded-lg shadow">
               {isCustomAdded && (
                 <div
-                  className="absolute top-2 right-2 cursor-pointer"
-                  onClick={() => setPopupIndex(popupIndex === index ? null : index)}
+                  className="absolute cursor-pointer top-2 right-2"
+                  onClick={() => setPopupIndex(popupIndex === originalIndex ? null : originalIndex)}
                 >
                   <span className="text-xl">⋮</span>
                 </div>
               )}
-              {popupIndex === index && isCustomAdded && (
-                <div className="absolute top-10 right-2 bg-white border border-green-300 shadow-lg rounded-xl p-3 z-10 w-56">
-                  <p className="text-base font-semibold text-green-700 mb-2">{product.title}</p>
-                  <p className="text-sm text-gray-700 mb-1">Price: Rs.{product.price}</p>
-                  <p className="text-sm text-gray-700 mb-2">Discount: {product.discount}%</p>
+              {popupIndex === originalIndex && isCustomAdded && (
+                <div className="absolute z-10 w-56 p-3 bg-white border border-green-300 shadow-lg top-10 right-2 rounded-xl">
+                  <p className="mb-2 text-base font-semibold text-green-700">{product.title}</p>
+                  <p className="mb-1 text-sm text-gray-700">Price: Rs.{product.price}</p>
+                  <p className="mb-2 text-sm text-gray-700">Discount: {product.discount}%</p>
                   <div className="flex justify-between">
                     <button
-                      onClick={() => handleEdit(index)}
-                      className="text-blue-600 font-medium text-sm hover:underline"
+                      onClick={() => handleEdit(originalIndex)}
+                      className="text-sm font-medium text-blue-600 hover:underline"
                     >
                       Edit
                     </button>
                     <button
-                      onClick={() => handleDelete(index)}
-                      className="text-red-600 font-medium text-sm hover:underline"
+                      onClick={() => handleDelete(originalIndex)}
+                      className="text-sm font-medium text-red-600 hover:underline"
                     >
                       Delete
                     </button>
@@ -270,24 +285,24 @@ export default function ProductGrid() {
               <img
                 src={product.image}
                 alt={product.title}
-                className="w-full h-36 object-cover rounded"
+                className="object-cover w-full rounded h-36"
               />
-              <h2 className="text-sm font-medium mt-2 line-clamp-2">{product.title}</h2>
-              <p className="text-green-600 font-semibold">Rs.{product.price}</p>
+              <h2 className="mt-2 text-sm font-medium line-clamp-2">{product.title}</h2>
+              <p className="font-semibold text-green-600">Rs.{product.price}</p>
               <p className="text-sm text-gray-500">-{product.discount}%</p>
 
               {/* Wishlist & Cart Icons */}
-              <div className="absolute bottom-2 right-2 flex gap-3">
+              <div className="absolute flex gap-3 bottom-2 right-2">
                 <FaHeart
-                  onClick={() => toggleWishlist(index)}
+                  onClick={() => toggleWishlist(originalIndex)}
                   className={`cursor-pointer text-lg ${
-                    wishlist.includes(index) ? "text-red-500" : "text-gray-400"
+                    wishlist.includes(originalIndex) ? "text-red-500" : "text-gray-400"
                   }`}
                 />
                 <FaShoppingCart
-                  onClick={() => toggleCart(index)}
+                  onClick={() => toggleCart(originalIndex)}
                   className={`cursor-pointer text-lg ${
-                    cart.includes(index) ? "text-blue-600" : "text-gray-400"
+                    cart.includes(originalIndex) ? "text-blue-600" : "text-gray-400"
                   }`}
                 />
               </div>
