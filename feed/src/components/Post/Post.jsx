@@ -8,10 +8,10 @@ const Post = () => {
   const [posts, setPosts] = useState([
     {
       id: 1,
-      username: "Current User",
+      username: "Buddhi Harshana",
       location: "cmb",
       date: "March 25, 2025",
-      description: "i dont kno",
+      description: "Benefits of Waste Segregation....Waste segregation facilitates the process of reuse, recycling, and recovery of waste. Segregating waste can improve the recycling process. For example, separating wet waste from dry waste is a simple way to help recycling companies. It will help to recycle non-biodegradable waste and treat biodegradable waste directly. Thereby, only degradable wastes will be disposed of into the natural environment, leading to less overall pollution. Waste segregation promotes the efficient use of our resources and protects them for future generations. Yet, the importance of waste segregation is not limited to that. ",
       likes: [],
       likeCount: 0,
       commentCount: 1,

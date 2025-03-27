@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FaHeart, FaShoppingCart, FaTrash, FaEdit } from "react-icons/fa";
 
-const userId = "user123"; // Mock current user ID
+const userId = "user123"; // Mock user ID
 
 const initialProducts = [
   {
@@ -38,7 +38,7 @@ const initialProducts = [
     discount: 20,
     image: "../../../public/pickeuu tool.jpeg",
     reviews: []
-  },
+  }
 ];
 
 export default function ProductGrid() {
@@ -57,7 +57,6 @@ export default function ProductGrid() {
   const [wishlist, setWishlist] = useState([]);
   const [cart, setCart] = useState([]);
   const [showMyItems, setShowMyItems] = useState(false);
-
   const [reviewInputs, setReviewInputs] = useState({});
   const [editingReview, setEditingReview] = useState(null);
 
@@ -193,6 +192,7 @@ export default function ProductGrid() {
         </div>
       )}
 
+      {/* Top Bar */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-green-600">Suggestions For You</h1>
         <div className="flex items-center gap-4">
@@ -233,6 +233,7 @@ export default function ProductGrid() {
         </div>
       </div>
 
+      {/* Add Post Form */}
       {showForm && (
         <form onSubmit={handleAddProduct} className="p-4 mb-6 bg-white rounded shadow">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -291,6 +292,7 @@ export default function ProductGrid() {
 
           return (
             <div key={originalIndex} className="relative p-3 bg-white rounded-lg shadow">
+              {/* Edit/Delete Menu */}
               {isCustomAdded && (
                 <div
                   className="absolute cursor-pointer top-2 right-2"
@@ -322,16 +324,16 @@ export default function ProductGrid() {
                   </div>
                 </div>
               )}
+
+              {/* Product Image */}
               <img
                 src={product.image}
                 alt={product.title}
                 className="object-cover w-full rounded h-36"
               />
-              <h2 className="mt-2 text-sm font-medium line-clamp-2">{product.title}</h2>
-              <p className="font-semibold text-green-600">Rs.{product.price}</p>
-              <p className="text-sm text-gray-500">-{product.discount}%</p>
 
-              <div className="absolute flex gap-3 bottom-2 right-2">
+              {/* Wishlist/Cart Buttons - under image */}
+              <div className="flex justify-end gap-3 mt-2">
                 <FaHeart
                   onClick={() => toggleWishlist(originalIndex)}
                   className={`cursor-pointer text-lg ${
@@ -345,6 +347,11 @@ export default function ProductGrid() {
                   }`}
                 />
               </div>
+
+              {/* Product Info */}
+              <h2 className="mt-2 text-sm font-medium line-clamp-2">{product.title}</h2>
+              <p className="font-semibold text-green-600">Rs.{product.price}</p>
+              <p className="text-sm text-gray-500">-{product.discount}%</p>
 
               {/* Reviews */}
               <div className="mt-4 text-sm">
