@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import PostActions from "./PostActions";
-import defaultImage from "../../assets/images/default-post.jpg";
+import defaultImage from "../../assets/images/forhome.png";
 import styles from "./Post.module.css";
+import "../../assets/images/forhome.png"
 
 const Post = () => {
   const [posts, setPosts] = useState([
@@ -636,14 +637,16 @@ const Post = () => {
           </div>
           <div className={styles.trending}>
             <h3 className={styles.suggestionsTitle}>Trending Topics</h3>
-            <div className={styles.trendingItem}>#SpringVibes</div>
-            <div className={styles.trendingItem}>#TechNews</div>
-            <div className={styles.trendingItem}>#TravelGoals</div>
+            <div className={styles.trendingItem}>#Circular Economy & Zero Waste</div>
+            <div className={styles.trendingItem}>#Smart Waste Technologies</div>
+            <div className={styles.trendingItem}>#E-Waste Management</div>
           </div>
         </div>
       </div>
     </div>
   );
+  
 };
 
 export default Post;
+

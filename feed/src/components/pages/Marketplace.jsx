@@ -26,6 +26,12 @@ const initialProducts = [
     discount: 15,
     image: "../../../public/vaccum garbage collector.jpeg"
   },
+  {
+    title: "Garbage Pickup Tool",
+    price: 1600,
+    discount: 20,
+    image: "../../../public/pickeuu tool.jpeg"
+  },
 ];
 
 export default function ProductGrid() {
