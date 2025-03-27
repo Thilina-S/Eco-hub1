@@ -1,36 +1,43 @@
 import React, { useState, useEffect } from "react";
-import { FaHeart, FaShoppingCart } from "react-icons/fa";
+import { FaHeart, FaShoppingCart, FaTrash, FaEdit } from "react-icons/fa";
+
+const userId = "user123"; // Mock current user ID
 
 const initialProducts = [
   {
-    title: " Leaf Rake",
+    title: "Leaf Rake",
     price: 1275,
     discount: 15,
-    image: "../../../public/leaf-rake.jpg"
+    image: "../../../public/leaf-rake.jpg",
+    reviews: []
   },
   {
     title: "Rake",
     price: 1600,
     discount: 20,
-    image: "../../../public/rake.jpg"
+    image: "../../../public/rake.jpg",
+    reviews: []
   },
   {
     title: "Recycle Bins",
     price: 2400,
     discount: 20,
-    image: "../../../public/recycle bins.jpeg"
+    image: "../../../public/recycle bins.jpeg",
+    reviews: []
   },
   {
     title: "Vaccum Garbage Collector",
     price: 12750,
     discount: 15,
-    image: "../../../public/vaccum garbage collector.jpeg"
+    image: "../../../public/vaccum garbage collector.jpeg",
+    reviews: []
   },
   {
     title: "Garbage Pickup Tool",
     price: 1600,
     discount: 20,
-    image: "../../../public/pickeuu tool.jpeg"
+    image: "../../../public/pickeuu tool.jpeg",
+    reviews: []
   },
 ];
 
@@ -50,6 +57,9 @@ export default function ProductGrid() {
   const [wishlist, setWishlist] = useState([]);
   const [cart, setCart] = useState([]);
   const [showMyItems, setShowMyItems] = useState(false);
+
+  const [reviewInputs, setReviewInputs] = useState({});
+  const [editingReview, setEditingReview] = useState(null);
 
   useEffect(() => {
     if (message) {
@@ -84,12 +94,13 @@ export default function ProductGrid() {
       title: formData.title,
       price: finalPrice,
       discount: discount,
-      image: formData.imageUrl
+      image: formData.imageUrl,
+      reviews: []
     };
 
     if (editIndex !== null) {
       const updated = [...products];
-      updated[editIndex] = newProduct;
+      updated[editIndex] = { ...newProduct, reviews: products[editIndex].reviews };
       setProducts(updated);
       showPopup("Post updated successfully!");
       setEditIndex(null);
@@ -124,35 +135,64 @@ export default function ProductGrid() {
   };
 
   const toggleWishlist = (index) => {
-    if (wishlist.includes(index)) {
-      setWishlist(wishlist.filter(i => i !== index));
-    } else {
-      setWishlist([...wishlist, index]);
-    }
+    setWishlist((prev) =>
+      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
+    );
   };
 
   const toggleCart = (index) => {
-    if (cart.includes(index)) {
-      setCart(cart.filter(i => i !== index));
-    } else {
-      setCart([...cart, index]);
-    }
+    setCart((prev) =>
+      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
+    );
   };
 
-  const filteredProducts = showMyItems 
+  const filteredProducts = showMyItems
     ? products.filter((_, index) => index >= initialProducts.length)
     : products;
 
+  const handleReviewChange = (index, value) => {
+    setReviewInputs({ ...reviewInputs, [index]: value });
+  };
+
+  const submitReview = (index) => {
+    if (!reviewInputs[index]) return;
+
+    const updatedProducts = [...products];
+    updatedProducts[index].reviews.push({
+      id: Date.now(),
+      userId,
+      text: reviewInputs[index]
+    });
+
+    setProducts(updatedProducts);
+    setReviewInputs({ ...reviewInputs, [index]: "" });
+  };
+
+  const updateReview = (productIndex, reviewId, newText) => {
+    const updatedProducts = [...products];
+    updatedProducts[productIndex].reviews = updatedProducts[productIndex].reviews.map((r) =>
+      r.id === reviewId ? { ...r, text: newText } : r
+    );
+    setProducts(updatedProducts);
+    setEditingReview(null);
+  };
+
+  const deleteReview = (productIndex, reviewId) => {
+    const updatedProducts = [...products];
+    updatedProducts[productIndex].reviews = updatedProducts[productIndex].reviews.filter(
+      (r) => r.id !== reviewId
+    );
+    setProducts(updatedProducts);
+  };
+
   return (
     <div className="relative min-h-screen px-6 py-8 bg-gray-100">
-      {/* Popup */}
       {message && (
         <div className="fixed z-50 px-4 py-2 text-white transition-all duration-300 bg-green-500 rounded shadow top-4 right-4">
           {message}
         </div>
       )}
 
-      {/* Top Bar */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-green-600">Suggestions For You</h1>
         <div className="flex items-center gap-4">
@@ -193,7 +233,6 @@ export default function ProductGrid() {
         </div>
       </div>
 
-      {/* Add Post Form */}
       {showForm && (
         <form onSubmit={handleAddProduct} className="p-4 mb-6 bg-white rounded shadow">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -247,7 +286,6 @@ export default function ProductGrid() {
       {/* Product Grid */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
         {filteredProducts.map((product, index) => {
-          // For filtered products, we need to find the original index to maintain wishlist/cart functionality
           const originalIndex = products.findIndex(p => p === product);
           const isCustomAdded = originalIndex >= initialProducts.length;
 
@@ -256,7 +294,9 @@ export default function ProductGrid() {
               {isCustomAdded && (
                 <div
                   className="absolute cursor-pointer top-2 right-2"
-                  onClick={() => setPopupIndex(popupIndex === originalIndex ? null : originalIndex)}
+                  onClick={() =>
+                    setPopupIndex(popupIndex === originalIndex ? null : originalIndex)
+                  }
                 >
                   <span className="text-xl">⋮</span>
                 </div>
@@ -291,7 +331,6 @@ export default function ProductGrid() {
               <p className="font-semibold text-green-600">Rs.{product.price}</p>
               <p className="text-sm text-gray-500">-{product.discount}%</p>
 
-              {/* Wishlist & Cart Icons */}
               <div className="absolute flex gap-3 bottom-2 right-2">
                 <FaHeart
                   onClick={() => toggleWishlist(originalIndex)}
@@ -305,6 +344,57 @@ export default function ProductGrid() {
                     cart.includes(originalIndex) ? "text-blue-600" : "text-gray-400"
                   }`}
                 />
+              </div>
+
+              {/* Reviews */}
+              <div className="mt-4 text-sm">
+                <h3 className="mb-1 font-semibold text-green-700">Reviews</h3>
+                {product.reviews.map((review) => (
+                  <div key={review.id} className="flex items-start justify-between mb-2">
+                    {editingReview?.id === review.id ? (
+                      <input
+                        type="text"
+                        value={editingReview.text}
+                        onChange={(e) =>
+                          setEditingReview({ ...editingReview, text: e.target.value })
+                        }
+                        onBlur={() =>
+                          updateReview(originalIndex, review.id, editingReview.text)
+                        }
+                        className="w-full p-1 border border-gray-300 rounded"
+                      />
+                    ) : (
+                      <p className="flex-1 text-gray-700">{review.text}</p>
+                    )}
+                    {review.userId === userId && (
+                      <div className="flex items-center gap-2 ml-2 text-gray-600">
+                        <FaEdit
+                          onClick={() => setEditingReview({ ...review })}
+                          className="cursor-pointer hover:text-blue-600"
+                        />
+                        <FaTrash
+                          onClick={() => deleteReview(originalIndex, review.id)}
+                          className="cursor-pointer hover:text-red-600"
+                        />
+                      </div>
+                    )}
+                  </div>
+                ))}
+                <div className="flex gap-2 mt-2">
+                  <input
+                    type="text"
+                    placeholder="Add review..."
+                    value={reviewInputs[originalIndex] || ""}
+                    onChange={(e) => handleReviewChange(originalIndex, e.target.value)}
+                    className="flex-1 p-1 border rounded"
+                  />
+                  <button
+                    onClick={() => submitReview(originalIndex)}
+                    className="px-2 py-1 text-sm text-white bg-green-500 rounded hover:bg-green-600"
+                  >
+                    Post
+                  </button>
+                </div>
               </div>
             </div>
           );
