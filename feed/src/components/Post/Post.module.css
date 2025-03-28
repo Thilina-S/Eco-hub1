@@ -1,566 +1,565 @@
 .mainContainer {
-    display: flex;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 16px;
-    gap: 20px;
+  display: flex;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px;
+  gap: 20px;
 }
 
 .postsContainer {
-    flex: 2;
-    max-width: 600px;
+  flex: 2;
+  max-width: 600px;
 }
 
 .leftSidebar {
-    flex: 1;
-    max-width: 250px;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    height: fit-content;
-    position: sticky;
-    top: 16px;
+  flex: 1;
+  max-width: 250px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  height: fit-content;
+  position: sticky;
+  top: 16px;
 }
 
 .rightSidebar {
-    flex: 1;
-    max-width: 300px;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    height: fit-content;
-    position: sticky;
-    top: 16px;
+  flex: 1;
+  max-width: 300px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  height: fit-content;
+  position: sticky;
+  top: 16px;
 }
 
 .sidebarContent {
-    padding: 16px;
+  padding: 16px;
 }
 
 .profileSection {
-    display: flex;
-    align-items: center;
-    margin-bottom: 20px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .sidebarAvatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background-color: #065f46;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    margin-right: 10px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #065f46;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  margin-right: 10px;
 }
 
 .profileName {
-    font-weight: 600;
-    color: #065f46;
+  font-weight: 600;
+  color: #065f46;
 }
 
 .navMenu {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .navItem {
-    display: flex;
-    align-items: center;
-    background: none;
-    border: none;
-    padding: 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 15px;
-    color: #065f46;
-    text-align: left;
-    transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  padding: 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 15px;
+  color: #065f46;
+  text-align: left;
+  transition: background-color 0.2s;
 }
 
 .navItem:hover {
-    background-color: #d1fae5;
+  background-color: #d1fae5;
 }
 
 .navIcon {
-    margin-right: 10px;
-    font-size: 18px;
+  margin-right: 10px;
+  font-size: 18px;
 }
 
 .searchContainer {
-    margin-bottom: 20px;
+  margin-bottom: 20px;
 }
 
 .searchInput {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    font-size: 14px;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
 }
 
 .suggestions {
-    margin-bottom: 20px;
+  margin-bottom: 20px;
 }
 
 .suggestionsTitle {
-    font-size: 16px;
-    color: #065f46;
-    margin-bottom: 12px;
+  font-size: 16px;
+  color: #065f46;
+  margin-bottom: 12px;
 }
 
 .suggestionItem {
-    display: flex;
-    align-items: center;
-    margin-bottom: 12px;
-    gap: 10px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 10px;
 }
 
 .suggestionAvatar {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background-color: #065f46;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: #065f46;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
 }
 
 .addFriendButton {
-    margin-left: auto;
-    padding: 4px 8px;
-    background: #d1fae5;
-    color: #065f46;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 12px;
+  margin-left: auto;
+  padding: 4px 8px;
+  background: #d1fae5;
+  color: #065f46;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
 }
 
 .addFriendButton:hover {
-    background: #a7f3d0;
+  background: #a7f3d0;
 }
 
 .trending {
-    padding-top: 20px;
-    border-top: 1px solid #e5e7eb;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
 }
 
 .trendingItem {
-    padding: 8px 0;
-    color: #065f46;
-    cursor: pointer;
+  padding: 8px 0;
+  color: #065f46;
+  cursor: pointer;
 }
 
 .trendingItem:hover {
-    text-decoration: underline;
+  text-decoration: underline;
 }
 
-/* Existing styles remain unchanged below this point */
 .postCreationButtons {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 16px;
-    background: white;
-    padding: 12px;
-    border-radius: 8px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  background: white;
+  padding: 12px;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
 
 .postButton {
-    display: flex;
-    align-items: center;
-    background: none;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
-    color: #065f46;
-    transition: background-color 0.2s;
-    font-weight: bold;
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #065f46;
+  transition: background-color 0.2s;
+  font-weight: bold;
 }
 
 .postButton:hover {
-    background-color: #d1fae5;
+  background-color: #d1fae5;
 }
 
 .postButtonIcon {
-    margin-right: 8px;
-    font-size: 18px;
+  margin-right: 8px;
+  font-size: 18px;
 }
 
 .postModalOverlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0,0,0,0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
 }
 
 .postModal {
-    background: white;
-    width: 90%;
-    max-width: 500px;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  background: white;
+  width: 90%;
+  max-width: 500px;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
 }
 
 .postModal h3 {
-    margin-top: 0;
-    margin-bottom: 16px;
-    font-size: 20px;
-    color: #065f46;
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-size: 20px;
+  color: #065f46;
 }
 
 .postTextarea {
-    width: 100%;
-    min-height: 100px;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    margin-bottom: 12px;
-    font-size: 16px;
-    resize: none;
+  width: 100%;
+  min-height: 100px;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  font-size: 16px;
+  resize: none;
 }
 
 .postInput {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    margin-bottom: 12px;
-    font-size: 16px;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  font-size: 16px;
 }
 
 .mediaUpload {
-    margin-bottom: 16px;
+  margin-bottom: 16px;
 }
 
 .fileInput {
-    display: none;
+  display: none;
 }
 
 .uploadButton {
-    display: inline-block;
-    padding: 8px 16px;
-    background: #d1fae5;
-    color: #065f46;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
+  display: inline-block;
+  padding: 8px 16px;
+  background: #d1fae5;
+  color: #065f46;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
 }
 
 .mediaPreview {
-    width: 100%;
-    max-height: 300px;
-    object-fit: contain;
-    margin-top: 12px;
-    border-radius: 6px;
+  width: 100%;
+  max-height: 300px;
+  object-fit: contain;
+  margin-top: 12px;
+  border-radius: 6px;
 }
 
 .modalButtons {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
 }
 
 .postSubmitButton {
-    padding: 8px 16px;
-    background: #065f46;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-weight: 600;
-    cursor: pointer;
+  padding: 8px 16px;
+  background: #065f46;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .postSubmitButton:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .cancelButton {
-    padding: 8px 16px;
-    background: #e4e6eb;
-    color: #050505;
-    border: none;
-    border-radius: 6px;
-    font-weight: 600;
-    cursor: pointer;
+  padding: 8px 16px;
+  background: #e4e6eb;
+  color: #050505;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .notification {
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #065f46;
-    color: white;
-    padding: 10px 20px;
-    border-radius: 4px;
-    z-index: 1000;
-    animation: fadeInOut 3s ease-in-out;
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #065f46;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 4px;
+  z-index: 1000;
+  animation: fadeInOut 3s ease-in-out;
 }
 
 @keyframes fadeInOut {
-    0% { opacity: 0; }
-    10% { opacity: 1; }
-    90% { opacity: 1; }
-    100% { opacity: 0; }
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 .postContainer {
-    display: flex;
-    flex-direction: column;
-    background: white;
-    border-radius: 8px;
-    margin-bottom: 16px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
 
 .postHeader {
-    padding: 16px;
+  padding: 16px;
 }
 
 .headerTop {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
 }
 
 .userInfo {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 }
 
 .userAvatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background-color: #065f46;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    margin-right: 10px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #065f46;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  margin-right: 10px;
 }
 
 .username {
-    font-size: 1.125rem;
-    font-weight: bold;
-    margin-bottom: 4px;
+  font-size: 1.125rem;
+  font-weight: bold;
+  margin-bottom: 4px;
 }
 
 .meta {
-    font-size: 0.875rem;
-    color: #6b7280;
-    margin-bottom: 8px;
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 8px;
 }
 
 .description {
-    font-size: 1rem;
-    margin-top: 8px;
+  font-size: 1rem;
+  margin-top: 8px;
 }
 
 .postImage {
-    width: 100%;
-    height: auto;
-    overflow: hidden;
+  width: 100%;
+  height: auto;
+  overflow: hidden;
 }
 
 .image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .stats {
-    display: flex;
-    justify-content: space-between;
-    padding: 8px 16px;
-    font-size: 14px;
-    color: #065f46;
-    border-top: 1px solid #e5e7eb;
-    border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 16px;
+  font-size: 14px;
+  color: #065f46;
+  border-top: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .postActions {
-    display: flex;
-    justify-content: space-around;
-    padding: 8px 0;
-    margin: 0 16px;
-    border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-around;
+  padding: 8px 0;
+  margin: 0 16px;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .actionButton {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: none;
-    border: none;
-    padding: 8px 0;
-    width: 100%;
-    font-size: 15px;
-    color: #065f46;
-    cursor: pointer;
-    transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 8px 0;
+  width: 100%;
+  font-size: 15px;
+  color: #065f46;
+  cursor: pointer;
+  transition: background-color 0.2s;
 }
 
 .actionButton:hover {
-    background-color: #d1fae5;
+  background-color: #d1fae5;
 }
 
 .actionButton.liked {
-    color: #065f46;
-    font-weight: bold;
+  color: #065f46;
+  font-weight: bold;
 }
 
 .actionIcon {
-    margin-right: 8px;
-    font-size: 18px;
+  margin-right: 8px;
+  font-size: 18px;
 }
 
 .commentsSection {
-    padding: 0 16px;
+  padding: 0 16px;
 }
 
 .comment {
-    margin-bottom: 12px;
-    padding: 8px 0;
-    border-bottom: 1px solid #f3f4f6;
-    position: relative;
+  margin-bottom: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f3f4f6;
+  position: relative;
 }
 
 .comment.editing {
-    background: #d1fae5;
-    padding: 8px;
-    border-radius: 4px;
+  background: #d1fae5;
+  padding: 8px;
+  border-radius: 4px;
 }
 
 .commentContent {
-    display: flex;
-    flex-wrap: wrap;
-    margin-bottom: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
 }
 
 .commentUser {
-    font-weight: 600;
-    margin-right: 6px;
-    color: #065f46;
+  font-weight: 600;
+  margin-right: 6px;
+  color: #065f46;
 }
 
 .commentText {
-    font-size: 0.875rem;
-    color: #4b5563;
+  font-size: 0.875rem;
+  color: #4b5563;
 }
 
 .commentActions {
-    display: flex;
-    gap: 12px;
-    margin-top: 4px;
+  display: flex;
+  gap: 12px;
+  margin-top: 4px;
 }
 
 .commentActionButton {
-    font-size: 0.75rem;
-    color: #065f46;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 2px 0;
+  font-size: 0.75rem;
+  color: #065f46;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 0;
 }
 
 .commentActionButton:hover {
-    text-decoration: underline;
+  text-decoration: underline;
 }
 
 .editInput {
-    width: 100%;
-    padding: 6px 8px;
-    border: none;
-    background: transparent;
-    font-size: 0.875rem;
-    outline: none;
+  width: 100%;
+  padding: 6px 8px;
+  border: none;
+  background: transparent;
+  font-size: 0.875rem;
+  outline: none;
 }
 
 .commentForm {
-    display: flex;
-    padding: 12px 16px;
-    border-top: 1px solid #e5e7eb;
+  display: flex;
+  padding: 12px 16px;
+  border-top: 1px solid #e5e7eb;
 }
 
 .commentInput {
-    flex-grow: 1;
-    border: none;
-    outline: none;
-    font-size: 0.875rem;
+  flex-grow: 1;
+  border: none;
+  outline: none;
+  font-size: 0.875rem;
 }
 
 .commentButton {
-    color: #065f46;
-    font-weight: 600;
-    font-size: 0.875rem;
-    background: none;
-    border: none;
-    cursor: pointer;
+  color: #065f46;
+  font-weight: 600;
+  font-size: 0.875rem;
+  background: none;
+  border: none;
+  cursor: pointer;
 }
 
 .commentButton:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .postOptions {
-    position: relative;
+  position: relative;
 }
 
 .optionsButton {
-    background: none;
-    border: none;
-    font-size: 20px;
-    cursor: pointer;
-    color: #65676b;
-    padding: 5px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #65676b;
+  padding: 5px;
 }
 
 .optionsMenu {
-    position: absolute;
-    right: 0;
-    top: 30px;
-    background: white;
-    border-radius: 6px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    z-index: 100;
-    min-width: 150px;
+  position: absolute;
+  right: 0;
+  top: 30px;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  min-width: 150px;
 }
 
 .menuItem {
-    display: block;
-    width: 100%;
-    padding: 8px 16px;
-    text-align: left;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 14px;
-    color: #065f46;
+  display: block;
+  width: 100%;
+  padding: 8px 16px;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: #065f46;
 }
 
 .menuItem:hover {
-    background-color: #d1fae5;
+  background-color: #d1fae5;
 }
