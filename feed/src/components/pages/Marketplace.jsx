@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { FaHeart, FaShoppingCart, FaTrash, FaEdit } from "react-icons/fa";
-
+import { Link, useNavigate } from "react-router-dom";
 const userId = "user123"; // Mock user ID
 
 const initialProducts = [
@@ -9,36 +9,36 @@ const initialProducts = [
     price: 1275,
     discount: 15,
     image: "../../../public/leaf-rake.jpg",
-    reviews: []
+    reviews: [],
   },
   {
     title: "Rake",
     price: 1600,
     discount: 20,
     image: "../../../public/rake.jpg",
-    reviews: []
+    reviews: [],
   },
   {
     title: "Recycle Bins",
     price: 2400,
     discount: 20,
     image: "../../../public/recycle bins.jpeg",
-    reviews: []
+    reviews: [],
   },
   {
     title: "Vaccum Garbage Collector",
     price: 12750,
     discount: 15,
     image: "../../../public/vaccum garbage collector.jpeg",
-    reviews: []
+    reviews: [],
   },
   {
     title: "Garbage Pickup Tool",
     price: 1600,
     discount: 20,
     image: "../../../public/pickeuu tool.jpeg",
-    reviews: []
-  }
+    reviews: [],
+  },
 ];
 
 export default function ProductGrid() {
@@ -49,7 +49,7 @@ export default function ProductGrid() {
     price: "",
     discount: "",
     image: null,
-    imageUrl: ""
+    imageUrl: "",
   });
   const [popupIndex, setPopupIndex] = useState(null);
   const [editIndex, setEditIndex] = useState(null);
@@ -59,6 +59,7 @@ export default function ProductGrid() {
   const [showMyItems, setShowMyItems] = useState(false);
   const [reviewInputs, setReviewInputs] = useState({});
   const [editingReview, setEditingReview] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (message) {
@@ -76,7 +77,7 @@ export default function ProductGrid() {
       setFormData({
         ...formData,
         image: file,
-        imageUrl: URL.createObjectURL(file)
+        imageUrl: URL.createObjectURL(file),
       });
     } else {
       setFormData({ ...formData, [name]: value });
@@ -87,19 +88,24 @@ export default function ProductGrid() {
     e.preventDefault();
     const originalPrice = parseFloat(formData.price);
     const discount = parseFloat(formData.discount);
-    const finalPrice = Math.round(originalPrice - (originalPrice * (discount / 100)));
+    const finalPrice = Math.round(
+      originalPrice - originalPrice * (discount / 100)
+    );
 
     const newProduct = {
       title: formData.title,
       price: finalPrice,
       discount: discount,
       image: formData.imageUrl,
-      reviews: []
+      reviews: [],
     };
 
     if (editIndex !== null) {
       const updated = [...products];
-      updated[editIndex] = { ...newProduct, reviews: products[editIndex].reviews };
+      updated[editIndex] = {
+        ...newProduct,
+        reviews: products[editIndex].reviews,
+      };
       setProducts(updated);
       showPopup("Post updated successfully!");
       setEditIndex(null);
@@ -108,7 +114,13 @@ export default function ProductGrid() {
       showPopup("Post added successfully!");
     }
 
-    setFormData({ title: "", price: "", discount: "", image: null, imageUrl: "" });
+    setFormData({
+      title: "",
+      price: "",
+      discount: "",
+      image: null,
+      imageUrl: "",
+    });
     setShowForm(false);
   };
 
@@ -121,12 +133,14 @@ export default function ProductGrid() {
 
   const handleEdit = (index) => {
     const product = products[index];
-    const originalPrice = Math.round(product.price / (1 - product.discount / 100));
+    const originalPrice = Math.round(
+      product.price / (1 - product.discount / 100)
+    );
     setFormData({
       title: product.title,
       price: originalPrice,
       discount: product.discount,
-      imageUrl: product.image
+      imageUrl: product.image,
     });
     setEditIndex(index);
     setShowForm(true);
@@ -160,7 +174,7 @@ export default function ProductGrid() {
     updatedProducts[index].reviews.push({
       id: Date.now(),
       userId,
-      text: reviewInputs[index]
+      text: reviewInputs[index],
     });
 
     setProducts(updatedProducts);
@@ -169,19 +183,23 @@ export default function ProductGrid() {
 
   const updateReview = (productIndex, reviewId, newText) => {
     const updatedProducts = [...products];
-    updatedProducts[productIndex].reviews = updatedProducts[productIndex].reviews.map((r) =>
-      r.id === reviewId ? { ...r, text: newText } : r
-    );
+    updatedProducts[productIndex].reviews = updatedProducts[
+      productIndex
+    ].reviews.map((r) => (r.id === reviewId ? { ...r, text: newText } : r));
     setProducts(updatedProducts);
     setEditingReview(null);
   };
 
   const deleteReview = (productIndex, reviewId) => {
     const updatedProducts = [...products];
-    updatedProducts[productIndex].reviews = updatedProducts[productIndex].reviews.filter(
-      (r) => r.id !== reviewId
-    );
+    updatedProducts[productIndex].reviews = updatedProducts[
+      productIndex
+    ].reviews.filter((r) => r.id !== reviewId);
     setProducts(updatedProducts);
+  };
+
+  const navigateToItemView = (product) => {
+    navigate('/itemview', { state: { product } });
   };
 
   return (
@@ -194,10 +212,14 @@ export default function ProductGrid() {
 
       {/* Top Bar */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-green-600">Suggestions For You</h1>
+        <h1 className="text-2xl font-bold text-green-600">
+          Suggestions For You
+        </h1>
         <div className="flex items-center gap-4">
           <div className="relative">
-            <FaHeart className="text-xl text-red-500 cursor-pointer" />
+            <Link to="/wishlist">
+              <FaHeart className="text-xl text-red-500 cursor-pointer" />
+            </Link>
             {wishlist.length > 0 && (
               <span className="absolute px-1 text-xs text-white bg-red-500 rounded-full -top-2 -right-2">
                 {wishlist.length}
@@ -205,26 +227,39 @@ export default function ProductGrid() {
             )}
           </div>
           <div className="relative">
-            <FaShoppingCart className="text-xl text-blue-600 cursor-pointer" />
+            <Link to="/cart">
+              <FaShoppingCart className="text-xl text-blue-600 cursor-pointer" />
+            </Link>
             {cart.length > 0 && (
               <span className="absolute px-1 text-xs text-white bg-blue-600 rounded-full -top-2 -right-2">
                 {cart.length}
               </span>
             )}
           </div>
-          <button
-            onClick={() => setShowMyItems(!showMyItems)}
-            className={`px-4 py-2 rounded shadow hover:bg-green-600 ${
-              showMyItems ? "bg-green-600 text-white" : "bg-green-500 text-white"
-            }`}
-          >
-            My Items
-          </button>
+          <Link to="/myitems">
+            <button
+              onClick={() => setShowMyItems(!showMyItems)}
+              className={`px-4 py-2 rounded shadow hover:bg-green-600 ${
+                showMyItems
+                  ? "bg-green-600 text-white"
+                  : "bg-green-500 text-white"
+              }`}
+            >
+              My Items
+            </button>
+          </Link>
+
           <button
             onClick={() => {
               setShowForm(!showForm);
               setEditIndex(null);
-              setFormData({ title: "", price: "", discount: "", image: null, imageUrl: "" });
+              setFormData({
+                title: "",
+                price: "",
+                discount: "",
+                image: null,
+                imageUrl: "",
+              });
             }}
             className="px-4 py-2 text-white bg-green-500 rounded shadow hover:bg-green-600"
           >
@@ -235,7 +270,10 @@ export default function ProductGrid() {
 
       {/* Add Post Form */}
       {showForm && (
-        <form onSubmit={handleAddProduct} className="p-4 mb-6 bg-white rounded shadow">
+        <form
+          onSubmit={handleAddProduct}
+          className="p-4 mb-6 bg-white rounded shadow"
+        >
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <input
               type="text"
@@ -287,17 +325,22 @@ export default function ProductGrid() {
       {/* Product Grid */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
         {filteredProducts.map((product, index) => {
-          const originalIndex = products.findIndex(p => p === product);
+          const originalIndex = products.findIndex((p) => p === product);
           const isCustomAdded = originalIndex >= initialProducts.length;
 
           return (
-            <div key={originalIndex} className="relative p-3 bg-white rounded-lg shadow">
+            <div
+              key={originalIndex}
+              className="relative p-3 bg-white rounded-lg shadow"
+            >
               {/* Edit/Delete Menu */}
               {isCustomAdded && (
                 <div
                   className="absolute cursor-pointer top-2 right-2"
                   onClick={() =>
-                    setPopupIndex(popupIndex === originalIndex ? null : originalIndex)
+                    setPopupIndex(
+                      popupIndex === originalIndex ? null : originalIndex
+                    )
                   }
                 >
                   <span className="text-xl">⋮</span>
@@ -305,9 +348,15 @@ export default function ProductGrid() {
               )}
               {popupIndex === originalIndex && isCustomAdded && (
                 <div className="absolute z-10 w-56 p-3 bg-white border border-green-300 shadow-lg top-10 right-2 rounded-xl">
-                  <p className="mb-2 text-base font-semibold text-green-700">{product.title}</p>
-                  <p className="mb-1 text-sm text-gray-700">Price: Rs.{product.price}</p>
-                  <p className="mb-2 text-sm text-gray-700">Discount: {product.discount}%</p>
+                  <p className="mb-2 text-base font-semibold text-green-700">
+                    {product.title}
+                  </p>
+                  <p className="mb-1 text-sm text-gray-700">
+                    Price: Rs.{product.price}
+                  </p>
+                  <p className="mb-2 text-sm text-gray-700">
+                    Discount: {product.discount}%
+                  </p>
                   <div className="flex justify-between">
                     <button
                       onClick={() => handleEdit(originalIndex)}
@@ -325,48 +374,68 @@ export default function ProductGrid() {
                 </div>
               )}
 
-              {/* Product Image */}
-              <img
-                src={product.image}
-                alt={product.title}
-                className="object-cover w-full rounded h-36"
-              />
+              {/* Product Image - clickable */}
+              <div onClick={() => navigateToItemView(product)} className="cursor-pointer">
+                <img
+                  src={product.image}
+                  alt={product.title}
+                  className="object-cover w-full rounded h-36"
+                />
+              </div>
 
               {/* Wishlist/Cart Buttons - under image */}
               <div className="flex justify-end gap-3 mt-2">
                 <FaHeart
                   onClick={() => toggleWishlist(originalIndex)}
                   className={`cursor-pointer text-lg ${
-                    wishlist.includes(originalIndex) ? "text-red-500" : "text-gray-400"
+                    wishlist.includes(originalIndex)
+                      ? "text-red-500"
+                      : "text-gray-400"
                   }`}
                 />
                 <FaShoppingCart
                   onClick={() => toggleCart(originalIndex)}
                   className={`cursor-pointer text-lg ${
-                    cart.includes(originalIndex) ? "text-blue-600" : "text-gray-400"
+                    cart.includes(originalIndex)
+                      ? "text-blue-600"
+                      : "text-gray-400"
                   }`}
                 />
               </div>
 
-              {/* Product Info */}
-              <h2 className="mt-2 text-sm font-medium line-clamp-2">{product.title}</h2>
-              <p className="font-semibold text-green-600">Rs.{product.price}</p>
-              <p className="text-sm text-gray-500">-{product.discount}%</p>
+              {/* Product Info - clickable */}
+              <div onClick={() => navigateToItemView(product)} className="cursor-pointer">
+                <h2 className="mt-2 text-sm font-medium line-clamp-2">
+                  {product.title}
+                </h2>
+                <p className="font-semibold text-green-600">Rs.{product.price}</p>
+                <p className="text-sm text-gray-500">-{product.discount}%</p>
+              </div>
 
               {/* Reviews */}
               <div className="mt-4 text-sm">
                 <h3 className="mb-1 font-semibold text-green-700">Reviews</h3>
                 {product.reviews.map((review) => (
-                  <div key={review.id} className="flex items-start justify-between mb-2">
+                  <div
+                    key={review.id}
+                    className="flex items-start justify-between mb-2"
+                  >
                     {editingReview?.id === review.id ? (
                       <input
                         type="text"
                         value={editingReview.text}
                         onChange={(e) =>
-                          setEditingReview({ ...editingReview, text: e.target.value })
+                          setEditingReview({
+                            ...editingReview,
+                            text: e.target.value,
+                          })
                         }
                         onBlur={() =>
-                          updateReview(originalIndex, review.id, editingReview.text)
+                          updateReview(
+                            originalIndex,
+                            review.id,
+                            editingReview.text
+                          )
                         }
                         className="w-full p-1 border border-gray-300 rounded"
                       />
@@ -392,7 +461,9 @@ export default function ProductGrid() {
                     type="text"
                     placeholder="Add review..."
                     value={reviewInputs[originalIndex] || ""}
-                    onChange={(e) => handleReviewChange(originalIndex, e.target.value)}
+                    onChange={(e) =>
+                      handleReviewChange(originalIndex, e.target.value)
+                    }
                     className="flex-1 p-1 border rounded"
                   />
                   <button
