@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Home from "./pages/Home.jsx";
-import Marketplace from "../src/components/pages/Marketplace.jsx"; // Added .jsx extension
+import Marketplace from "../src/components/pages/Marketplace.jsx";
 import ContactUs from "../src/components/pages/ContactUs.jsx";
 import AboutUs from "../src/components/pages/AboutUs.jsx"
 import Chatbot from "../src/components/pages/Chatbot.jsx";
@@ -10,6 +10,12 @@ import SignIn from "./components/pages/SignIn.jsx";
 import Signup from "../src/components/pages/Signup.jsx";
 import Profile from "../src/components/pages/Profile.jsx";
 import Faq from "./components/pages/Faq.jsx";
+import Cart from "./components/pages/Cart.jsx";
+import Checkout from "./components/pages/Checkout.jsx";
+import ItemView from "./components/pages/ItemView.jsx";
+import MyItems from "./components/pages/MyItems.jsx";
+import MyPosts from "./components/pages/MyPosts.jsx";
+import Wishlist from "./components/pages/Wishlist.jsx";
 
 
 function App() {
@@ -28,8 +34,12 @@ function App() {
             <Route path="/signup" element={<Signup />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/faq" element={<Faq />} />
-
-
+            <Route path="/cart" element={<Cart /> } />
+            <Route path="/checkout" element={<Checkout /> } />
+            <Route path="/itemview" element={<ItemView /> } />
+            <Route path="/myitems" element={<MyItems /> } />
+            <Route path="/myposts" element={<MyPosts /> } />
+            <Route path="/wishlist" element={<Wishlist /> } />
           </Routes>
         </main>
         <Footer />
