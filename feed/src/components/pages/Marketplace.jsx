@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { FaHeart, FaShoppingCart, FaTrash, FaEdit } from "react-icons/fa";
+import { FaHeart, FaShoppingCart } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
-const userId = "user123"; // Mock user ID
 
 const initialProducts = [
   {
@@ -9,57 +8,50 @@ const initialProducts = [
     price: 1275,
     discount: 15,
     image: "../../../public/leaf-rake.jpg",
-    reviews: [],
   },
   {
     title: "Rake",
     price: 1600,
     discount: 20,
     image: "../../../public/rake.jpg",
-    reviews: [],
   },
   {
     title: "Recycle Bins",
     price: 2400,
     discount: 20,
     image: "../../../public/recycle bins.jpeg",
-    reviews: [],
   },
   {
     title: "Vaccum Garbage Collector",
     price: 12750,
     discount: 15,
     image: "../../../public/vaccum garbage collector.jpeg",
-    reviews: [],
   },
   {
     title: "Garbage Pickup Tool",
     price: 1600,
     discount: 20,
     image: "../../../public/pickeuu tool.jpeg",
-    reviews: [],
   },
 ];
 
 export default function ProductGrid() {
-  const [products, setProducts] = useState(initialProducts);
-  const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({
-    title: "",
-    price: "",
-    discount: "",
-    image: null,
-    imageUrl: "",
+  const navigate = useNavigate();
+  
+  // Initialize products from localStorage or use initial products if none exist
+  const [products, setProducts] = useState(() => {
+    const savedProducts = localStorage.getItem("products");
+    return savedProducts ? JSON.parse(savedProducts) : initialProducts;
   });
-  const [popupIndex, setPopupIndex] = useState(null);
-  const [editIndex, setEditIndex] = useState(null);
+
   const [message, setMessage] = useState("");
   const [wishlist, setWishlist] = useState([]);
   const [cart, setCart] = useState([]);
-  const [showMyItems, setShowMyItems] = useState(false);
-  const [reviewInputs, setReviewInputs] = useState({});
-  const [editingReview, setEditingReview] = useState(null);
-  const navigate = useNavigate();
+  
+  // Save products to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("products", JSON.stringify(products));
+  }, [products]);
 
   useEffect(() => {
     if (message) {
@@ -70,132 +62,18 @@ export default function ProductGrid() {
 
   const showPopup = (msg) => setMessage(msg);
 
-  const handleInputChange = (e) => {
-    const { name, value, files } = e.target;
-    if (name === "image") {
-      const file = files[0];
-      setFormData({
-        ...formData,
-        image: file,
-        imageUrl: URL.createObjectURL(file),
-      });
-    } else {
-      setFormData({ ...formData, [name]: value });
-    }
-  };
-
-  const handleAddProduct = (e) => {
-    e.preventDefault();
-    const originalPrice = parseFloat(formData.price);
-    const discount = parseFloat(formData.discount);
-    const finalPrice = Math.round(
-      originalPrice - originalPrice * (discount / 100)
-    );
-
-    const newProduct = {
-      title: formData.title,
-      price: finalPrice,
-      discount: discount,
-      image: formData.imageUrl,
-      reviews: [],
-    };
-
-    if (editIndex !== null) {
-      const updated = [...products];
-      updated[editIndex] = {
-        ...newProduct,
-        reviews: products[editIndex].reviews,
-      };
-      setProducts(updated);
-      showPopup("Post updated successfully!");
-      setEditIndex(null);
-    } else {
-      setProducts([...products, newProduct]);
-      showPopup("Post added successfully!");
-    }
-
-    setFormData({
-      title: "",
-      price: "",
-      discount: "",
-      image: null,
-      imageUrl: "",
-    });
-    setShowForm(false);
-  };
-
-  const handleDelete = (index) => {
-    const updated = products.filter((_, i) => i !== index);
-    setProducts(updated);
-    setPopupIndex(null);
-    showPopup("Post deleted successfully!");
-  };
-
-  const handleEdit = (index) => {
-    const product = products[index];
-    const originalPrice = Math.round(
-      product.price / (1 - product.discount / 100)
-    );
-    setFormData({
-      title: product.title,
-      price: originalPrice,
-      discount: product.discount,
-      imageUrl: product.image,
-    });
-    setEditIndex(index);
-    setShowForm(true);
-    setPopupIndex(null);
-  };
-
   const toggleWishlist = (index) => {
     setWishlist((prev) =>
       prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
     );
+    showPopup(wishlist.includes(index) ? "Removed from wishlist" : "Added to wishlist");
   };
 
   const toggleCart = (index) => {
     setCart((prev) =>
       prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
     );
-  };
-
-  const filteredProducts = showMyItems
-    ? products.filter((_, index) => index >= initialProducts.length)
-    : products;
-
-  const handleReviewChange = (index, value) => {
-    setReviewInputs({ ...reviewInputs, [index]: value });
-  };
-
-  const submitReview = (index) => {
-    if (!reviewInputs[index]) return;
-
-    const updatedProducts = [...products];
-    updatedProducts[index].reviews.push({
-      id: Date.now(),
-      userId,
-      text: reviewInputs[index],
-    });
-
-    setProducts(updatedProducts);
-    setReviewInputs({ ...reviewInputs, [index]: "" });
-  };
-
-  const updateReview = (productIndex, reviewId, newText) => {
-    const updatedProducts = [...products];
-    updatedProducts[productIndex].reviews = updatedProducts[
-      productIndex
-    ].reviews.map((r) => (r.id === reviewId ? { ...r, text: newText } : r));
-    setProducts(updatedProducts);
-    setEditingReview(null);
-  };
-
-  const deleteReview = (productIndex, reviewId) => {
-    const updatedProducts = [...products];
-    updatedProducts[productIndex].reviews = updatedProducts[
-      productIndex
-    ].reviews.filter((r) => r.id !== reviewId);
-    setProducts(updatedProducts);
+    showPopup(cart.includes(index) ? "Removed from cart" : "Added to cart");
   };
 
   const navigateToItemView = (product) => {
@@ -203,7 +81,7 @@ export default function ProductGrid() {
   };
 
   return (
-    <div className="relative min-h-screen px-6 py-8 bg-gray-100">
+    <div className="relative min-h-screen px-4 py-8 bg-gray-100 sm:px-6">
       {message && (
         <div className="fixed z-50 px-4 py-2 text-white transition-all duration-300 bg-green-500 rounded shadow top-4 right-4">
           {message}
@@ -211,7 +89,7 @@ export default function ProductGrid() {
       )}
 
       {/* Top Bar */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col items-center justify-between mb-6 space-y-4 sm:flex-row sm:space-y-0">
         <h1 className="text-2xl font-bold text-green-600">
           Suggestions For You
         </h1>
@@ -236,242 +114,66 @@ export default function ProductGrid() {
               </span>
             )}
           </div>
-          <Link to="/myitems">
-            <button
-              onClick={() => setShowMyItems(!showMyItems)}
-              className={`px-4 py-2 rounded shadow hover:bg-green-600 ${
-                showMyItems
-                  ? "bg-green-600 text-white"
-                  : "bg-green-500 text-white"
-              }`}
-            >
-              My Items
-            </button>
-          </Link>
-
           <button
-            onClick={() => {
-              setShowForm(!showForm);
-              setEditIndex(null);
-              setFormData({
-                title: "",
-                price: "",
-                discount: "",
-                image: null,
-                imageUrl: "",
-              });
-            }}
+            onClick={() => navigate('/myitems')}
             className="px-4 py-2 text-white bg-green-500 rounded shadow hover:bg-green-600"
           >
-            {showForm ? "Cancel" : "Add Post"}
+            My Items
           </button>
         </div>
       </div>
 
-      {/* Add Post Form */}
-      {showForm && (
-        <form
-          onSubmit={handleAddProduct}
-          className="p-4 mb-6 bg-white rounded shadow"
-        >
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <input
-              type="text"
-              name="title"
-              placeholder="Title"
-              value={formData.title}
-              onChange={handleInputChange}
-              className="w-full p-2 border rounded"
-              required
-            />
-            <input
-              type="number"
-              name="price"
-              placeholder="Original Price"
-              value={formData.price}
-              onChange={handleInputChange}
-              className="w-full p-2 border rounded"
-              required
-            />
-            <input
-              type="number"
-              name="discount"
-              placeholder="Discount %"
-              value={formData.discount}
-              onChange={handleInputChange}
-              className="w-full p-2 border rounded"
-              min="0"
-              max="100"
-              required
-            />
-            <input
-              type="file"
-              name="image"
-              accept="image/*"
-              onChange={handleInputChange}
-              className="w-full p-2 border rounded"
-              required={!formData.imageUrl}
-            />
-          </div>
-          <button
-            type="submit"
-            className="px-4 py-2 mt-4 text-white bg-green-600 rounded hover:bg-green-700"
-          >
-            {editIndex !== null ? "Update Post" : "Submit Post"}
-          </button>
-        </form>
-      )}
-
       {/* Product Grid */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-        {filteredProducts.map((product, index) => {
-          const originalIndex = products.findIndex((p) => p === product);
-          const isCustomAdded = originalIndex >= initialProducts.length;
-
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        {products.map((product, index) => {
           return (
             <div
-              key={originalIndex}
-              className="relative p-3 bg-white rounded-lg shadow"
+              key={index}
+              className="relative p-4 transition-shadow duration-300 rounded-lg shadow-md bg-green-50 hover:shadow-lg"
             >
-              {/* Edit/Delete Menu */}
-              {isCustomAdded && (
-                <div
-                  className="absolute cursor-pointer top-2 right-2"
-                  onClick={() =>
-                    setPopupIndex(
-                      popupIndex === originalIndex ? null : originalIndex
-                    )
-                  }
-                >
-                  <span className="text-xl">⋮</span>
-                </div>
-              )}
-              {popupIndex === originalIndex && isCustomAdded && (
-                <div className="absolute z-10 w-56 p-3 bg-white border border-green-300 shadow-lg top-10 right-2 rounded-xl">
-                  <p className="mb-2 text-base font-semibold text-green-700">
-                    {product.title}
-                  </p>
-                  <p className="mb-1 text-sm text-gray-700">
-                    Price: Rs.{product.price}
-                  </p>
-                  <p className="mb-2 text-sm text-gray-700">
-                    Discount: {product.discount}%
-                  </p>
-                  <div className="flex justify-between">
-                    <button
-                      onClick={() => handleEdit(originalIndex)}
-                      className="text-sm font-medium text-blue-600 hover:underline"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(originalIndex)}
-                      className="text-sm font-medium text-red-600 hover:underline"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              )}
-
               {/* Product Image - clickable */}
-              <div onClick={() => navigateToItemView(product)} className="cursor-pointer">
+              <div 
+                onClick={() => navigateToItemView(product)} 
+                className="cursor-pointer"
+              >
                 <img
                   src={product.image}
                   alt={product.title}
-                  className="object-cover w-full rounded h-36"
+                  className="object-cover w-full rounded-lg h-36 sm:h-40 md:h-48"
                 />
               </div>
 
               {/* Wishlist/Cart Buttons - under image */}
-              <div className="flex justify-end gap-3 mt-2">
+              <div className="flex justify-end gap-3 mt-3">
                 <FaHeart
-                  onClick={() => toggleWishlist(originalIndex)}
+                  onClick={() => toggleWishlist(index)}
                   className={`cursor-pointer text-lg ${
-                    wishlist.includes(originalIndex)
+                    wishlist.includes(index)
                       ? "text-red-500"
-                      : "text-gray-400"
+                      : "text-gray-400 hover:text-red-400"
                   }`}
                 />
                 <FaShoppingCart
-                  onClick={() => toggleCart(originalIndex)}
+                  onClick={() => toggleCart(index)}
                   className={`cursor-pointer text-lg ${
-                    cart.includes(originalIndex)
+                    cart.includes(index)
                       ? "text-blue-600"
-                      : "text-gray-400"
+                      : "text-gray-400 hover:text-blue-400"
                   }`}
                 />
               </div>
 
               {/* Product Info - clickable */}
-              <div onClick={() => navigateToItemView(product)} className="cursor-pointer">
-                <h2 className="mt-2 text-sm font-medium line-clamp-2">
+              <div 
+                onClick={() => navigateToItemView(product)} 
+                className="mt-3 cursor-pointer"
+              >
+                <h2 className="text-sm font-medium line-clamp-2 sm:text-base">
                   {product.title}
                 </h2>
-                <p className="font-semibold text-green-600">Rs.{product.price}</p>
-                <p className="text-sm text-gray-500">-{product.discount}%</p>
-              </div>
-
-              {/* Reviews */}
-              <div className="mt-4 text-sm">
-                <h3 className="mb-1 font-semibold text-green-700">Reviews</h3>
-                {product.reviews.map((review) => (
-                  <div
-                    key={review.id}
-                    className="flex items-start justify-between mb-2"
-                  >
-                    {editingReview?.id === review.id ? (
-                      <input
-                        type="text"
-                        value={editingReview.text}
-                        onChange={(e) =>
-                          setEditingReview({
-                            ...editingReview,
-                            text: e.target.value,
-                          })
-                        }
-                        onBlur={() =>
-                          updateReview(
-                            originalIndex,
-                            review.id,
-                            editingReview.text
-                          )
-                        }
-                        className="w-full p-1 border border-gray-300 rounded"
-                      />
-                    ) : (
-                      <p className="flex-1 text-gray-700">{review.text}</p>
-                    )}
-                    {review.userId === userId && (
-                      <div className="flex items-center gap-2 ml-2 text-gray-600">
-                        <FaEdit
-                          onClick={() => setEditingReview({ ...review })}
-                          className="cursor-pointer hover:text-blue-600"
-                        />
-                        <FaTrash
-                          onClick={() => deleteReview(originalIndex, review.id)}
-                          className="cursor-pointer hover:text-red-600"
-                        />
-                      </div>
-                    )}
-                  </div>
-                ))}
-                <div className="flex gap-2 mt-2">
-                  <input
-                    type="text"
-                    placeholder="Add review..."
-                    value={reviewInputs[originalIndex] || ""}
-                    onChange={(e) =>
-                      handleReviewChange(originalIndex, e.target.value)
-                    }
-                    className="flex-1 p-1 border rounded"
-                  />
-                  <button
-                    onClick={() => submitReview(originalIndex)}
-                    className="px-2 py-1 text-sm text-white bg-green-500 rounded hover:bg-green-600"
-                  >
-                    Post
-                  </button>
+                <div className="flex items-center mt-1 space-x-2">
+                  <p className="font-semibold text-green-600">Rs.{product.price}</p>
+                  <p className="text-xs text-gray-500 sm:text-sm">-{product.discount}%</p>
                 </div>
               </div>
             </div>
