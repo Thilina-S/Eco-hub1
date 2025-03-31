@@ -4,30 +4,35 @@ import { Link, useNavigate } from "react-router-dom";
 
 const initialProducts = [
   {
+    id: 1,
     title: "Leaf Rake",
     price: 1275,
     discount: 15,
     image: "../../../public/leaf-rake.jpg",
   },
   {
+    id: 2,
     title: "Rake",
     price: 1600,
     discount: 20,
     image: "../../../public/rake.jpg",
   },
   {
+    id: 3,
     title: "Recycle Bins",
     price: 2400,
     discount: 20,
     image: "../../../public/recycle bins.jpeg",
   },
   {
+    id: 4,
     title: "Vaccum Garbage Collector",
     price: 12750,
     discount: 15,
     image: "../../../public/vaccum garbage collector.jpeg",
   },
   {
+    id: 5,
     title: "Garbage Pickup Tool",
     price: 1600,
     discount: 20,
@@ -48,6 +53,14 @@ export default function ProductGrid() {
   const [wishlist, setWishlist] = useState([]);
   const [cart, setCart] = useState([]);
   
+  // Load wishlist and cart from localStorage on component mount
+  useEffect(() => {
+    const savedWishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
+    const savedCart = JSON.parse(localStorage.getItem("cart") || "[]");
+    setWishlist(savedWishlist);
+    setCart(savedCart);
+  }, []);
+
   // Save products to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem("products", JSON.stringify(products));
@@ -62,18 +75,36 @@ export default function ProductGrid() {
 
   const showPopup = (msg) => setMessage(msg);
 
-  const toggleWishlist = (index) => {
-    setWishlist((prev) =>
-      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
-    );
-    showPopup(wishlist.includes(index) ? "Removed from wishlist" : "Added to wishlist");
+  const toggleWishlist = (product) => {
+    let updatedWishlist;
+    const isInWishlist = wishlist.some(item => item.id === product.id);
+    
+    if (isInWishlist) {
+      updatedWishlist = wishlist.filter(item => item.id !== product.id);
+      showPopup("Removed from wishlist");
+    } else {
+      updatedWishlist = [...wishlist, {...product, quantity: 1}];
+      showPopup("Added to wishlist");
+    }
+    
+    setWishlist(updatedWishlist);
+    localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
   };
 
-  const toggleCart = (index) => {
-    setCart((prev) =>
-      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
-    );
-    showPopup(cart.includes(index) ? "Removed from cart" : "Added to cart");
+  const toggleCart = (product) => {
+    let updatedCart;
+    const isInCart = cart.some(item => item.id === product.id);
+    
+    if (isInCart) {
+      updatedCart = cart.filter(item => item.id !== product.id);
+      showPopup("Removed from cart");
+    } else {
+      updatedCart = [...cart, {...product, quantity: 1}];
+      showPopup("Added to cart");
+    }
+    
+    setCart(updatedCart);
+    localStorage.setItem("cart", JSON.stringify(updatedCart));
   };
 
   const navigateToItemView = (product) => {
@@ -125,10 +156,14 @@ export default function ProductGrid() {
 
       {/* Product Grid */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-        {products.map((product, index) => {
+        {products.map((product) => {
+          const isInWishlist = wishlist.some(item => item.id === product.id);
+          const isInCart = cart.some(item => item.id === product.id);
+          const discountedPrice = product.price - (product.price * product.discount / 100);
+
           return (
             <div
-              key={index}
+              key={product.id}
               className="relative p-4 transition-shadow duration-300 rounded-lg shadow-md bg-green-50 hover:shadow-lg"
             >
               {/* Product Image - clickable */}
@@ -146,17 +181,17 @@ export default function ProductGrid() {
               {/* Wishlist/Cart Buttons - under image */}
               <div className="flex justify-end gap-3 mt-3">
                 <FaHeart
-                  onClick={() => toggleWishlist(index)}
+                  onClick={() => toggleWishlist(product)}
                   className={`cursor-pointer text-lg ${
-                    wishlist.includes(index)
+                    isInWishlist
                       ? "text-red-500"
                       : "text-gray-400 hover:text-red-400"
                   }`}
                 />
                 <FaShoppingCart
-                  onClick={() => toggleCart(index)}
+                  onClick={() => toggleCart(product)}
                   className={`cursor-pointer text-lg ${
-                    cart.includes(index)
+                    isInCart
                       ? "text-blue-600"
                       : "text-gray-400 hover:text-blue-400"
                   }`}
@@ -172,8 +207,9 @@ export default function ProductGrid() {
                   {product.title}
                 </h2>
                 <div className="flex items-center mt-1 space-x-2">
-                  <p className="font-semibold text-green-600">Rs.{product.price}</p>
-                  <p className="text-xs text-gray-500 sm:text-sm">-{product.discount}%</p>
+                  <p className="font-semibold text-green-600">Rs.{discountedPrice.toFixed(2)}</p>
+                  <p className="text-xs text-gray-500 line-through sm:text-sm">Rs.{product.price.toFixed(2)}</p>
+                  <p className="text-xs text-green-600 sm:text-sm">-{product.discount}%</p>
                 </div>
               </div>
             </div>

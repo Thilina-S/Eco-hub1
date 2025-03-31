@@ -1,10 +1,18 @@
-import React, { useState } from "react";
-import { FaTrash } from "react-icons/fa";
+import React, { useState, useEffect } from "react";
+import { FaTrash, FaArrowLeft } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 export default function CartPage() {
-  const [quantity, setQuantity] = useState(1);
+  const navigate = useNavigate();
+  const [cart, setCart] = useState([]);
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
+
+  // Load cart from localStorage on component mount
+  useEffect(() => {
+    const savedCart = JSON.parse(localStorage.getItem("cart") || []);
+    setCart(savedCart);
+  }, []);
 
   const validateEmail = (value) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -22,88 +30,161 @@ export default function CartPage() {
     }
   };
 
-  return (
-    <div className="bg-green-100 min-h-screen text-black p-4">
-      <h1 className="text-center text-2xl font-bold text-green-800 mb-8">MY CART</h1>
+  const updateQuantity = (id, newQuantity) => {
+    if (newQuantity < 1) return;
+    
+    const updatedCart = cart.map(item => 
+      item.id === id ? { ...item, quantity: newQuantity } : item
+    );
+    
+    setCart(updatedCart);
+    localStorage.setItem("cart", JSON.stringify(updatedCart));
+  };
 
-      <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-6">
-        {/* Product Card */}
-        <div className="bg-white p-4 rounded-xl shadow-sm flex justify-between items-center">
-          <div className="flex flex-col gap-2">
-            <h2 className="font-bold text-lg text-green-800">Mid Half Socks</h2>
-            <p className="text-green-700">LKR 1,250</p>
-            <p className="text-sm text-gray-500">Sheer White</p>
-            <div className="flex items-center gap-3 mt-2">
-              <button
-                className="px-2 py-1 border border-green-700 rounded text-green-800 hover:bg-green-200"
-                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+  const removeItem = (id) => {
+    const updatedCart = cart.filter(item => item.id !== id);
+    setCart(updatedCart);
+    localStorage.setItem("cart", JSON.stringify(updatedCart));
+  };
+
+  // Calculate subtotal using discounted price
+  const subtotal = cart.reduce((sum, item) => {
+    const discountedPrice = item.price - (item.price * item.discount / 100);
+    return sum + (discountedPrice * item.quantity);
+  }, 0);
+
+  const handleCheckout = () => {
+    if (cart.length === 0) {
+      alert("Your cart is empty. Please add items before checkout.");
+      return;
+    }
+    navigate('/checkout', { state: { cart, subtotal } });
+  };
+
+  return (
+    <div className="min-h-screen p-4 text-black bg-green-100">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center text-green-800 hover:text-green-600"
+          >
+            <FaArrowLeft className="mr-2" /> Back
+          </button>
+          <h1 className="text-2xl font-bold text-green-800">MY CART</h1>
+          <div className="w-8"></div> {/* Spacer for alignment */}
+        </div>
+
+        {cart.length === 0 ? (
+          <div className="py-12 text-center">
+            <h2 className="mb-4 text-xl font-semibold text-green-800">Your cart is empty</h2>
+            <button
+              onClick={() => navigate("/marketplace")}
+              className="px-6 py-2 text-white transition bg-green-700 rounded-full hover:bg-green-600"
+            >
+              Continue Shopping
+            </button>
+          </div>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Product Cards */}
+            <div className="space-y-4">
+              {cart.map((item) => {
+                const discountedPrice = item.price - (item.price * item.discount / 100);
+                
+                return (
+                  <div key={item.id} className="flex items-center justify-between p-4 bg-white shadow-sm rounded-xl">
+                    <div className="flex flex-col gap-2">
+                      <h2 className="text-lg font-bold text-green-800">{item.title}</h2>
+                      <div className="flex items-center gap-2">
+                        <p className="text-green-700">Rs.{discountedPrice.toFixed(2)}</p>
+                        {item.discount > 0 && (
+                          <span className="text-xs text-gray-500 line-through">Rs.{item.price.toFixed(2)}</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3 mt-2">
+                        <button
+                          className="px-2 py-1 text-green-800 border border-green-700 rounded hover:bg-green-200"
+                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                        >
+                          -
+                        </button>
+                        <span>{item.quantity}</span>
+                        <button
+                          className="px-2 py-1 text-green-800 border border-green-700 rounded hover:bg-green-200"
+                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        >
+                          +
+                        </button>
+                        <button 
+                          className="ml-4 text-red-500 hover:text-red-700"
+                          onClick={() => removeItem(item.id)}
+                        >
+                          <FaTrash />
+                        </button>
+                      </div>
+                    </div>
+                    <img
+                      src={item.image}
+                      alt={item.title}
+                      className="object-cover w-28 h-28 rounded-xl"
+                    />
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Order Summary */}
+            <div className="sticky p-6 space-y-4 bg-white shadow-md rounded-xl h-fit top-4">
+              <h2 className="text-lg font-bold text-green-800">ORDER SUMMARY</h2>
+              <div className="flex justify-between">
+                <span>Subtotal ({cart.reduce((sum, item) => sum + item.quantity, 0)} items)</span>
+                <span>Rs.{subtotal.toFixed(2)}</span>
+              </div>
+              <p className="text-sm text-gray-500">
+                Shipping calculated at check out
+                <br />
+                Tax calculated at check out
+              </p>
+              <button 
+                className="w-full py-3 font-semibold text-white transition bg-green-700 rounded-full hover:bg-green-600"
+                onClick={handleCheckout}
               >
-                -
-              </button>
-              <span>{quantity}</span>
-              <button
-                className="px-2 py-1 border border-green-700 rounded text-green-800 hover:bg-green-200"
-                onClick={() => setQuantity(quantity + 1)}
-              >
-                +
-              </button>
-              <button className="ml-4 text-red-500 hover:text-red-700">
-                <FaTrash />
+                CHECK OUT – Rs.{subtotal.toFixed(2)}
               </button>
             </div>
           </div>
-          <img
-            src="https://via.placeholder.com/120"
-            alt="Mid Half Socks"
-            className="w-28 h-auto rounded-xl object-cover"
-          />
-        </div>
+        )}
 
-        {/* Order Summary */}
-        <div className="bg-white p-6 rounded-xl shadow-md space-y-4">
-          <h2 className="font-bold text-lg text-green-800">ORDER SUMMARY</h2>
-          <div className="flex justify-between">
-            <span>Subtotal</span>
-            <span>LKR {1250 * quantity}</span>
-          </div>
-          <p className="text-sm text-gray-500">
-            Shipping calculated at check out
-            <br />
-            Tax calculated at check out
+        {/* Newsletter Section */}
+        <div className="px-4 py-12 mt-16 text-center bg-green-200 rounded-lg shadow-inner">
+          <h3 className="mb-2 text-xl font-semibold text-green-900">
+            OUR NEWEST PRODUCTS STRAIGHT TO YOUR INBOX.
+          </h3>
+          <p className="max-w-xl mx-auto mb-4 text-sm text-gray-700">
+            Be the first to know about our products, limited-time offers, community events, and more.
           </p>
-          <button className="w-full bg-green-700 text-white py-3 rounded-full font-semibold hover:bg-green-600 transition">
-            CHECK OUT – LKR {1250 * quantity}
-          </button>
-        </div>
-      </div>
-
-      {/* Newsletter Section */}
-      <div className="mt-16 py-12 bg-green-200 text-center px-4 rounded-lg shadow-inner">
-        <h3 className="text-xl font-semibold text-green-900 mb-2">
-          OUR NEWEST PRODUCTS STRAIGHT TO YOUR INBOX.
-        </h3>
-        <p className="text-sm text-gray-700 mb-4 max-w-xl mx-auto">
-          Be the first to know about our products, limited-time offers, community events, and more.
-        </p>
-        <form
-          onSubmit={handleSignup}
-          className="flex flex-col md:flex-row justify-center items-center gap-2 max-w-md mx-auto"
-        >
-          <input
-            type="email"
-            placeholder="Enter your email address"
-            className="w-full px-4 py-2 rounded-full bg-white text-black border border-green-400 focus:outline-none"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <button
-            type="submit"
-            className="px-6 py-2 bg-green-700 text-white rounded-full hover:bg-green-600 transition"
+          <form
+            onSubmit={handleSignup}
+            className="flex flex-col items-center justify-center max-w-md gap-2 mx-auto md:flex-row"
           >
-            SIGN UP
-          </button>
-        </form>
-        {emailError && <p className="text-red-600 mt-2 text-sm">{emailError}</p>}
+            <input
+              type="email"
+              placeholder="Enter your email address"
+              className="w-full px-4 py-2 text-black bg-white border border-green-400 rounded-full focus:outline-none"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <button
+              type="submit"
+              className="px-6 py-2 text-white transition bg-green-700 rounded-full hover:bg-green-600"
+            >
+              Sign up
+            </button>
+          </form>
+          {emailError && <p className="mt-2 text-sm text-red-600">{emailError}</p>}
+        </div>
       </div>
     </div>
   );

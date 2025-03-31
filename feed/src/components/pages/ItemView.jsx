@@ -5,15 +5,9 @@ import { useLocation, useNavigate } from "react-router-dom";
 export default function ItemView() {
   const location = useLocation();
   const navigate = useNavigate();
-  const userId = "user123"; // Should match the user ID in ProductGrid
   
   // Get product from location state
   const { product } = location.state || {};
-  
-  // State for review functionality
-  const [reviewInput, setReviewInput] = useState("");
-  const [reviews, setReviews] = useState(product?.reviews || []);
-  const [editingReview, setEditingReview] = useState(null);
   
   // State for wishlist and cart
   const [wishlist, setWishlist] = useState([]);
@@ -66,7 +60,7 @@ export default function ItemView() {
       updatedWishlist = wishlist.filter(item => item.id !== product.id);
       showPopup("Removed from wishlist");
     } else {
-      updatedWishlist = [...wishlist, product];
+      updatedWishlist = [...wishlist, {...product, quantity: 1}];
       showPopup("Added to wishlist");
     }
     
@@ -81,79 +75,12 @@ export default function ItemView() {
       updatedCart = cart.filter(item => item.id !== product.id);
       showPopup("Removed from cart");
     } else {
-      updatedCart = [...cart, product];
+      updatedCart = [...cart, {...product, quantity: 1}];
       showPopup("Added to cart");
     }
     
     setCart(updatedCart);
     localStorage.setItem("cart", JSON.stringify(updatedCart));
-  };
-  
-  // Handle review submission
-  const submitReview = () => {
-    if (!reviewInput.trim()) return;
-    
-    const newReview = {
-      id: Date.now(),
-      userId,
-      text: reviewInput
-    };
-    
-    // Update local state
-    setReviews([...reviews, newReview]);
-    setReviewInput("");
-    
-    // Update product reviews in localStorage
-    const savedProducts = JSON.parse(localStorage.getItem("products") || "[]");
-    const updatedProducts = savedProducts.map(p => {
-      if (p.title === product.title) {
-        return { ...p, reviews: [...p.reviews, newReview] };
-      }
-      return p;
-    });
-    
-    localStorage.setItem("products", JSON.stringify(updatedProducts));
-  };
-  
-  // Handle editing review
-  const updateReview = (reviewId, newText) => {
-    const updatedReviews = reviews.map(r => 
-      r.id === reviewId ? { ...r, text: newText } : r
-    );
-    
-    // Update local state
-    setReviews(updatedReviews);
-    setEditingReview(null);
-    
-    // Update in localStorage
-    const savedProducts = JSON.parse(localStorage.getItem("products") || "[]");
-    const updatedProducts = savedProducts.map(p => {
-      if (p.title === product.title) {
-        return { ...p, reviews: updatedReviews };
-      }
-      return p;
-    });
-    
-    localStorage.setItem("products", JSON.stringify(updatedProducts));
-  };
-  
-  // Handle deleting review
-  const deleteReview = (reviewId) => {
-    const updatedReviews = reviews.filter(r => r.id !== reviewId);
-    
-    // Update local state
-    setReviews(updatedReviews);
-    
-    // Update in localStorage
-    const savedProducts = JSON.parse(localStorage.getItem("products") || "[]");
-    const updatedProducts = savedProducts.map(p => {
-      if (p.title === product.title) {
-        return { ...p, reviews: updatedReviews };
-      }
-      return p;
-    });
-    
-    localStorage.setItem("products", JSON.stringify(updatedProducts));
   };
   
   return (
@@ -330,90 +257,6 @@ export default function ItemView() {
                   <li>Easy to clean and maintain</li>
                   <li>Perfect for gardening and cleaning tasks</li>
                 </ul>
-              </div>
-            </div>
-          </div>
-          
-          {/* Reviews Section */}
-          <div className="p-6 border-t border-gray-200">
-            <h2 className="mb-4 text-xl font-bold text-green-800">Customer Reviews</h2>
-            
-            {/* Review List */}
-            <div className="mb-6 space-y-4">
-              {reviews.length === 0 ? (
-                <p className="text-gray-500">No reviews yet. Be the first to leave a review!</p>
-              ) : (
-                reviews.map((review) => (
-                  <div key={review.id} className="p-4 rounded-lg bg-gray-50">
-                    <div className="flex items-start justify-between">
-                      {editingReview?.id === review.id ? (
-                        <div className="w-full">
-                          <input
-                            type="text"
-                            value={editingReview.text}
-                            onChange={(e) => setEditingReview({...editingReview, text: e.target.value})}
-                            className="w-full p-2 border border-gray-300 rounded"
-                            autoFocus
-                          />
-                          <div className="flex gap-2 mt-2">
-                            <button 
-                              onClick={() => updateReview(review.id, editingReview.text)}
-                              className="px-3 py-1 text-sm text-white bg-green-600 rounded hover:bg-green-700"
-                            >
-                              Save
-                            </button>
-                            <button 
-                              onClick={() => setEditingReview(null)}
-                              className="px-3 py-1 text-sm text-gray-600 bg-gray-200 rounded hover:bg-gray-300"
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          <p className="flex-1 text-gray-700">{review.text}</p>
-                          {review.userId === userId && (
-                            <div className="flex items-center gap-3 ml-4">
-                              <button
-                                onClick={() => setEditingReview({ ...review })}
-                                className="text-green-600 hover:text-green-800"
-                              >
-                                Edit
-                              </button>
-                              <button
-                                onClick={() => deleteReview(review.id)}
-                                className="text-red-600 hover:text-red-800"
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-            
-            {/* Add Review Form */}
-            <div className="p-4 rounded-lg bg-gray-50">
-              <h3 className="mb-2 font-semibold text-gray-700">Add Your Review</h3>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Write your review here..."
-                  value={reviewInput}
-                  onChange={(e) => setReviewInput(e.target.value)}
-                  className="flex-1 p-2 border border-gray-300 rounded"
-                />
-                <button
-                  onClick={submitReview}
-                  className="px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700"
-                >
-                  Item Review
-                </button>
               </div>
             </div>
           </div>
