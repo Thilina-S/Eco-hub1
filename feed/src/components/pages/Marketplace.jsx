@@ -218,4 +218,4 @@ export default function ProductGrid() {
       </div>
     </div>
   );
-}
+} ba
