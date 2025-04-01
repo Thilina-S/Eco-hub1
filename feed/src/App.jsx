@@ -16,7 +16,7 @@ import ItemView from "./components/pages/ItemView.jsx";
 import MyItems from "./components/pages/MyItems.jsx";
 import MyPosts from "./components/pages/MyPosts.jsx";
 import Wishlist from "./components/pages/Wishlist.jsx";
-
+import AdminDashboard from "./components/pages/AdminDashboard.jsx";
 
 function App() {
   return (
@@ -40,6 +40,8 @@ function App() {
             <Route path="/myitems" element={<MyItems /> } />
             <Route path="/myposts" element={<MyPosts /> } />
             <Route path="/wishlist" element={<Wishlist /> } />
+            <Route path="/admindashboard" element={<AdminDashboard /> } />
+            
           </Routes>
         </main>
         <Footer />
