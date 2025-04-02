@@ -8,6 +8,7 @@ const initialProducts = [
     title: "Leaf Rake",
     price: 1275,
     discount: 15,
+    stock: 10,
     image: "../../../public/leaf-rake.jpg",
   },
   {
@@ -15,6 +16,7 @@ const initialProducts = [
     title: "Rake",
     price: 1600,
     discount: 20,
+    stock: 8,
     image: "../../../public/rake.jpg",
   },
   {
@@ -22,6 +24,7 @@ const initialProducts = [
     title: "Recycle Bins",
     price: 2400,
     discount: 20,
+    stock: 5,
     image: "../../../public/recycle bins.jpeg",
   },
   {
@@ -29,6 +32,7 @@ const initialProducts = [
     title: "Vaccum Garbage Collector",
     price: 12750,
     discount: 15,
+    stock: 2,
     image: "../../../public/vaccum garbage collector.jpeg",
   },
   {
@@ -36,14 +40,14 @@ const initialProducts = [
     title: "Garbage Pickup Tool",
     price: 1600,
     discount: 20,
+    stock: 20,
     image: "../../../public/pickeuu tool.jpeg",
   },
 ];
 
 export default function ProductGrid() {
   const navigate = useNavigate();
-  
-  // Initialize products from localStorage or use initial products if none exist
+
   const [products, setProducts] = useState(() => {
     const savedProducts = localStorage.getItem("products");
     return savedProducts ? JSON.parse(savedProducts) : initialProducts;
@@ -52,8 +56,7 @@ export default function ProductGrid() {
   const [message, setMessage] = useState("");
   const [wishlist, setWishlist] = useState([]);
   const [cart, setCart] = useState([]);
-  
-  // Load wishlist and cart from localStorage on component mount
+
   useEffect(() => {
     const savedWishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
     const savedCart = JSON.parse(localStorage.getItem("cart") || "[]");
@@ -61,7 +64,6 @@ export default function ProductGrid() {
     setCart(savedCart);
   }, []);
 
-  // Save products to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem("products", JSON.stringify(products));
   }, [products]);
@@ -77,38 +79,38 @@ export default function ProductGrid() {
 
   const toggleWishlist = (product) => {
     let updatedWishlist;
-    const isInWishlist = wishlist.some(item => item.id === product.id);
-    
+    const isInWishlist = wishlist.some((item) => item.id === product.id);
+
     if (isInWishlist) {
-      updatedWishlist = wishlist.filter(item => item.id !== product.id);
+      updatedWishlist = wishlist.filter((item) => item.id !== product.id);
       showPopup("Removed from wishlist");
     } else {
-      updatedWishlist = [...wishlist, {...product, quantity: 1}];
+      updatedWishlist = [...wishlist, { ...product, quantity: 1 }];
       showPopup("Added to wishlist");
     }
-    
+
     setWishlist(updatedWishlist);
     localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
   };
 
   const toggleCart = (product) => {
     let updatedCart;
-    const isInCart = cart.some(item => item.id === product.id);
-    
+    const isInCart = cart.some((item) => item.id === product.id);
+
     if (isInCart) {
-      updatedCart = cart.filter(item => item.id !== product.id);
+      updatedCart = cart.filter((item) => item.id !== product.id);
       showPopup("Removed from cart");
     } else {
-      updatedCart = [...cart, {...product, quantity: 1}];
+      updatedCart = [...cart, { ...product, quantity: 1 }];
       showPopup("Added to cart");
     }
-    
+
     setCart(updatedCart);
     localStorage.setItem("cart", JSON.stringify(updatedCart));
   };
 
   const navigateToItemView = (product) => {
-    navigate('/itemview', { state: { product } });
+    navigate("/itemview", { state: { product } });
   };
 
   return (
@@ -119,11 +121,8 @@ export default function ProductGrid() {
         </div>
       )}
 
-      {/* Top Bar */}
       <div className="flex flex-col items-center justify-between mb-6 space-y-4 sm:flex-row sm:space-y-0">
-        <h1 className="text-2xl font-bold text-green-600">
-          Suggestions For You
-        </h1>
+        <h1 className="text-2xl font-bold text-green-600">Suggestions For You</h1>
         <div className="flex items-center gap-4">
           <div className="relative">
             <Link to="/wishlist">
@@ -146,7 +145,7 @@ export default function ProductGrid() {
             )}
           </div>
           <button
-            onClick={() => navigate('/myitems')}
+            onClick={() => navigate("/myitems")}
             className="px-4 py-2 text-white bg-green-500 rounded shadow hover:bg-green-600"
           >
             My Items
@@ -154,62 +153,60 @@ export default function ProductGrid() {
         </div>
       </div>
 
-      {/* Product Grid */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {products.map((product) => {
-          const isInWishlist = wishlist.some(item => item.id === product.id);
-          const isInCart = cart.some(item => item.id === product.id);
-          const discountedPrice = product.price - (product.price * product.discount / 100);
+          const isInWishlist = wishlist.some((item) => item.id === product.id);
+          const isInCart = cart.some((item) => item.id === product.id);
+          const discountedPrice =
+            product.price - (product.price * product.discount) / 100;
 
           return (
             <div
               key={product.id}
-              className="relative p-4 transition-shadow duration-300 rounded-lg shadow-md bg-green-50 hover:shadow-lg"
+              className="relative p-4 transition-shadow duration-300 bg-green-50 rounded-lg shadow-md hover:shadow-lg"
             >
-              {/* Product Image - clickable */}
-              <div 
-                onClick={() => navigateToItemView(product)} 
-                className="cursor-pointer"
-              >
+              <div onClick={() => navigateToItemView(product)} className="cursor-pointer">
                 <img
                   src={product.image}
                   alt={product.title}
-                  className="object-cover w-full rounded-lg h-36 sm:h-40 md:h-48"
+                  className="object-cover w-full h-40 rounded-lg sm:h-48 md:h-56"
                 />
               </div>
 
-              {/* Wishlist/Cart Buttons - under image */}
-              <div className="flex justify-end gap-3 mt-3">
-                <FaHeart
-                  onClick={() => toggleWishlist(product)}
-                  className={`cursor-pointer text-lg ${
-                    isInWishlist
-                      ? "text-red-500"
-                      : "text-gray-400 hover:text-red-400"
-                  }`}
-                />
-                <FaShoppingCart
-                  onClick={() => toggleCart(product)}
-                  className={`cursor-pointer text-lg ${
-                    isInCart
-                      ? "text-blue-600"
-                      : "text-gray-400 hover:text-blue-400"
-                  }`}
-                />
+              <div className="flex items-center justify-between gap-3 mt-3">
+                <div className="flex items-center gap-3">
+                  <FaHeart
+                    onClick={() => toggleWishlist(product)}
+                    className={`cursor-pointer text-lg ${
+                      isInWishlist ? "text-red-500" : "text-gray-400 hover:text-red-400"
+                    }`}
+                  />
+                  <FaShoppingCart
+                    onClick={() => toggleCart(product)}
+                    className={`cursor-pointer text-lg ${
+                      isInCart ? "text-blue-600" : "text-gray-400 hover:text-blue-400"
+                    }`}
+                  />
+                </div>
+                <span className="text-sm text-gray-700 font-medium">
+                  {product.stock} In stock
+                </span>
               </div>
 
-              {/* Product Info - clickable */}
-              <div 
-                onClick={() => navigateToItemView(product)} 
-                className="mt-3 cursor-pointer"
-              >
+              <div onClick={() => navigateToItemView(product)} className="mt-3 cursor-pointer">
                 <h2 className="text-sm font-medium line-clamp-2 sm:text-base">
                   {product.title}
                 </h2>
                 <div className="flex items-center mt-1 space-x-2">
-                  <p className="font-semibold text-green-600">Rs.{discountedPrice.toFixed(2)}</p>
-                  <p className="text-xs text-gray-500 line-through sm:text-sm">Rs.{product.price.toFixed(2)}</p>
-                  <p className="text-xs text-green-600 sm:text-sm">-{product.discount}%</p>
+                  <p className="font-semibold text-green-600">
+                    Rs.{discountedPrice.toFixed(2)}
+                  </p>
+                  <p className="text-xs text-gray-500 line-through sm:text-sm">
+                    Rs.{product.price.toFixed(2)}
+                  </p>
+                  <p className="text-xs text-green-600 sm:text-sm">
+                    -{product.discount}%
+                  </p>
                 </div>
               </div>
             </div>
@@ -218,4 +215,4 @@ export default function ProductGrid() {
       </div>
     </div>
   );
-} 
+}
