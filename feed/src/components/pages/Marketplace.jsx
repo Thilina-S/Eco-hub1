@@ -114,7 +114,7 @@ export default function ProductGrid() {
   };
 
   return (
-    <div className="relative min-h-screen px-4 py-8 bg-gradient-to-br from-green-100 via-lime-200 to-emerald-100 sm:px-6">
+    <div className="relative min-h-screen px-4 py-8 bg-white sm:px-6">
       {message && (
         <div className="fixed z-50 px-4 py-2 text-white transition-all duration-300 bg-green-600 rounded shadow top-4 right-4">
           {message}
@@ -125,7 +125,10 @@ export default function ProductGrid() {
         <h1 className="text-3xl font-extrabold text-emerald-800 drop-shadow-sm">🌿 Marketplace</h1>
         <div className="flex items-center gap-4">
           <div className="relative">
-            <Link to="/wishlist">
+            <Link
+              to="/wishlist"
+              onClick={() => localStorage.setItem("wishlist", JSON.stringify(wishlist))}
+            >
               <FaHeart className="text-2xl text-red-500 cursor-pointer" />
             </Link>
             {wishlist.length > 0 && (
@@ -163,7 +166,7 @@ export default function ProductGrid() {
           return (
             <div
               key={product.id}
-              className="relative p-4 transition-transform duration-300 bg-white border border-emerald-200 rounded-xl shadow-lg hover:scale-[1.02] hover:shadow-emerald-400"
+              className="relative p-4 transition-transform duration-300 bg-white rounded-xl shadow-md hover:scale-[1.02]"
             >
               <div onClick={() => navigateToItemView(product)} className="cursor-pointer">
                 <img
