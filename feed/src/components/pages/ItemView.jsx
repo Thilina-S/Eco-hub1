@@ -222,6 +222,12 @@ export default function ItemView() {
                 Sed euismod, nunc vel tincidunt lacinia, nunc nisl aliquam nisl, 
                 eget aliquam nunc nisl eu nunc.
               </p>
+
+              {/* Stock Info */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-800">Available Stock:</h3>
+                <p className="text-gray-600">{product.stock} items left</p>
+              </div>
               
               <div className="flex gap-4 mb-6">
                 <button

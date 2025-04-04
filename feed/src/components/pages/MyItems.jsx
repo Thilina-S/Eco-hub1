@@ -16,6 +16,7 @@ export default function MyItems() {
     discount: "",
     image: null,
     imageUrl: "",
+    stock: "", // Added stock field
   });
   const [formErrors, setFormErrors] = useState({});
 
@@ -67,6 +68,7 @@ export default function MyItems() {
       price: originalPrice,
       discount: product.discount,
       imageUrl: product.image,
+      stock: product.stock, // Set stock in formData
     });
     
     setSelectedProduct(index);
@@ -81,6 +83,7 @@ export default function MyItems() {
       discount: "",
       image: null,
       imageUrl: "",
+      stock: "", // Initialize stock field
     });
     setShowAddModal(true);
     setFormErrors({});
@@ -128,6 +131,12 @@ export default function MyItems() {
     if (!formData.imageUrl && !formData.image) {
       errors.image = "Image is required";
     }
+
+    if (!formData.stock) {
+      errors.stock = "Stock is required";
+    } else if (isNaN(formData.stock) || parseInt(formData.stock) < 0) {
+      errors.stock = "Stock must be a non-negative integer";
+    }
     
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -153,6 +162,7 @@ export default function MyItems() {
       discount: discount,
       image: formData.imageUrl,
       reviews: products[selectedProduct].reviews || [],
+      stock: parseInt(formData.stock), // Update stock here
     };
 
     // The real index is selectedProduct + 5 (to account for initial products)
@@ -193,6 +203,7 @@ export default function MyItems() {
       discount: discount,
       image: formData.imageUrl,
       reviews: [],
+      stock: parseInt(formData.stock), // Add stock to new product
     };
 
     // Add to all products
@@ -215,6 +226,7 @@ export default function MyItems() {
       discount: "",
       image: null,
       imageUrl: "",
+      stock: "", // Reset stock
     });
   };
 
@@ -257,6 +269,7 @@ export default function MyItems() {
                 <th className="p-3 text-left">Price (Rs.)</th>
                 <th className="p-3 text-left">Discount (%)</th>
                 <th className="p-3 text-left">Final Price (Rs.)</th>
+                <th className="p-3 text-left">Stock</th> {/* Added Stock column */}
                 <th className="p-3 text-center">Actions</th>
               </tr>
             </thead>
@@ -279,6 +292,7 @@ export default function MyItems() {
                     <td className="p-3">{originalPrice}</td>
                     <td className="p-3">{product.discount}</td>
                     <td className="p-3">{product.price}</td>
+                    <td className="p-3">{product.stock}</td> {/* Display Stock */}
                     <td className="p-3">
                       <div className="flex items-center justify-center gap-3">
                         <button
@@ -315,173 +329,124 @@ export default function MyItems() {
         )}
       </div>
 
-      {/* Update Modal */}
-      {showUpdateModal && (
+      {/* Add/Edit Item Modal */}
+      {(showAddModal || showUpdateModal) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-lg">
-            <h2 className="mb-4 text-xl font-bold text-green-700">Update Item</h2>
-            
-            <form onSubmit={handleUpdate}>
-              <div className="mb-4">
-                <label className="block mb-2 text-sm font-medium text-gray-700">Title</label>
-                <input
-                  type="text"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleInputChange}
-                  className={`w-full p-2 border ${formErrors.title ? 'border-red-500' : 'border-gray-300'} rounded`}
-                />
-                {formErrors.title && <p className="mt-1 text-xs text-red-500">{formErrors.title}</p>}
-              </div>
-              
-              <div className="mb-4">
-                <label className="block mb-2 text-sm font-medium text-gray-700">Original Price</label>
-                <input
-                  type="number"
-                  name="price"
-                  value={formData.price}
-                  onChange={handleInputChange}
-                  className={`w-full p-2 border ${formErrors.price ? 'border-red-500' : 'border-gray-300'} rounded`}
-                />
-                {formErrors.price && <p className="mt-1 text-xs text-red-500">{formErrors.price}</p>}
-              </div>
-              
-              <div className="mb-4">
-                <label className="block mb-2 text-sm font-medium text-gray-700">Discount (%)</label>
-                <input
-                  type="number"
-                  name="discount"
-                  value={formData.discount}
-                  onChange={handleInputChange}
-                  className={`w-full p-2 border ${formErrors.discount ? 'border-red-500' : 'border-gray-300'} rounded`}
-                  min="0"
-                  max="100"
-                />
-                {formErrors.discount && <p className="mt-1 text-xs text-red-500">{formErrors.discount}</p>}
-              </div>
-              
-              <div className="mb-4">
-                <label className="block mb-2 text-sm font-medium text-gray-700">Image</label>
-                <div className="flex items-center gap-4">
-                  {formData.imageUrl && (
-                    <img 
-                      src={formData.imageUrl} 
-                      alt="Product preview" 
-                      className="object-cover w-16 h-16 rounded"
-                    />
-                  )}
-                  <input
-                    type="file"
-                    name="image"
-                    accept="image/*"
-                    onChange={handleInputChange}
-                    className={`flex-1 p-2 border ${formErrors.image ? 'border-red-500' : 'border-gray-300'} rounded`}
-                  />
-                </div>
-                {formErrors.image && <p className="mt-1 text-xs text-red-500">{formErrors.image}</p>}
-              </div>
-              
-              <div className="flex justify-end gap-3 mt-6">
-                <button
-                  type="button"
-                  onClick={() => setShowUpdateModal(false)}
-                  className="px-4 py-2 text-gray-700 bg-gray-200 rounded hover:bg-gray-300 focus:outline-none"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700 focus:outline-none"
-                >
-                  Update Item
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+          <div className="bg-white rounded-lg shadow-lg w-96">
+            <form
+              onSubmit={showAddModal ? handleAddProduct : handleUpdate}
+              className="p-6"
+            >
+              <h2 className="mb-4 text-xl font-bold text-green-700">
+                {showAddModal ? "Add New Item" : "Edit Item"}
+              </h2>
 
-      {/* Add Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-lg">
-            <h2 className="mb-4 text-xl font-bold text-green-700">Add New Item</h2>
-            
-            <form onSubmit={handleAddProduct}>
               <div className="mb-4">
-                <label className="block mb-2 text-sm font-medium text-gray-700">Title</label>
+                <label
+                  htmlFor="title"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Title
+                </label>
                 <input
                   type="text"
+                  id="title"
                   name="title"
                   value={formData.title}
                   onChange={handleInputChange}
-                  className={`w-full p-2 border ${formErrors.title ? 'border-red-500' : 'border-gray-300'} rounded`}
+                  className="w-full p-3 mt-1 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
-                {formErrors.title && <p className="mt-1 text-xs text-red-500">{formErrors.title}</p>}
+                {formErrors.title && <span className="text-sm text-red-500">{formErrors.title}</span>}
               </div>
-              
+
               <div className="mb-4">
-                <label className="block mb-2 text-sm font-medium text-gray-700">Original Price</label>
+                <label
+                  htmlFor="price"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Price (Rs.)
+                </label>
                 <input
                   type="number"
+                  id="price"
                   name="price"
-                  placeholder="Original Price"
                   value={formData.price}
                   onChange={handleInputChange}
-                  className={`w-full p-2 border ${formErrors.price ? 'border-red-500' : 'border-gray-300'} rounded`}
+                  className="w-full p-3 mt-1 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
-                {formErrors.price && <p className="mt-1 text-xs text-red-500">{formErrors.price}</p>}
+                {formErrors.price && <span className="text-sm text-red-500">{formErrors.price}</span>}
               </div>
-              
+
               <div className="mb-4">
-                <label className="block mb-2 text-sm font-medium text-gray-700">Discount (%)</label>
+                <label
+                  htmlFor="discount"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Discount (%) 
+                </label>
                 <input
                   type="number"
+                  id="discount"
                   name="discount"
-                  placeholder="Discount %"
                   value={formData.discount}
                   onChange={handleInputChange}
-                  className={`w-full p-2 border ${formErrors.discount ? 'border-red-500' : 'border-gray-300'} rounded`}
-                  min="0"
-                  max="100"
+                  className="w-full p-3 mt-1 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
-                {formErrors.discount && <p className="mt-1 text-xs text-red-500">{formErrors.discount}</p>}
+                {formErrors.discount && <span className="text-sm text-red-500">{formErrors.discount}</span>}
               </div>
-              
+
               <div className="mb-4">
-                <label className="block mb-2 text-sm font-medium text-gray-700">Image</label>
-                <div className="flex items-center gap-4">
-                  {formData.imageUrl && (
-                    <img 
-                      src={formData.imageUrl} 
-                      alt="Product preview" 
-                      className="object-cover w-16 h-16 rounded"
-                    />
-                  )}
-                  <input
-                    type="file"
-                    name="image"
-                    accept="image/*"
-                    onChange={handleInputChange}
-                    className={`flex-1 p-2 border ${formErrors.image ? 'border-red-500' : 'border-gray-300'} rounded`}
-                  />
-                </div>
-                {formErrors.image && <p className="mt-1 text-xs text-red-500">{formErrors.image}</p>}
-              </div>
-              
-              <div className="flex justify-end gap-3 mt-6">
-                <button
-                  type="button"
-                  onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 text-gray-700 bg-gray-200 rounded hover:bg-gray-300 focus:outline-none"
+                <label
+                  htmlFor="stock"
+                  className="block text-sm font-medium text-gray-700"
                 >
-                  Cancel
-                </button>
+                  Available Stock
+                </label>
+                <input
+                  type="number"
+                  id="stock"
+                  name="stock"
+                  value={formData.stock}
+                  onChange={handleInputChange}
+                  className="w-full p-3 mt-1 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+                {formErrors.stock && <span className="text-sm text-red-500">{formErrors.stock}</span>}
+              </div>
+
+              <div className="mb-4">
+                <label
+                  htmlFor="image"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Image
+                </label>
+                <input
+                  type="file"
+                  id="image"
+                  name="image"
+                  accept="image/*"
+                  onChange={handleInputChange}
+                  className="w-full p-3 mt-1 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+                {formErrors.image && <span className="text-sm text-red-500">{formErrors.image}</span>}
+              </div>
+
+              <div className="flex justify-between gap-4">
                 <button
                   type="submit"
-                  className="px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700 focus:outline-none"
+                  className="px-6 py-2 text-white bg-green-600 rounded-lg focus:outline-none"
                 >
-                  Add Item
+                  {showAddModal ? "Add Item" : "Update Item"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddModal(false);
+                    setShowUpdateModal(false);
+                  }}
+                  className="px-6 py-2 text-white bg-gray-600 rounded-lg focus:outline-none"
+                >
+                  Cancel
                 </button>
               </div>
             </form>

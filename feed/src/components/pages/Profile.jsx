@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/solid';
 
 export default function Profile() {
   const [user, setUser] = useState({
@@ -104,33 +103,83 @@ export default function Profile() {
         setShowImageSuccess(true);
         setTimeout(() => setShowImageSuccess(false), 3000);
       };
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(file); 
     }
   };
 
+  // Handle logout
+  const handleLogout = () => {
+    // Perform logout logic (like clearing sessionStorage or localStorage, etc.)
+    navigate('/login');
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
-        <div className="bg-white shadow rounded-lg overflow-hidden">
+    <div className="flex min-h-screen px-4 py-12 bg-gray-50 sm:px-6 lg:px-8">
+      {/* Sidebar */}
+      <div className="w-1/4 px-6 py-8 text-white bg-gray-800">
+        <h2 className="mb-8 text-xl font-bold">Dashboard</h2>
+        <div className="space-y-4">
+          <button
+            onClick={() => navigate('/my-items')}
+            className="w-full px-4 py-2 text-left rounded-md hover:bg-gray-700"
+          >
+            My Items
+          </button>
+          <button
+            onClick={() => navigate('/my-posts')}
+            className="w-full px-4 py-2 text-left rounded-md hover:bg-gray-700"
+          >
+            My Posts
+          </button>
+          <button
+            onClick={() => navigate('/listed-items')}
+            className="w-full px-4 py-2 text-left rounded-md hover:bg-gray-700"
+          >
+            Listed Items
+          </button>
+          <button
+            onClick={() => navigate('/my-orders')}
+            className="w-full px-4 py-2 text-left rounded-md hover:bg-gray-700"
+          >
+            My Orders
+          </button>
+          <button
+            onClick={() => navigate('/notices')}
+            className="w-full px-4 py-2 text-left rounded-md hover:bg-gray-700"
+          >
+            Notices
+          </button>
+          <button
+            onClick={handleLogout}
+            className="w-full px-4 py-2 mt-8 text-left bg-red-500 rounded-md hover:bg-red-600"
+          >
+            Logout
+          </button>
+        </div>
+      </div>
+
+      {/* Profile Content */}
+      <div className="w-3/4 max-w-3xl mx-auto">
+        <div className="overflow-hidden bg-white rounded-lg shadow">
           {/* Profile Header */}
-          <div className="bg-emerald-500 px-6 py-8 text-center">
-            <div className="relative mx-auto w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg">
+          <div className="px-6 py-8 text-center bg-emerald-500">
+            <div className="relative w-32 h-32 mx-auto overflow-hidden border-4 border-white rounded-full shadow-lg">
               {user.profilePhoto ? (
                 <img 
                   src={user.profilePhoto} 
                   alt="Profile" 
-                  className="w-full h-full object-cover"
+                  className="object-cover w-full h-full"
                 />
               ) : (
-                <div className="w-full h-full bg-gray-200 flex items-center justify-center text-4xl text-gray-600">
+                <div className="flex items-center justify-center w-full h-full text-4xl text-gray-600 bg-gray-200">
                   {user.name.charAt(0).toUpperCase()}
                 </div>
               )}
               <button
                 onClick={() => document.getElementById('profile-photo').click()}
-                className="absolute inset-0 w-full h-full opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-end justify-center"
+                className="absolute inset-0 flex items-end justify-center w-full h-full transition-opacity duration-300 opacity-0 hover:opacity-100"
               >
-                <span className="w-full bg-black bg-opacity-50 text-white text-sm py-2">
+                <span className="w-full py-2 text-sm text-white bg-black bg-opacity-50">
                   Change Photo
                 </span>
               </button>
@@ -149,41 +198,41 @@ export default function Profile() {
           {/* Profile Details */}
           <div className="px-6 py-8">
             <div className="mb-8">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Profile Information</h2>
+              <h2 className="mb-4 text-xl font-semibold text-gray-800">Profile Information</h2>
               
               <div className="space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center border-b border-gray-200 py-3">
-                  <span className="text-gray-600 font-medium sm:w-1/4">Name</span>
+                <div className="flex flex-col py-3 border-b border-gray-200 sm:flex-row sm:items-center">
+                  <span className="font-medium text-gray-600 sm:w-1/4">Name</span>
                   <span className="sm:w-2/4">{user.name}</span>
                 </div>
                 
-                <div className="flex flex-col sm:flex-row sm:items-center border-b border-gray-200 py-3">
-                  <span className="text-gray-600 font-medium sm:w-1/4">Email</span>
+                <div className="flex flex-col py-3 border-b border-gray-200 sm:flex-row sm:items-center">
+                  <span className="font-medium text-gray-600 sm:w-1/4">Email</span>
                   <span className="sm:w-2/4">{user.email}</span>
                 </div>
                 
-                <div className="flex flex-col sm:flex-row sm:items-center border-b border-gray-200 py-3">
-                  <span className="text-gray-600 font-medium sm:w-1/4">Password</span>
+                <div className="flex flex-col py-3 border-b border-gray-200 sm:flex-row sm:items-center">
+                  <span className="font-medium text-gray-600 sm:w-1/4">Password</span>
                   <span className="sm:w-2/4">{user.password}</span>
                 </div>
                 
-                <div className="flex flex-col sm:flex-row sm:items-center border-b border-gray-200 py-3">
-                  <span className="text-gray-600 font-medium sm:w-1/4">Join Date</span>
+                <div className="flex flex-col py-3 border-b border-gray-200 sm:flex-row sm:items-center">
+                  <span className="font-medium text-gray-600 sm:w-1/4">Join Date</span>
                   <span className="sm:w-2/4">{user.joinDate}</span>
                 </div>
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col gap-4 sm:flex-row">
               <button
                 onClick={handleEditClick}
-                className="px-4 py-2 bg-emerald-500 text-white rounded-md hover:bg-emerald-600 transition"
+                className="px-4 py-2 text-white transition rounded-md bg-emerald-500 hover:bg-emerald-600"
               >
                 Update Profile
               </button>
               <button
                 onClick={() => setShowDeleteConfirm(true)}
-                className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition"
+                className="px-4 py-2 text-white transition bg-red-500 rounded-md hover:bg-red-600"
               >
                 Delete Account
               </button>
@@ -191,139 +240,6 @@ export default function Profile() {
           </div>
         </div>
       </div>
-
-      {/* Edit Modal */}
-      {isEditModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <h3 className="text-lg font-semibold mb-4">Update Profile</h3>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                <input
-                  type="text"
-                  name="name"
-                  value={editData.name}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md ${
-                    errors.name ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                />
-                {errors.name && (
-                  <p className="mt-1 text-sm text-red-600">{errors.name}</p>
-                )}
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={editData.email}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md ${
-                    errors.email ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                />
-                {errors.email && (
-                  <p className="mt-1 text-sm text-red-600">{errors.email}</p>
-                )}
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
-                <input
-                  type="password"
-                  name="password"
-                  value={editData.password}
-                  onChange={handleInputChange}
-                  placeholder="Leave blank to keep current"
-                  className={`w-full px-3 py-2 border rounded-md ${
-                    errors.password ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                />
-                {errors.password && (
-                  <p className="mt-1 text-sm text-red-600">{errors.password}</p>
-                )}
-              </div>
-            </div>
-            
-            <div className="mt-6 flex justify-end space-x-3">
-              <button
-                onClick={() => setIsEditModalOpen(false)}
-                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveChanges}
-                className="px-4 py-2 bg-emerald-500 text-white rounded-md hover:bg-emerald-600"
-              >
-                Save Changes
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <h3 className="text-lg font-semibold mb-4">Delete Account</h3>
-            <p className="text-gray-600 mb-6">Are you sure you want to delete your account? This action cannot be undone.</p>
-            
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDeleteAccount}
-                className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
-              >
-                Delete Account
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Success Modal */}
-      {showDeleteSuccess && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 text-center">
-            <CheckCircleIcon className="h-12 w-12 text-emerald-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Account Deleted Successfully</h3>
-            <p className="text-gray-600">You will be redirected to the home page.</p>
-          </div>
-        </div>
-      )}
-
-      {/* Success Messages */}
-      {showSuccess && (
-        <div className="fixed bottom-4 right-4 bg-emerald-500 text-white px-4 py-2 rounded-md shadow-lg z-50 flex items-center">
-          <CheckCircleIcon className="h-5 w-5 mr-2" />
-          Profile updated successfully!
-        </div>
-      )}
-
-      {showImageSuccess && (
-        <div className="fixed bottom-4 right-4 bg-emerald-500 text-white px-4 py-2 rounded-md shadow-lg z-50 flex items-center">
-          <CheckCircleIcon className="h-5 w-5 mr-2" />
-          Profile image uploaded successfully!
-        </div>
-      )}
-
-      {errors.profilePhoto && (
-        <div className="fixed bottom-4 right-4 bg-red-500 text-white px-4 py-2 rounded-md shadow-lg z-50 flex items-center">
-          <XCircleIcon className="h-5 w-5 mr-2" />
-          {errors.profilePhoto}
-        </div>
-      )}
     </div>
   );
 }
