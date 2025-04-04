@@ -4,9 +4,8 @@ import User from '../models/userModel.js';
 import { validateEmail, validatePassword } from '../utils/validateInput.js';
 
 export const signUp = async (req, res) => {
-  const { username, email, password } = req.body;
+  const { name, email, password } = req.body;
 
-  // Validate inputs
   if (!validateEmail(email)) {
     return res.status(400).json({ message: 'Invalid email format' });
   }
@@ -15,34 +14,34 @@ export const signUp = async (req, res) => {
   }
 
   try {
-    // Check if email or username exists
-    const existingEmail = await User.findOne({ email });
-    if (existingEmail) {
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
       return res.status(400).json({ message: 'Email already in use' });
     }
 
-    const existingUsername = await User.findOne({ username });
-    if (existingUsername) {
-      return res.status(400).json({ message: 'Username already taken' });
-    }
-
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = new User({
-      username,
+      name,
       email,
       password: hashedPassword,
     });
 
     await user.save();
 
-    // Generate JWT token
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-    res.status(201).json({ token, user: { id: user._id, username: user.username, email: user.email } });
+    res.status(201).json({ 
+      token, 
+      user: { 
+        id: user._id, 
+        name: user.name, 
+        email: user.email,
+        profilePhoto: user.profilePhoto,
+        joinDate: user.createdAt
+      } 
+    });
   } catch (error) {
-    console.error('Signup error:', error);
     res.status(500).json({ message: 'Failed to create account', error: error.message });
   }
 };
@@ -65,10 +64,15 @@ export const signIn = async (req, res) => {
     
     res.status(200).json({ 
       token, 
-      user: { id: user._id, username: user.username, email: user.email } 
+      user: { 
+        id: user._id, 
+        name: user.name, 
+        email: user.email,
+        profilePhoto: user.profilePhoto,
+        joinDate: user.createdAt
+      } 
     });
   } catch (error) {
-    console.error('Signin error:', error);
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 };

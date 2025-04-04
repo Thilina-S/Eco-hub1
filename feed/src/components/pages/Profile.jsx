@@ -1,13 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/solid';
 
 export default function Profile() {
   const [user, setUser] = useState({
-    name: 'John Doe',
-    email: 'john@example.com',
+    name: 'Loading...',
+    email: 'Loading...',
     password: '********',
-    joinDate: '2023-05-15',
+    joinDate: 'Loading...',
     profilePhoto: null
   });
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -17,15 +17,57 @@ export default function Profile() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
   const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/profile`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            localStorage.removeItem('token');
+            navigate('/login');
+          }
+          throw new Error(`Request failed: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setUser({
+          ...data.user,
+          password: '********',
+          joinDate: new Date(data.user.joinDate).toLocaleDateString()
+        });
+      } catch (error) {
+        console.error('Profile fetch error:', error);
+        setErrors({ api: error.message });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [navigate]);
 
   const validateForm = () => {
     const newErrors = {};
-    if (!editData.name) newErrors.name = 'Name is required';
-    if (!editData.email) {
+    if (!editData.name?.trim()) newErrors.name = 'Name is required';
+    if (!editData.email?.trim()) {
       newErrors.email = 'Email is required';
     } else if (!/^\S+@\S+\.\S+$/.test(editData.email)) {
-      newErrors.email = 'Email is invalid';
+      newErrors.email = 'Invalid email format';
     }
     if (editData.password && editData.password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters';
@@ -45,98 +87,174 @@ export default function Profile() {
   };
 
   const handleInputChange = (e) => {
-    setEditData({
-      ...editData,
-      [e.target.name]: e.target.value
-    });
-    // Clear error when user types
-    if (errors[e.target.name]) {
-      setErrors({
-        ...errors,
-        [e.target.name]: null
-      });
-    }
+    const { name, value } = e.target;
+    setEditData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    setErrors(prev => ({ ...prev, [name]: null }));
   };
 
-  const handleSaveChanges = () => {
+  const handleSaveChanges = async () => {
     if (!validateForm()) return;
-    
-    setUser({
-      ...user,
-      name: editData.name,
-      email: editData.email,
-      password: editData.password || user.password
-    });
-    setIsEditModalOpen(false);
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 3000);
-  };
 
-  const handleDeleteAccount = () => {
-    // Simulate account deletion
-    setShowDeleteConfirm(false);
-    setShowDeleteSuccess(true);
-    
-    // Redirect after showing success message
-    setTimeout(() => {
-      navigate('/');
-    }, 2000);
-  };
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: editData.name,
+          email: editData.email,
+          password: editData.password || undefined
+        })
+      });
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (!file.type.match('image.*')) {
-        setErrors({...errors, profilePhoto: 'Please select an image file'});
-        return;
-      }
-      if (file.size > 2 * 1024 * 1024) {
-        setErrors({...errors, profilePhoto: 'File size should be less than 2MB'});
-        return;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Update failed');
       }
 
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setUser({
-          ...user,
-          profilePhoto: reader.result
-        });
-        setShowImageSuccess(true);
-        setTimeout(() => setShowImageSuccess(false), 3000);
-      };
-      reader.readAsDataURL(file);
+      const data = await response.json();
+      setUser({
+        ...data.user,
+        password: '********'
+      });
+      setIsEditModalOpen(false);
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+    } catch (error) {
+      console.error('Update error:', error);
+      setErrors({ api: error.message });
     }
   };
+
+  const handleDeleteAccount = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/profile`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Account deletion failed');
+      }
+
+      localStorage.removeItem('token');
+      setShowDeleteConfirm(false);
+      setShowDeleteSuccess(true);
+      setTimeout(() => navigate('/'), 2000);
+    } catch (error) {
+      console.error('Delete error:', error);
+      setErrors({ api: error.message });
+    }
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.match('image.*')) {
+      setErrors({...errors, profilePhoto: 'Please select an image file'});
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setErrors({...errors, profilePhoto: 'File size should be less than 2MB'});
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append('profilePhoto', file);
+
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/profile/photo`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to upload photo');
+      }
+
+      setUser(prev => ({
+        ...prev,
+        profilePhoto: data.profilePhoto
+      }));
+      setShowImageSuccess(true);
+      setTimeout(() => setShowImageSuccess(false), 3000);
+    } catch (error) {
+      console.error('Upload error:', error);
+      setErrors({...errors, profilePhoto: error.message});
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="w-16 h-16 border-4 rounded-full border-emerald-500 border-t-transparent animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
       <div className="w-64 py-8 text-white bg-gray-800">
-        <h2 className="text-2xl font-semibold text-center text-white">Dashboard</h2>
+        <h2 className="text-2xl font-semibold text-center">Dashboard</h2>
         <nav className="mt-8">
           <ul>
             <li>
-              <button className="w-full py-2 pl-6 text-left hover:bg-gray-700" onClick={() => navigate('/myposts')}>
+              <button 
+                className="w-full py-2 pl-6 text-left hover:bg-gray-700"
+                onClick={() => navigate('/myposts')}
+              >
                 My Posts
               </button>
             </li>
             <li>
-              <button className="w-full py-2 pl-6 text-left hover:bg-gray-700" onClick={() => navigate('/myitems')}>
+              <button 
+                className="w-full py-2 pl-6 text-left hover:bg-gray-700"
+                onClick={() => navigate('/myitems')}
+              >
                 My Listed Items
               </button>
             </li>
             <li>
-              <button className="w-full py-2 pl-6 text-left hover:bg-gray-700" onClick={() => navigate('/myorders')}>
+              <button 
+                className="w-full py-2 pl-6 text-left hover:bg-gray-700"
+                onClick={() => navigate('/myorders')}
+              >
                 My Orders
               </button>
             </li>
             <li>
-              <button className="w-full py-2 pl-6 text-left hover:bg-gray-700" onClick={() => navigate('/notices')}>
+              <button 
+                className="w-full py-2 pl-6 text-left hover:bg-gray-700"
+                onClick={() => navigate('/notices')}
+              >
                 Notices
               </button>
             </li>
             <li>
-              <button className="w-full py-2 pl-6 text-left hover:bg-gray-700" onClick={() => navigate('/logout')}>
+              <button 
+                className="w-full py-2 pl-6 text-left hover:bg-gray-700"
+                onClick={() => {
+                  localStorage.removeItem('token');
+                  navigate('/login');
+                }}
+              >
                 Logout
               </button>
             </li>
@@ -144,8 +262,8 @@ export default function Profile() {
         </nav>
       </div>
 
-      {/* Profile Content */}
-      <div className="flex-1 px-4 py-12 bg-gray-50 sm:px-6 lg:px-8">
+      {/* Main Content */}
+      <div className="flex-1 px-4 py-12 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto">
           <div className="overflow-hidden bg-white rounded-lg shadow">
             {/* Profile Header */}
@@ -204,7 +322,7 @@ export default function Profile() {
                   </div>
                   
                   <div className="flex flex-col py-3 border-b border-gray-200 sm:flex-row sm:items-center">
-                    <span className="font-medium text-gray-600 sm:w-1/4">Join Date</span>
+                    <span className="font-medium text-gray-600 sm:w-1/4">Member Since</span>
                     <span className="sm:w-2/4">{user.joinDate}</span>
                   </div>
                 </div>
@@ -224,127 +342,100 @@ export default function Profile() {
                   Delete Account
                 </button>
               </div>
+
+              {errors.api && (
+                <div className="p-3 mt-4 text-sm text-red-600 rounded-md bg-red-50">
+                  {errors.api}
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         {/* Edit Modal */}
         {isEditModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-            <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-xl">
-              <h3 className="mb-4 text-lg font-semibold">Update Profile</h3>
-              <div className="space-y-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-600 bg-opacity-50">
+            <div className="w-full max-w-lg p-8 bg-white rounded-lg">
+              <h2 className="text-xl font-semibold text-gray-800">Edit Profile</h2>
+              <form className="mt-4">
                 <div>
-                  <label className="block mb-1 text-sm font-medium text-gray-700">Name</label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={editData.name}
-                    onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md ${errors.name ? 'border-red-500' : 'border-gray-300'}`}
+                  <label htmlFor="name" className="text-sm font-medium text-gray-600">Name</label>
+                  <input 
+                    id="name" 
+                    name="name" 
+                    type="text" 
+                    value={editData.name || ''} 
+                    onChange={handleInputChange} 
+                    className="w-full p-2 mt-1 border border-gray-300 rounded-md"
                   />
-                  {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
+                  {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
                 </div>
-                
-                <div>
-                  <label className="block mb-1 text-sm font-medium text-gray-700">Email</label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={editData.email}
-                    onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md ${errors.email ? 'border-red-500' : 'border-gray-300'}`}
+
+                <div className="mt-4">
+                  <label htmlFor="email" className="text-sm font-medium text-gray-600">Email</label>
+                  <input 
+                    id="email" 
+                    name="email" 
+                    type="email" 
+                    value={editData.email || ''} 
+                    onChange={handleInputChange} 
+                    className="w-full p-2 mt-1 border border-gray-300 rounded-md"
                   />
-                  {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
+                  {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email}</p>}
                 </div>
-                
-                <div>
-                  <label className="block mb-1 text-sm font-medium text-gray-700">New Password</label>
-                  <input
-                    type="password"
-                    name="password"
-                    value={editData.password}
-                    onChange={handleInputChange}
+
+                <div className="mt-4">
+                  <label htmlFor="password" className="text-sm font-medium text-gray-600">New Password</label>
+                  <input 
+                    id="password" 
+                    name="password" 
+                    type="password" 
                     placeholder="Leave blank to keep current"
-                    className={`w-full px-3 py-2 border rounded-md ${errors.password ? 'border-red-500' : 'border-gray-300'}`}
+                    value={editData.password || ''} 
+                    onChange={handleInputChange} 
+                    className="w-full p-2 mt-1 border border-gray-300 rounded-md"
                   />
-                  {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
+                  {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password}</p>}
                 </div>
-              </div>
-              
-              <div className="flex justify-end mt-6 space-x-3">
-                <button
-                  onClick={() => setIsEditModalOpen(false)}
-                  className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSaveChanges}
-                  className="px-4 py-2 text-white rounded-md bg-emerald-500 hover:bg-emerald-600"
-                >
-                  Save Changes
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
-        {/* Delete Confirmation Modal */}
-        {showDeleteConfirm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-            <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-xl">
-              <h3 className="mb-4 text-lg font-semibold">Delete Account</h3>
-              <p className="mb-6 text-gray-600">Are you sure you want to delete your account? This action cannot be undone.</p>
-              
-              <div className="flex justify-end space-x-3">
-                <button
-                  onClick={() => setShowDeleteConfirm(false)}
-                  className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleDeleteAccount}
-                  className="px-4 py-2 text-white bg-red-500 rounded-md hover:bg-red-600"
-                >
-                  Delete Account
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Delete Success Modal */}
-        {showDeleteSuccess && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-            <div className="w-full max-w-md p-6 text-center bg-white rounded-lg shadow-xl">
-              <CheckCircleIcon className="w-12 h-12 mx-auto mb-4 text-emerald-500" />
-              <h3 className="mb-2 text-lg font-semibold">Account Deleted Successfully</h3>
-              <p className="text-gray-600">You will be redirected to the home page.</p>
+                <div className="flex justify-end gap-4 mt-6">
+                  <button 
+                    type="button"
+                    onClick={() => setIsEditModalOpen(false)} 
+                    className="px-4 py-2 text-sm text-gray-600 transition bg-gray-200 rounded-md hover:bg-gray-300"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveChanges}
+                    className="px-4 py-2 text-sm text-white transition rounded-md bg-emerald-500 hover:bg-emerald-600"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}
 
         {/* Success Messages */}
         {showSuccess && (
-          <div className="fixed z-50 flex items-center px-4 py-2 text-white rounded-md shadow-lg bottom-4 right-4 bg-emerald-500">
+          <div className="fixed z-50 p-4 text-sm font-medium text-white bg-green-500 rounded-lg shadow-lg bottom-4 right-4">
             <CheckCircleIcon className="w-5 h-5 mr-2" />
             Profile updated successfully!
           </div>
         )}
-
         {showImageSuccess && (
-          <div className="fixed z-50 flex items-center px-4 py-2 text-white rounded-md shadow-lg bottom-4 right-4 bg-emerald-500">
+          <div className="fixed z-50 p-4 text-sm font-medium text-white bg-green-500 rounded-lg shadow-lg bottom-4 right-4">
             <CheckCircleIcon className="w-5 h-5 mr-2" />
-            Profile image uploaded successfully!
+            Profile photo updated!
           </div>
         )}
-
-        {errors.profilePhoto && (
-          <div className="fixed z-50 flex items-center px-4 py-2 text-white bg-red-500 rounded-md shadow-lg bottom-4 right-4">
+        {showDeleteSuccess && (
+          <div className="fixed z-50 p-4 text-sm font-medium text-white bg-red-500 rounded-lg shadow-lg bottom-4 right-4">
             <XCircleIcon className="w-5 h-5 mr-2" />
-            {errors.profilePhoto}
+            Your account was deleted successfully!
           </div>
         )}
       </div>

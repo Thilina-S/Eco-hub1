@@ -1,13 +1,11 @@
 import mongoose from 'mongoose';
 
 const userSchema = new mongoose.Schema({
-  username: { 
-    type: String, 
+  name: {
+    type: String,
     required: true,
-    unique: true,
     trim: true,
-    minlength: 3,
-    maxlength: 30
+    maxlength: 50
   },
   email: { 
     type: String, 
@@ -21,6 +19,14 @@ const userSchema = new mongoose.Schema({
     required: true,
     minlength: 6
   },
+  profilePhoto: {
+    type: String,
+    default: null
+  },
+  joinDate: {
+    type: Date,
+    default: Date.now
+  }
 }, {
   timestamps: true
 });
