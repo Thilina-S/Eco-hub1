@@ -18,7 +18,7 @@ import MyItems from "./components/pages/MyItems.jsx";
 import MyPosts from "./components/pages/MyPosts.jsx";
 import Wishlist from "./components/pages/Wishlist.jsx";
 import AdminDashboard from "./components/pages/AdminDashboard.jsx";
-
+import Logout from "./components/pages/logout.jsx";
 function App() {
   return (
     <Router>
@@ -43,6 +43,7 @@ function App() {
             <Route path="/myposts" element={<MyPosts />} />
             <Route path="/wishlist" element={<Wishlist />} />
             <Route path="/admindashboard" element={<AdminDashboard />} />
+            <Route path="/logout" element={<Logout />} />
           </Routes>
         </main>
         <Footer />

@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
-import profileRoutes from './routes/profileRoutes.js';
+import profileRoutes from './routes/profileRoutes.js'; // Assuming profileRoutes exists
 
 dotenv.config();
 
@@ -15,7 +15,7 @@ app.use(express.json());
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/profile', profileRoutes);
+app.use('/api/profile', profileRoutes); // Assuming you will create profile routes
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

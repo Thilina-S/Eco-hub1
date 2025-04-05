@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { BsFillEyeFill, BsFillEyeSlashFill } from "react-icons/bs";
-import SignUpImage from "../../../public/Signup.png"; // Corrected image import
+import SignUpImage from "../../../public/Signup.png";
 
 export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
-    username: "",
+    name: "",
     email: "",
     password: "",
   });
@@ -15,7 +15,7 @@ export default function SignUp() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  const API_URL = import.meta.env.VITE_API_URL;
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
@@ -26,13 +26,13 @@ export default function SignUp() {
     let tempErrors = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    if (!formData.username) {
-      tempErrors.username = "Username is required";
-    } else if (formData.username.length < 3) {
-      tempErrors.username = "Username must be at least 3 characters";
+    if (!formData.name.trim()) {
+      tempErrors.name = "Name is required";
+    } else if (formData.name.length < 3) {
+      tempErrors.name = "Name must be at least 3 characters";
     }
 
-    if (!formData.email) {
+    if (!formData.email.trim()) {
       tempErrors.email = "Email is required";
     } else if (!emailRegex.test(formData.email)) {
       tempErrors.email = "Please enter a valid email address";
@@ -64,14 +64,23 @@ export default function SignUp() {
 
       const data = await response.json();
 
-      if (response.ok) {
-        setShowSuccessPopup(true);
-        setTimeout(() => {
-          navigate("/signin");
-        }, 1500);
-      } else {
-        setErrors({ server: data.message || "Registration failed" });
+      if (!response.ok) {
+        if (data.errors) {
+          const serverErrors = {};
+          data.errors.forEach(err => {
+            serverErrors[err.path] = err.msg;
+          });
+          setErrors(serverErrors);
+        } else {
+          setErrors({ server: data.message || "Failed to create account" });
+        }
+        return;
       }
+
+      setShowSuccessPopup(true);
+      setTimeout(() => {
+        navigate("/signin");
+      }, 1500);
     } catch (error) {
       setErrors({ server: "Failed to connect to server" });
     } finally {
@@ -108,19 +117,19 @@ export default function SignUp() {
 
             <form className="space-y-6" onSubmit={handleSubmit}>
               <div>
-                <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                  Your Username
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                  Your Name
                 </label>
                 <input
-                  id="username"
-                  name="username"
+                  id="name"
+                  name="name"
                   type="text"
                   required
                   className="block w-full px-3 py-2 placeholder-gray-400 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                  value={formData.username}
+                  value={formData.name}
                   onChange={handleChange}
                 />
-                {errors.username && <p className="mt-1 text-sm text-red-500">{errors.username}</p>}
+                {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
               </div>
 
               <div>
