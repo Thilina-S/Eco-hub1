@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 export default function MyItems() {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
-  const [allProducts, setAllProducts] = useState([]);
   const [message, setMessage] = useState("");
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -16,21 +15,23 @@ export default function MyItems() {
     discount: "",
     image: null,
     imageUrl: "",
-    stock: "", // Added stock field
+    stock: "",
   });
   const [formErrors, setFormErrors] = useState({});
 
-  // Load products from localStorage
+  // Fetch products from backend
   useEffect(() => {
-    const savedProducts = localStorage.getItem("products");
-    if (savedProducts) {
-      const allProductsList = JSON.parse(savedProducts);
-      setAllProducts(allProductsList);
-      
-      // Only get custom added products (those after the first 5 initial products)
-      const customProducts = allProductsList.slice(5);
-      setProducts(customProducts);
-    }
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/products`);
+        if (!response.ok) throw new Error('Failed to fetch products');
+        const data = await response.json();
+        setProducts(data);
+      } catch (error) {
+        showPopup(error.message);
+      }
+    };
+    fetchProducts();
   }, []);
 
   // Clear message after 3 seconds
@@ -43,22 +44,22 @@ export default function MyItems() {
 
   const showPopup = (msg) => setMessage(msg);
 
-  const handleDelete = (index) => {
-    // Need to get all products first
-    const realIndex = index + 5; // to account for initial products
-    const updatedAllProducts = allProducts.filter((_, i) => i !== realIndex);
-    
-    // Save back to localStorage
-    localStorage.setItem("products", JSON.stringify(updatedAllProducts));
-    
-    // Update states
-    setAllProducts(updatedAllProducts);
-    setProducts(products.filter((_, i) => i !== index));
-    showPopup("Item deleted successfully!");
+  const handleDelete = async (id) => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/products/${id}`, {
+        method: 'DELETE'
+      });
+      
+      if (!response.ok) throw new Error('Failed to delete product');
+      
+      setProducts(products.filter(product => product._id !== id));
+      showPopup("Product deleted successfully!");
+    } catch (error) {
+      showPopup(error.message);
+    }
   };
 
-  const handleUpdateClick = (index) => {
-    const product = products[index];
+  const handleUpdateClick = (product) => {
     const originalPrice = Math.round(
       product.price / (1 - product.discount / 100)
     );
@@ -67,11 +68,11 @@ export default function MyItems() {
       title: product.title,
       price: originalPrice,
       discount: product.discount,
-      imageUrl: product.image,
-      stock: product.stock, // Set stock in formData
+      imageUrl: product.imageUrl,
+      stock: product.stock,
     });
     
-    setSelectedProduct(index);
+    setSelectedProduct(product);
     setShowUpdateModal(true);
     setFormErrors({});
   };
@@ -83,7 +84,7 @@ export default function MyItems() {
       discount: "",
       image: null,
       imageUrl: "",
-      stock: "", // Initialize stock field
+      stock: "",
     });
     setShowAddModal(true);
     setFormErrors({});
@@ -142,92 +143,86 @@ export default function MyItems() {
     return Object.keys(errors).length === 0;
   };
 
-  const handleUpdate = (e) => {
+  const handleUpdate = async (e) => {
     e.preventDefault();
     
     if (!validateForm()) {
       return;
     }
     
-    // Calculate the final price
-    const originalPrice = parseFloat(formData.price);
-    const discount = parseFloat(formData.discount);
-    const finalPrice = Math.round(
-      originalPrice - originalPrice * (discount / 100)
-    );
+    try {
+      const updatedData = {
+        title: formData.title,
+        price: parseFloat(formData.price),
+        discount: parseFloat(formData.discount),
+        stock: parseInt(formData.stock),
+      };
 
-    const updatedProduct = {
-      title: formData.title,
-      price: finalPrice,
-      discount: discount,
-      image: formData.imageUrl,
-      reviews: products[selectedProduct].reviews || [],
-      stock: parseInt(formData.stock), // Update stock here
-    };
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/products/${selectedProduct._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedData)
+      });
 
-    // The real index is selectedProduct + 5 (to account for initial products)
-    const realIndex = selectedProduct + 5;
-    const updatedAllProducts = [...allProducts];
-    updatedAllProducts[realIndex] = updatedProduct;
+      if (!response.ok) throw new Error('Failed to update product');
+
+      const updatedProduct = await response.json();
       
-    // Save back to localStorage
-    localStorage.setItem("products", JSON.stringify(updatedAllProducts));
-    
-    // Update states
-    setAllProducts(updatedAllProducts);
-    const newProducts = [...products];
-    newProducts[selectedProduct] = updatedProduct;
-    setProducts(newProducts);
-    
-    setShowUpdateModal(false);
-    showPopup("Item updated successfully!");
+      setProducts(products.map(p => 
+        p._id === updatedProduct._id ? updatedProduct : p
+      ));
+      
+      setShowUpdateModal(false);
+      showPopup("Product updated successfully!");
+    } catch (error) {
+      showPopup(error.message);
+    }
   };
 
-  const handleAddProduct = (e) => {
+  const handleAddProduct = async (e) => {
     e.preventDefault();
     
     if (!validateForm()) {
       return;
     }
     
-    // Calculate the final price
-    const originalPrice = parseFloat(formData.price);
-    const discount = parseFloat(formData.discount);
-    const finalPrice = Math.round(
-      originalPrice - originalPrice * (discount / 100)
-    );
+    try {
+      const formDataToSend = new FormData();
+      formDataToSend.append('title', formData.title);
+      formDataToSend.append('price', formData.price);
+      formDataToSend.append('discount', formData.discount);
+      formDataToSend.append('stock', formData.stock);
+      if (formData.image) {
+        formDataToSend.append('image', formData.image);
+      }
 
-    const newProduct = {
-      title: formData.title,
-      price: finalPrice,
-      discount: discount,
-      image: formData.imageUrl,
-      reviews: [],
-      stock: parseInt(formData.stock), // Add stock to new product
-    };
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/products`, {
+        method: 'POST',
+        body: formDataToSend,
+      });
 
-    // Add to all products
-    const updatedAllProducts = [...allProducts, newProduct];
-    
-    // Save back to localStorage
-    localStorage.setItem("products", JSON.stringify(updatedAllProducts));
-    
-    // Update states
-    setAllProducts(updatedAllProducts);
-    setProducts([...products, newProduct]);
-    
-    setShowAddModal(false);
-    showPopup("Item added successfully!");
-    
-    // Reset form
-    setFormData({
-      title: "",
-      price: "",
-      discount: "",
-      image: null,
-      imageUrl: "",
-      stock: "", // Reset stock
-    });
+      if (!response.ok) throw new Error('Failed to add product');
+
+      const newProduct = await response.json();
+      
+      setProducts([...products, newProduct]);
+      setShowAddModal(false);
+      showPopup("Product added successfully!");
+      
+      // Reset form
+      setFormData({
+        title: "",
+        price: "",
+        discount: "",
+        image: null,
+        imageUrl: "",
+        stock: "",
+      });
+    } catch (error) {
+      showPopup(error.message);
+    }
   };
 
   return (
@@ -269,21 +264,21 @@ export default function MyItems() {
                 <th className="p-3 text-left">Price (Rs.)</th>
                 <th className="p-3 text-left">Discount (%)</th>
                 <th className="p-3 text-left">Final Price (Rs.)</th>
-                <th className="p-3 text-left">Stock</th> {/* Added Stock column */}
+                <th className="p-3 text-left">Stock</th>
                 <th className="p-3 text-center">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {products.map((product, index) => {
+              {products.map((product) => {
                 const originalPrice = Math.round(
                   product.price / (1 - product.discount / 100)
                 );
                 
                 return (
-                  <tr key={index} className="border-b hover:bg-green-50">
+                  <tr key={product._id} className="border-b hover:bg-green-50">
                     <td className="p-3">
                       <img
-                        src={product.image}
+                        src={product.imageUrl}
                         alt={product.title}
                         className="object-cover w-16 h-16 rounded"
                       />
@@ -292,18 +287,18 @@ export default function MyItems() {
                     <td className="p-3">{originalPrice}</td>
                     <td className="p-3">{product.discount}</td>
                     <td className="p-3">{product.price}</td>
-                    <td className="p-3">{product.stock}</td> {/* Display Stock */}
+                    <td className="p-3">{product.stock}</td>
                     <td className="p-3">
                       <div className="flex items-center justify-center gap-3">
                         <button
-                          onClick={() => handleUpdateClick(index)}
+                          onClick={() => handleUpdateClick(product)}
                           className="p-2 text-white bg-blue-600 rounded-full hover:bg-blue-700 focus:outline-none"
                           aria-label="Edit"
                         >
                           <FaEdit />
                         </button>
                         <button
-                          onClick={() => handleDelete(index)}
+                          onClick={() => handleDelete(product._id)}
                           className="p-2 text-white bg-red-600 rounded-full hover:bg-red-700 focus:outline-none"
                           aria-label="Delete"
                         >
@@ -430,6 +425,16 @@ export default function MyItems() {
                 />
                 {formErrors.image && <span className="text-sm text-red-500">{formErrors.image}</span>}
               </div>
+
+              {formData.imageUrl && (
+                <div className="mb-4">
+                  <img 
+                    src={formData.imageUrl} 
+                    alt="Preview" 
+                    className="object-cover w-16 h-16 rounded"
+                  />
+                </div>
+              )}
 
               <div className="flex justify-between gap-4">
                 <button

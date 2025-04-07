@@ -2,61 +2,32 @@ import React, { useState, useEffect } from "react";
 import { FaHeart, FaShoppingCart } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 
-const initialProducts = [
-  {
-    id: 1,
-    title: "Leaf Rake",
-    price: 1275,
-    discount: 15,
-    stock: 10,
-    image: "../../../public/leaf-rake.jpg",
-  },
-  {
-    id: 2,
-    title: "Rake",
-    price: 1600,
-    discount: 20,
-    stock: 8,
-    image: "../../../public/rake.jpg",
-  },
-  {
-    id: 3,
-    title: "Recycle Bins",
-    price: 2400,
-    discount: 20,
-    stock: 5,
-    image: "../../../public/recycle bins.jpeg",
-  },
-  {
-    id: 4,
-    title: "Vaccum Garbage Collector",
-    price: 12750,
-    discount: 15,
-    stock: 2,
-    image: "../../../public/vaccum garbage collector.jpeg",
-  },
-  {
-    id: 5,
-    title: "Garbage Pickup Tool",
-    price: 1600,
-    discount: 20,
-    stock: 20,
-    image: "../../../public/pickeuu tool.jpeg",
-  },
-];
-
 export default function ProductGrid() {
   const navigate = useNavigate();
-
-  const [products, setProducts] = useState(() => {
-    const savedProducts = localStorage.getItem("products");
-    return savedProducts ? JSON.parse(savedProducts) : initialProducts;
-  });
-
+  const [products, setProducts] = useState([]);
   const [message, setMessage] = useState("");
   const [wishlist, setWishlist] = useState([]);
   const [cart, setCart] = useState([]);
+  const [loading, setLoading] = useState(true);
 
+  // Fetch products from backend
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/products`);
+        if (!response.ok) throw new Error('Failed to fetch products');
+        const data = await response.json();
+        setProducts(data);
+      } catch (error) {
+        showPopup(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
+
+  // Load wishlist and cart from localStorage
   useEffect(() => {
     const savedWishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
     const savedCart = JSON.parse(localStorage.getItem("cart") || "[]");
@@ -64,10 +35,7 @@ export default function ProductGrid() {
     setCart(savedCart);
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem("products", JSON.stringify(products));
-  }, [products]);
-
+  // Message timeout
   useEffect(() => {
     if (message) {
       const timeout = setTimeout(() => setMessage(""), 3000);
@@ -79,10 +47,10 @@ export default function ProductGrid() {
 
   const toggleWishlist = (product) => {
     let updatedWishlist;
-    const isInWishlist = wishlist.some((item) => item.id === product.id);
+    const isInWishlist = wishlist.some((item) => item._id === product._id);
 
     if (isInWishlist) {
-      updatedWishlist = wishlist.filter((item) => item.id !== product.id);
+      updatedWishlist = wishlist.filter((item) => item._id !== product._id);
       showPopup("Removed from wishlist");
     } else {
       updatedWishlist = [...wishlist, { ...product, quantity: 1 }];
@@ -95,10 +63,10 @@ export default function ProductGrid() {
 
   const toggleCart = (product) => {
     let updatedCart;
-    const isInCart = cart.some((item) => item.id === product.id);
+    const isInCart = cart.some((item) => item._id === product._id);
 
     if (isInCart) {
-      updatedCart = cart.filter((item) => item.id !== product.id);
+      updatedCart = cart.filter((item) => item._id !== product._id);
       showPopup("Removed from cart");
     } else {
       updatedCart = [...cart, { ...product, quantity: 1 }];
@@ -112,6 +80,14 @@ export default function ProductGrid() {
   const navigateToItemView = (product) => {
     navigate("/itemview", { state: { product } });
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-white">
+        <div className="text-xl font-semibold text-emerald-800">Loading products...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen px-4 py-8 bg-white sm:px-6">
@@ -149,7 +125,7 @@ export default function ProductGrid() {
           </div>
           <button
             onClick={() => navigate("/myitems")}
-            className="px-4 py-2 text-white bg-emerald-600 rounded shadow hover:bg-emerald-700"
+            className="px-4 py-2 text-white rounded shadow bg-emerald-600 hover:bg-emerald-700"
           >
             My Items
           </button>
@@ -158,19 +134,18 @@ export default function ProductGrid() {
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {products.map((product) => {
-          const isInWishlist = wishlist.some((item) => item.id === product.id);
-          const isInCart = cart.some((item) => item.id === product.id);
-          const discountedPrice =
-            product.price - (product.price * product.discount) / 100;
+          const isInWishlist = wishlist.some((item) => item._id === product._id);
+          const isInCart = cart.some((item) => item._id === product._id);
+          const discountedPrice = product.price - (product.price * product.discount) / 100;
 
           return (
             <div
-              key={product.id}
+              key={product._id}
               className="relative p-4 transition-transform duration-300 bg-white rounded-xl shadow-md hover:scale-[1.02]"
             >
               <div onClick={() => navigateToItemView(product)} className="cursor-pointer">
                 <img
-                  src={product.image}
+                  src={product.imageUrl || "/placeholder-product.jpg"}
                   alt={product.title}
                   className="object-cover w-full h-40 rounded-md sm:h-48 md:h-56"
                 />
