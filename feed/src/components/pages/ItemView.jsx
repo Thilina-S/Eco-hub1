@@ -15,13 +15,21 @@ export default function ItemView() {
   const [message, setMessage] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
-  // Load wishlist and cart from localStorage on component mount
+  // State for comments
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState("");
+  const [editingId, setEditingId] = useState(null);
+  const [editText, setEditText] = useState("");
+  
+  // Load wishlist, cart, and comments from localStorage
   useEffect(() => {
     const savedWishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
     const savedCart = JSON.parse(localStorage.getItem("cart") || "[]");
+    const savedComments = product?.id ? JSON.parse(localStorage.getItem(`comments_${product.id}`) || "[]") : [];
     setWishlist(savedWishlist);
     setCart(savedCart);
-  }, []);
+    setComments(savedComments);
+  }, [product?.id]);
   
   // Handle if no product is found
   if (!product) {
@@ -40,11 +48,9 @@ export default function ItemView() {
     );
   }
   
-  // Check if product is in wishlist or cart
+  // Product status checks
   const isInWishlist = wishlist.some(item => item.id === product.id);
   const isInCart = cart.some(item => item.id === product.id);
-  
-  // Calculate actual price after discount
   const discountedPrice = product.price - (product.price * product.discount / 100);
   
   // Show popup message
@@ -53,36 +59,66 @@ export default function ItemView() {
     setTimeout(() => setMessage(""), 3000);
   };
   
-  // Toggle wishlist status
+  // Wishlist and cart handlers
   const toggleWishlist = () => {
-    let updatedWishlist;
-    if (isInWishlist) {
-      updatedWishlist = wishlist.filter(item => item.id !== product.id);
-      showPopup("Removed from wishlist");
-    } else {
-      updatedWishlist = [...wishlist, {...product, quantity: 1}];
-      showPopup("Added to wishlist");
-    }
+    const updatedWishlist = isInWishlist
+      ? wishlist.filter(item => item.id !== product.id)
+      : [...wishlist, {...product, quantity: 1}];
     
     setWishlist(updatedWishlist);
     localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
+    showPopup(isInWishlist ? "Removed from wishlist" : "Added to wishlist");
   };
   
-  // Toggle cart status
   const toggleCart = () => {
-    let updatedCart;
-    if (isInCart) {
-      updatedCart = cart.filter(item => item.id !== product.id);
-      showPopup("Removed from cart");
-    } else {
-      updatedCart = [...cart, {...product, quantity: 1}];
-      showPopup("Added to cart");
-    }
+    const updatedCart = isInCart
+      ? cart.filter(item => item.id !== product.id)
+      : [...cart, {...product, quantity: 1}];
     
     setCart(updatedCart);
     localStorage.setItem("cart", JSON.stringify(updatedCart));
+    showPopup(isInCart ? "Removed from cart" : "Added to cart");
   };
   
+  // Comment handlers
+  const addComment = (e) => {
+    e.preventDefault();
+    if (!newComment.trim()) return;
+    
+    const comment = {
+      id: Date.now(),
+      username: "@hilna",
+      text: newComment,
+      date: "Just now",
+      isCurrentUser: true
+    };
+    
+    const updatedComments = [comment, ...comments];
+    setComments(updatedComments);
+    localStorage.setItem(`comments_${product.id}`, JSON.stringify(updatedComments));
+    setNewComment("");
+    showPopup("Comment added");
+  };
+  
+  const updateComment = (id) => {
+    if (!editText.trim()) return;
+    
+    const updatedComments = comments.map(comment => 
+      comment.id === id ? { ...comment, text: editText, date: "Edited just now" } : comment
+    );
+    
+    setComments(updatedComments);
+    localStorage.setItem(`comments_${product.id}`, JSON.stringify(updatedComments));
+    setEditingId(null);
+  };
+  
+  const deleteComment = (id) => {
+    const updatedComments = comments.filter(comment => comment.id !== id);
+    setComments(updatedComments);
+    localStorage.setItem(`comments_${product.id}`, JSON.stringify(updatedComments));
+    showPopup("Comment deleted");
+  };
+
   return (
     <div className="relative min-h-screen bg-gray-100">
       {/* Header/Navigation */}
@@ -99,7 +135,7 @@ export default function ItemView() {
               </button>
             </div>
             
-            {/* Item Name - Center on mobile, left on desktop */}
+            {/* Item Name */}
             <h1 className="text-xl font-bold truncate md:text-2xl md:flex-1">
               {product.title}
             </h1>
@@ -196,6 +232,7 @@ export default function ItemView() {
           <FaArrowLeft className="mr-2" /> Back to Products
         </button>
         
+        {/* Product Details */}
         <div className="overflow-hidden bg-white rounded-lg shadow-lg">
           <div className="md:flex">
             {/* Product Image */}
@@ -207,7 +244,7 @@ export default function ItemView() {
               />
             </div>
             
-            {/* Product Details */}
+            {/* Product Info */}
             <div className="p-6 md:w-1/2">
               <h1 className="mb-4 text-3xl font-bold text-gray-800">{product.title}</h1>
               
@@ -229,6 +266,7 @@ export default function ItemView() {
                 <p className="text-gray-600">{product.stock} items left</p>
               </div>
               
+              {/* Action Buttons */}
               <div className="flex gap-4 mb-6">
                 <button
                   onClick={toggleWishlist}
@@ -254,6 +292,7 @@ export default function ItemView() {
                 </button>
               </div>
               
+              {/* Specifications */}
               <div className="mt-8">
                 <h2 className="mb-4 text-xl font-bold text-gray-800">Product Specifications</h2>
                 <ul className="space-y-2 text-gray-600 list-disc list-inside">
@@ -264,6 +303,107 @@ export default function ItemView() {
                   <li>Perfect for gardening and cleaning tasks</li>
                 </ul>
               </div>
+            </div>
+          </div>
+          
+          {/* Comments Section */}
+          <div className="p-6 border-t border-gray-200">
+            <h1 className="mb-6 text-2xl font-bold">Comments</h1>
+            
+            {/* Add Comment Form */}
+            <div className="mb-8">
+              <div className="mb-2 text-sm font-medium">Signed in as: @hilna</div>
+              <form onSubmit={addComment}>
+                <textarea
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  placeholder="Add a comment..."
+                  className="w-full p-3 mb-2 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  rows="3"
+                  maxLength="200"
+                />
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-500">{200 - newComment.length} characters remaining</span>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700 disabled:opacity-50"
+                    disabled={!newComment.trim()}
+                  >
+                    Submit
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* Comments List */}
+            <div>
+              <div className="mb-4 text-lg font-semibold">Comments [{comments.length}]</div>
+              
+              {comments.length === 0 ? (
+                <p className="text-gray-500">No comments yet. Be the first to comment!</p>
+              ) : (
+                <div className="space-y-4">
+                  {comments.map((comment) => (
+                    <div key={comment.id} className="p-4 border-b border-gray-200">
+                      <div className="flex justify-between">
+                        <div>
+                          <div className="font-medium">{comment.username}</div>
+                          <div className="text-sm text-gray-500">{comment.date}</div>
+                        </div>
+                        {comment.isCurrentUser && (
+                          <div className="flex space-x-2">
+                            {editingId === comment.id ? (
+                              <>
+                                <button 
+                                  onClick={() => updateComment(comment.id)}
+                                  className="px-2 py-1 text-sm text-green-600 hover:text-green-800"
+                                >
+                                  Save
+                                </button>
+                                <button 
+                                  onClick={() => setEditingId(null)}
+                                  className="px-2 py-1 text-sm text-gray-600 hover:text-gray-800"
+                                >
+                                  Cancel
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <button 
+                                  onClick={() => {
+                                    setEditingId(comment.id);
+                                    setEditText(comment.text);
+                                  }}
+                                  className="px-2 py-1 text-sm text-blue-600 hover:text-blue-800"
+                                >
+                                  Edit
+                                </button>
+                                <button 
+                                  onClick={() => deleteComment(comment.id)}
+                                  className="px-2 py-1 text-sm text-red-600 hover:text-red-800"
+                                >
+                                  Delete
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      
+                      {editingId === comment.id ? (
+                        <textarea
+                          value={editText}
+                          onChange={(e) => setEditText(e.target.value)}
+                          className="w-full p-2 mt-2 border border-gray-300 rounded"
+                          rows="2"
+                        />
+                      ) : (
+                        <p className="mt-2">{comment.text}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
