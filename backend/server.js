@@ -6,7 +6,7 @@ import connectDB from './config/db.js';
 
 import authRoutes from './routes/authRoutes.js';
 import profileRoutes from './routes/profileRoutes.js'; // Optional, include if available
-import productRoutes from './routes/productRoutes.js'; // Added from second block
+import productRoutes from './routes/productRoutes.js'; // Added product routes
 
 dotenv.config();
 
@@ -15,6 +15,7 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(bodyParser.json()); // Parsing JSON
+app.use('/uploads', express.static('uploads')); // Serve uploaded files statically
 
 // Routes
 app.use('/api/auth', authRoutes);

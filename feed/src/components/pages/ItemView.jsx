@@ -1,42 +1,115 @@
 import React, { useState, useEffect } from "react";
-import { FaHeart, FaShoppingCart, FaArrowLeft, FaBars, FaTimes } from "react-icons/fa";
-import { useLocation, useNavigate } from "react-router-dom";
+import {
+  FaHeart,
+  FaShoppingCart,
+  FaArrowLeft,
+  FaBars,
+  FaTimes,
+} from "react-icons/fa";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import axios from "axios";
 
 export default function ItemView() {
   const location = useLocation();
   const navigate = useNavigate();
-  
-  // Get product from location state
-  const { product } = location.state || {};
-  
-  // State for wishlist and cart
+  const { productId } = useParams();
+
+  // State for product, wishlist, and cart
+  const [product, setProduct] = useState(location.state?.product || null);
   const [wishlist, setWishlist] = useState([]);
   const [cart, setCart] = useState([]);
   const [message, setMessage] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  
-  // State for comments
-  const [comments, setComments] = useState([]);
-  const [newComment, setNewComment] = useState("");
+  const [loading, setLoading] = useState(!location.state?.product);
+
+  // State for reviews and user
+  const [reviews, setReviews] = useState([]);
+  const [newReview, setNewReview] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [editText, setEditText] = useState("");
-  
-  // Load wishlist, cart, and comments from localStorage
+  const [rating, setRating] = useState(5);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  // Fetch current user (mock for this example)
+  useEffect(() => {
+    // In a real app, you would get this from your authentication context
+    const mockUser = {
+      id: "user123",
+      name: "John Doe",
+      isAuthenticated: true
+    };
+    setCurrentUser(mockUser);
+  }, []);
+
+  // Fetch product if not passed via state
+  useEffect(() => {
+    if (!product && productId) {
+      const fetchProduct = async () => {
+        try {
+          const response = await axios.get(
+            `${import.meta.env.VITE_API_URL}/products/${productId}`
+          );
+          setProduct(response.data);
+        } catch (error) {
+          console.error("Failed to fetch product:", error);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchProduct();
+    }
+  }, [productId, product]);
+
+  // Fetch reviews for the product
+  useEffect(() => {
+    if (productId) {
+      const fetchReviews = async () => {
+        try {
+          const response = await axios.get(
+            `${import.meta.env.VITE_API_URL}/products/reviews/${productId}`
+          );
+          // Add isCurrentUser flag to each review
+          const processedReviews = response.data.map(review => ({
+            ...review,
+            isCurrentUser: currentUser && review.userId === currentUser.id
+          }));
+          setReviews(processedReviews);
+        } catch (error) {
+          console.error("Failed to fetch reviews:", error);
+        }
+      };
+      fetchReviews();
+    }
+  }, [productId, currentUser]);
+
+  // Load wishlist and cart from localStorage
   useEffect(() => {
     const savedWishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
     const savedCart = JSON.parse(localStorage.getItem("cart") || "[]");
-    const savedComments = product?.id ? JSON.parse(localStorage.getItem(`comments_${product.id}`) || "[]") : [];
     setWishlist(savedWishlist);
     setCart(savedCart);
-    setComments(savedComments);
-  }, [product?.id]);
-  
+  }, []);
+
   // Handle if no product is found
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen px-6 py-8 bg-gray-100">
+        <div className="text-center">
+          <h2 className="mb-4 text-2xl font-bold text-green-800">
+            Loading Product...
+          </h2>
+        </div>
+      </div>
+    );
+  }
+
   if (!product) {
     return (
       <div className="flex items-center justify-center min-h-screen px-6 py-8 bg-gray-100">
         <div className="text-center">
-          <h2 className="mb-4 text-2xl font-bold text-red-600">Product Not Found</h2>
+          <h2 className="mb-4 text-2xl font-bold text-red-600">
+            Product Not Found
+          </h2>
           <button
             onClick={() => navigate("/")}
             className="px-4 py-2 text-white bg-green-600 rounded shadow hover:bg-green-700"
@@ -47,76 +120,104 @@ export default function ItemView() {
       </div>
     );
   }
-  
+
   // Product status checks
-  const isInWishlist = wishlist.some(item => item.id === product.id);
-  const isInCart = cart.some(item => item.id === product.id);
-  const discountedPrice = product.price - (product.price * product.discount / 100);
-  
+  const isInWishlist = wishlist.some((item) => item.id === product._id);
+  const isInCart = cart.some((item) => item.id === product._id);
+  const discountedPrice =
+    product.price - (product.price * (product.discount || 0)) / 100;
+
   // Show popup message
   const showPopup = (msg) => {
     setMessage(msg);
     setTimeout(() => setMessage(""), 3000);
   };
-  
+
   // Wishlist and cart handlers
   const toggleWishlist = () => {
     const updatedWishlist = isInWishlist
-      ? wishlist.filter(item => item.id !== product.id)
-      : [...wishlist, {...product, quantity: 1}];
-    
+      ? wishlist.filter((item) => item.id !== product._id)
+      : [...wishlist, { ...product, quantity: 1 }];
+
     setWishlist(updatedWishlist);
     localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
     showPopup(isInWishlist ? "Removed from wishlist" : "Added to wishlist");
   };
-  
+
   const toggleCart = () => {
     const updatedCart = isInCart
-      ? cart.filter(item => item.id !== product.id)
-      : [...cart, {...product, quantity: 1}];
-    
+      ? cart.filter((item) => item.id !== product._id)
+      : [...cart, { ...product, quantity: 1 }];
+
     setCart(updatedCart);
     localStorage.setItem("cart", JSON.stringify(updatedCart));
     showPopup(isInCart ? "Removed from cart" : "Added to cart");
   };
-  
-  // Comment handlers
-  const addComment = (e) => {
+
+  // Review handlers
+  const addReview = async (e) => {
     e.preventDefault();
-    if (!newComment.trim()) return;
-    
-    const comment = {
-      id: Date.now(),
-      username: "@hilna",
-      text: newComment,
-      date: "Just now",
-      isCurrentUser: true
-    };
-    
-    const updatedComments = [comment, ...comments];
-    setComments(updatedComments);
-    localStorage.setItem(`comments_${product.id}`, JSON.stringify(updatedComments));
-    setNewComment("");
-    showPopup("Comment added");
+    if (!newReview.trim()) return;
+
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/products/reviews/${product._id}`,
+        {
+          userId: currentUser?.id,
+          name: currentUser?.name || "Anonymous",
+          text: newReview,
+          rating,
+        }
+      );
+
+      setReviews([{
+        ...response.data,
+        isCurrentUser: true
+      }, ...reviews]);
+      setNewReview("");
+      showPopup("Review added successfully");
+    } catch (error) {
+      console.error("Failed to add review:", error);
+      showPopup("Failed to add review");
+    }
   };
-  
-  const updateComment = (id) => {
+
+  const updateReview = async (reviewId) => {
     if (!editText.trim()) return;
-    
-    const updatedComments = comments.map(comment => 
-      comment.id === id ? { ...comment, text: editText, date: "Edited just now" } : comment
-    );
-    
-    setComments(updatedComments);
-    localStorage.setItem(`comments_${product.id}`, JSON.stringify(updatedComments));
-    setEditingId(null);
+
+    try {
+      const response = await axios.put(
+        `${import.meta.env.VITE_API_URL}/products/reviews/${reviewId}`,
+        {
+          text: editText,
+          rating,
+        }
+      );
+
+      setReviews(
+        reviews.map((review) =>
+          review._id === reviewId ? { ...response.data, isCurrentUser: true } : review
+        )
+      );
+      setEditingId(null);
+      showPopup("Review updated successfully");
+    } catch (error) {
+      console.error("Failed to update review:", error);
+      showPopup("Failed to update review");
+    }
   };
-  
-  const deleteComment = (id) => {
-    const updatedComments = comments.filter(comment => comment.id !== id);
-    setComments(updatedComments);
-    localStorage.setItem(`comments_${product.id}`, JSON.stringify(updatedComments));
-    showPopup("Comment deleted");
+
+  const deleteReview = async (reviewId) => {
+    try {
+      await axios.delete(
+        `${import.meta.env.VITE_API_URL}/products/reviews/${reviewId}`
+      );
+      setReviews(reviews.filter((review) => review._id !== reviewId));
+      showPopup("Review deleted successfully");
+    } catch (error) {
+      console.error("Failed to delete review:", error);
+      showPopup("Failed to delete review");
+    }
   };
 
   return (
@@ -134,16 +235,16 @@ export default function ItemView() {
                 {mobileMenuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
               </button>
             </div>
-            
+
             {/* Item Name */}
             <h1 className="text-xl font-bold truncate md:text-2xl md:flex-1">
               {product.title}
             </h1>
-            
+
             {/* Desktop Navigation */}
             <div className="hidden md:flex md:items-center md:space-x-6">
               <div className="relative">
-                <button 
+                <button
                   onClick={() => navigate("/wishlist")}
                   className="flex items-center space-x-1 hover:text-green-200"
                 >
@@ -156,9 +257,9 @@ export default function ItemView() {
                   )}
                 </button>
               </div>
-              
+
               <div className="relative">
-                <button 
+                <button
                   onClick={() => navigate("/cart")}
                   className="flex items-center space-x-1 hover:text-green-200"
                 >
@@ -173,12 +274,12 @@ export default function ItemView() {
               </div>
             </div>
           </div>
-          
+
           {/* Mobile Navigation */}
           {mobileMenuOpen && (
             <div className="pt-4 pb-2 md:hidden">
               <div className="flex flex-col items-start space-y-4">
-                <button 
+                <button
                   onClick={() => {
                     navigate("/wishlist");
                     setMobileMenuOpen(false);
@@ -193,8 +294,8 @@ export default function ItemView() {
                     </span>
                   )}
                 </button>
-                
-                <button 
+
+                <button
                   onClick={() => {
                     navigate("/cart");
                     setMobileMenuOpen(false);
@@ -214,16 +315,16 @@ export default function ItemView() {
           )}
         </div>
       </header>
-      
+
       {/* Main Content */}
       <div className="container px-6 py-8 mx-auto">
         {/* Popup Message */}
         {message && (
-          <div className="fixed z-50 px-4 py-2 text-white transition-all duration-300 bg-green-600 rounded shadow top-4 right-4">
+          <div className="fixed z-50 px-4 py-2 text-white transition-all duration-300 bg-green-600 rounded top-4 right-4">
             {message}
           </div>
         )}
-        
+
         {/* Back Button */}
         <button
           onClick={() => navigate(-1)}
@@ -231,70 +332,84 @@ export default function ItemView() {
         >
           <FaArrowLeft className="mr-2" /> Back to Products
         </button>
-        
+
         {/* Product Details */}
         <div className="overflow-hidden bg-white rounded-lg shadow-lg">
           <div className="md:flex">
             {/* Product Image */}
             <div className="md:w-1/2">
               <img
-                src={product.image}
+                src={product.imageUrl || "/placeholder-product.jpg"}
                 alt={product.title}
                 className="object-cover w-full h-96"
               />
             </div>
-            
+
             {/* Product Info */}
             <div className="p-6 md:w-1/2">
-              <h1 className="mb-4 text-3xl font-bold text-gray-800">{product.title}</h1>
-              
+              <h1 className="mb-4 text-3xl font-bold text-gray-800">
+                {product.title}
+              </h1>
+
               <div className="flex items-end gap-3 mb-4">
-                <span className="text-2xl font-bold text-green-600">Rs.{discountedPrice.toFixed(2)}</span>
-                <span className="text-lg text-gray-500 line-through">Rs.{product.price.toFixed(2)}</span>
-                <span className="px-2 py-1 text-sm font-semibold text-white bg-green-800 rounded">-{product.discount}%</span>
+                <span className="text-2xl font-bold text-green-600">
+                  Rs.{discountedPrice.toFixed(2)}
+                </span>
+                {product.discount > 0 && (
+                  <>
+                    <span className="text-lg text-gray-500 line-through">
+                      Rs.{product.price.toFixed(2)}
+                    </span>
+                    <span className="px-2 py-1 text-sm font-semibold text-white bg-green-800 rounded">
+                      -{product.discount}%
+                    </span>
+                  </>
+                )}
               </div>
-              
+
               <p className="mb-6 text-gray-600">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla facilisi. 
-                Sed euismod, nunc vel tincidunt lacinia, nunc nisl aliquam nisl, 
-                eget aliquam nunc nisl eu nunc.
+                {product.description || "No description available."}
               </p>
 
               {/* Stock Info */}
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-800">Available Stock:</h3>
+                <h3 className="text-lg font-semibold text-gray-800">
+                  Available Stock:
+                </h3>
                 <p className="text-gray-600">{product.stock} items left</p>
               </div>
-              
+
               {/* Action Buttons */}
               <div className="flex gap-4 mb-6">
                 <button
                   onClick={toggleWishlist}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                    isInWishlist 
-                      ? "bg-green-100 text-green-800 border border-green-300" 
+                    isInWishlist
+                      ? "bg-green-100 text-green-800 border border-green-300"
                       : "bg-gray-100 text-gray-700 border border-gray-300 hover:bg-green-50"
                   }`}
                 >
-                  <FaHeart className={isInWishlist ? "text-red-500" : ""} /> 
+                  <FaHeart className={isInWishlist ? "text-red-500" : ""} />
                   {isInWishlist ? "In Wishlist" : "Add to Wishlist"}
                 </button>
-                
+
                 <button
                   onClick={toggleCart}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                    isInCart 
-                      ? "bg-green-100 text-green-800 border border-green-300" 
+                    isInCart
+                      ? "bg-green-100 text-green-800 border border-green-300"
                       : "bg-gray-100 text-gray-700 border border-gray-300 hover:bg-green-50"
                   }`}
                 >
                   <FaShoppingCart /> {isInCart ? "In Cart" : "Add to Cart"}
                 </button>
               </div>
-              
+
               {/* Specifications */}
               <div className="mt-8">
-                <h2 className="mb-4 text-xl font-bold text-gray-800">Product Specifications</h2>
+                <h2 className="mb-4 text-xl font-bold text-gray-800">
+                  Product Specifications
+                </h2>
                 <ul className="space-y-2 text-gray-600 list-disc list-inside">
                   <li>High-quality eco-friendly material</li>
                   <li>Durable and long-lasting</li>
@@ -305,62 +420,119 @@ export default function ItemView() {
               </div>
             </div>
           </div>
-          
-          {/* Comments Section */}
-          <div className="p-6 border-t border-gray-200">
-            <h1 className="mb-6 text-2xl font-bold">Comments</h1>
-            
-            {/* Add Comment Form */}
-            <div className="mb-8">
-              <div className="mb-2 text-sm font-medium">Signed in as: @hilna</div>
-              <form onSubmit={addComment}>
-                <textarea
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Add a comment..."
-                  className="w-full p-3 mb-2 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                  rows="3"
-                  maxLength="200"
-                />
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-500">{200 - newComment.length} characters remaining</span>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700 disabled:opacity-50"
-                    disabled={!newComment.trim()}
-                  >
-                    Submit
-                  </button>
-                </div>
-              </form>
-            </div>
 
-            {/* Comments List */}
+          {/* Reviews Section */}
+          <div className="p-6 border-t border-gray-200">
+            <h1 className="mb-6 text-2xl font-bold">Customer Reviews</h1>
+
+            {/* Add Review Form */}
+            {currentUser?.isAuthenticated ? (
+              <div className="mb-8">
+                <div className="mb-4">
+                  <label className="block mb-2 text-sm font-medium">Rating</label>
+                  <select
+                    value={rating}
+                    onChange={(e) => setRating(Number(e.target.value))}
+                    className="p-2 border border-gray-300 rounded"
+                  >
+                    {[5, 4, 3, 2, 1].map((num) => (
+                      <option key={`rating-${num}`} value={num}>
+                        {num} star{num !== 1 ? "s" : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <form onSubmit={addReview}>
+                  <textarea
+                    value={newReview}
+                    onChange={(e) => setNewReview(e.target.value)}
+                    placeholder="Write your review..."
+                    className="w-full p-3 mb-2 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    rows="3"
+                    maxLength="200"
+                  />
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-500">
+                      {200 - newReview.length} characters remaining
+                    </span>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700 disabled:opacity-50"
+                      disabled={!newReview.trim()}
+                    >
+                      Submit Review
+                    </button>
+                  </div>
+                </form>
+              </div>
+            ) : (
+              <div className="p-4 mb-8 text-center bg-gray-100 rounded">
+                <p>Please log in to leave a review</p>
+              </div>
+            )}
+
+            {/* Reviews List */}
             <div>
-              <div className="mb-4 text-lg font-semibold">Comments [{comments.length}]</div>
-              
-              {comments.length === 0 ? (
-                <p className="text-gray-500">No comments yet. Be the first to comment!</p>
+              <div className="mb-4 text-lg font-semibold">
+                Reviews [{reviews.length}]
+                {reviews.length > 0 && (
+                  <span className="ml-2 text-sm font-normal text-gray-500">
+                    Average rating:{" "}
+                    {(
+                      reviews.reduce((sum, review) => sum + review.rating, 0) /
+                      reviews.length
+                    ).toFixed(1)}
+                    /5
+                  </span>
+                )}
+              </div>
+
+              {reviews.length === 0 ? (
+                <p className="text-gray-500">
+                  No reviews yet. Be the first to review!
+                </p>
               ) : (
                 <div className="space-y-4">
-                  {comments.map((comment) => (
-                    <div key={comment.id} className="p-4 border-b border-gray-200">
+                  {reviews.map((review) => (
+                    <div
+                      key={`review-${review._id}`}
+                      className="p-4 border-b border-gray-200"
+                    >
                       <div className="flex justify-between">
                         <div>
-                          <div className="font-medium">{comment.username}</div>
-                          <div className="text-sm text-gray-500">{comment.date}</div>
+                          <div className="font-medium">
+                            {review.name || "Anonymous"}
+                          </div>
+                          <div className="flex items-center">
+                            {[...Array(5)].map((_, i) => (
+                              <span
+                                key={`star-${review._id}-${i}`}
+                                className={
+                                  i < review.rating
+                                    ? "text-yellow-500"
+                                    : "text-gray-300"
+                                }
+                              >
+                                ★
+                              </span>
+                            ))}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {new Date(review.createdAt).toLocaleString()}
+                          </div>
                         </div>
-                        {comment.isCurrentUser && (
+                        {review.isCurrentUser && (
                           <div className="flex space-x-2">
-                            {editingId === comment.id ? (
+                            {editingId === review._id ? (
                               <>
-                                <button 
-                                  onClick={() => updateComment(comment.id)}
+                                <button
+                                  onClick={() => updateReview(review._id)}
                                   className="px-2 py-1 text-sm text-green-600 hover:text-green-800"
                                 >
                                   Save
                                 </button>
-                                <button 
+                                <button
                                   onClick={() => setEditingId(null)}
                                   className="px-2 py-1 text-sm text-gray-600 hover:text-gray-800"
                                 >
@@ -369,17 +541,18 @@ export default function ItemView() {
                               </>
                             ) : (
                               <>
-                                <button 
+                                <button
                                   onClick={() => {
-                                    setEditingId(comment.id);
-                                    setEditText(comment.text);
+                                    setEditingId(review._id);
+                                    setEditText(review.text);
+                                    setRating(review.rating);
                                   }}
                                   className="px-2 py-1 text-sm text-blue-600 hover:text-blue-800"
                                 >
                                   Edit
                                 </button>
-                                <button 
-                                  onClick={() => deleteComment(comment.id)}
+                                <button
+                                  onClick={() => deleteReview(review._id)}
                                   className="px-2 py-1 text-sm text-red-600 hover:text-red-800"
                                 >
                                   Delete
@@ -389,16 +562,29 @@ export default function ItemView() {
                           </div>
                         )}
                       </div>
-                      
-                      {editingId === comment.id ? (
-                        <textarea
-                          value={editText}
-                          onChange={(e) => setEditText(e.target.value)}
-                          className="w-full p-2 mt-2 border border-gray-300 rounded"
-                          rows="2"
-                        />
+
+                      {editingId === review._id ? (
+                        <>
+                          <select
+                            value={rating}
+                            onChange={(e) => setRating(Number(e.target.value))}
+                            className="p-2 mt-2 border border-gray-300 rounded"
+                          >
+                            {[5, 4, 3, 2, 1].map((num) => (
+                              <option key={`edit-rating-${num}`} value={num}>
+                                {num} star{num !== 1 ? "s" : ""}
+                              </option>
+                            ))}
+                          </select>
+                          <textarea
+                            value={editText}
+                            onChange={(e) => setEditText(e.target.value)}
+                            className="w-full p-2 mt-2 border border-gray-300 rounded"
+                            rows="2"
+                          />
+                        </>
                       ) : (
-                        <p className="mt-2">{comment.text}</p>
+                        <p className="mt-2">{review.text}</p>
                       )}
                     </div>
                   ))}
