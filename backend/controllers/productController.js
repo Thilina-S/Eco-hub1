@@ -64,64 +64,57 @@ export const deleteProduct = async (req, res) => {
 
 // ----- Review Functions -----
 // Add new review
+// Add review
 export const addReview = async (req, res) => {
-  const { productId } = req.params;
-  const { name, text, rating } = req.body;  // Change username to name
-  const date = new Date().toLocaleString();
-
   try {
-    const newReview = new Review({
-      productId,
-      name,  // Change username to name
-      text,
-      date,
-      rating,
-      isCurrentUser: true,  // Assuming current user logic
+    const newReview = await Review.create({
+      productId: req.params.productId,
+      userId: req.body.userId,
+      name: req.body.name,
+      text: req.body.text,
+      rating: req.body.rating,
+      isCurrentUser: true
     });
-
-    await newReview.save();
-    res.status(201).json({ message: 'Review added successfully', newReview });
+    
+    res.status(201).json({ 
+      message: 'Review added successfully', 
+      newReview 
+    });
   } catch (err) {
     res.status(500).json({ message: 'Failed to add review', error: err.message });
   }
 };
 
-// Get all reviews for a product
-export const getReviews = async (req, res) => {
-  const { productId } = req.params;
-
-  try {
-    const reviews = await Review.find({ productId }).sort({ createdAt: -1 });
-    res.status(200).json(reviews);
-  } catch (err) {
-    res.status(500).json({ message: 'Failed to retrieve reviews', error: err.message });
-  }
-};
-
-// Update review by ID
+// Update review
 export const updateReview = async (req, res) => {
-  const { reviewId } = req.params;
-  const { text, rating } = req.body;
-
   try {
     const updatedReview = await Review.findByIdAndUpdate(
-      reviewId,
-      { text, rating, date: 'Edited just now' },
+      req.params.reviewId,
+      { 
+        text: req.body.text, 
+        rating: req.body.rating,
+        date: 'Edited just now' 
+      },
       { new: true }
     );
-    res.status(200).json(updatedReview);
+    
+    res.status(200).json({ 
+      message: 'Review updated successfully',
+      updatedReview 
+    });
   } catch (err) {
     res.status(500).json({ message: 'Failed to update review', error: err.message });
   }
 };
 
-// Delete review by ID
+// Delete review
 export const deleteReview = async (req, res) => {
-  const { reviewId } = req.params;
-
   try {
-    const deletedReview = await Review.findByIdAndDelete(reviewId);
-    res.status(200).json({ message: 'Review deleted successfully', deletedReview });
+    const deletedReview = await Review.findByIdAndDelete(req.params.reviewId);
+    res.status(200).json({ 
+      message: 'Review deleted successfully', 
+      deletedReview 
+    });
   } catch (err) {
     res.status(500).json({ message: 'Failed to delete review', error: err.message });
   }

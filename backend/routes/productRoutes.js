@@ -12,9 +12,9 @@ router.put('/:id', updateProduct); // Update product by ID
 router.delete('/:id', deleteProduct); // Delete product by ID
 
 // Review Routes
-router.post('/reviews/:productId', addReview); // Add new review
-router.get('/reviews/:productId', getReviews); // Get all reviews for a product
-router.put('/reviews/:reviewId', updateReview); // Update review by ID
-router.delete('/reviews/:reviewId', deleteReview); // Delete review by ID
+router.post('/reviews/:productId', addReview);       // ✅ POST /api/products/reviews/:productId
+router.get('/reviews/:productId', getReviews);       // ✅ GET /api/products/reviews/:productId
+router.put('/reviews/:reviewId', updateReview);      // ✅ PUT /api/products/reviews/:reviewId
+router.delete('/reviews/:reviewId', deleteReview); 
 
 export default router;

@@ -5,6 +5,7 @@ import {
   FaArrowLeft,
   FaBars,
   FaTimes,
+  FaStar,
 } from "react-icons/fa";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
@@ -32,11 +33,10 @@ export default function ItemView() {
 
   // Fetch current user (mock for this example)
   useEffect(() => {
-    // In a real app, you would get this from your authentication context
     const mockUser = {
       id: "user123",
       name: "John Doe",
-      isAuthenticated: true
+      isAuthenticated: true,
     };
     setCurrentUser(mockUser);
   }, []);
@@ -69,9 +69,9 @@ export default function ItemView() {
             `${import.meta.env.VITE_API_URL}/products/reviews/${productId}`
           );
           // Add isCurrentUser flag to each review
-          const processedReviews = response.data.map(review => ({
+          const processedReviews = response.data.map((review) => ({
             ...review,
-            isCurrentUser: currentUser && review.userId === currentUser.id
+            isCurrentUser: currentUser && review.userId === currentUser.id,
           }));
           setReviews(processedReviews);
         } catch (error) {
@@ -155,7 +155,7 @@ export default function ItemView() {
   };
 
   // Review handlers
-  const addReview = async (e) => {
+  const handleAddReview = async (e) => {
     e.preventDefault();
     if (!newReview.trim()) return;
 
@@ -170,11 +170,15 @@ export default function ItemView() {
         }
       );
 
-      setReviews([{
-        ...response.data,
-        isCurrentUser: true
-      }, ...reviews]);
+      setReviews([
+        {
+          ...response.data.newReview,
+          isCurrentUser: true,
+        },
+        ...reviews,
+      ]);
       setNewReview("");
+      setRating(5);
       showPopup("Review added successfully");
     } catch (error) {
       console.error("Failed to add review:", error);
@@ -182,12 +186,12 @@ export default function ItemView() {
     }
   };
 
-  const updateReview = async (reviewId) => {
+  const handleUpdateReview = async () => {
     if (!editText.trim()) return;
 
     try {
       const response = await axios.put(
-        `${import.meta.env.VITE_API_URL}/products/reviews/${reviewId}`,
+        `${import.meta.env.VITE_API_URL}/products/reviews/${editingId}`,
         {
           text: editText,
           rating,
@@ -196,10 +200,13 @@ export default function ItemView() {
 
       setReviews(
         reviews.map((review) =>
-          review._id === reviewId ? { ...response.data, isCurrentUser: true } : review
+          review._id === editingId
+            ? { ...response.data.updatedReview, isCurrentUser: true }
+            : review
         )
       );
       setEditingId(null);
+      setEditText("");
       showPopup("Review updated successfully");
     } catch (error) {
       console.error("Failed to update review:", error);
@@ -207,7 +214,7 @@ export default function ItemView() {
     }
   };
 
-  const deleteReview = async (reviewId) => {
+  const handleDeleteReview = async (reviewId) => {
     try {
       await axios.delete(
         `${import.meta.env.VITE_API_URL}/products/reviews/${reviewId}`
@@ -219,6 +226,25 @@ export default function ItemView() {
       showPopup("Failed to delete review");
     }
   };
+
+  const startEditing = (review) => {
+    setEditingId(review._id);
+    setEditText(review.text);
+    setRating(review.rating);
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+    setEditText("");
+  };
+
+  // Calculate average rating
+  const averageRating =
+    reviews.length > 0
+      ? (
+          reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
+        ).toFixed(1)
+      : 0;
 
   return (
     <div className="relative min-h-screen bg-gray-100">
@@ -443,7 +469,7 @@ export default function ItemView() {
                   </select>
                 </div>
 
-                <form onSubmit={addReview}>
+                <form onSubmit={handleAddReview}>
                   <textarea
                     value={newReview}
                     onChange={(e) => setNewReview(e.target.value)}
@@ -478,12 +504,7 @@ export default function ItemView() {
                 Reviews [{reviews.length}]
                 {reviews.length > 0 && (
                   <span className="ml-2 text-sm font-normal text-gray-500">
-                    Average rating:{" "}
-                    {(
-                      reviews.reduce((sum, review) => sum + review.rating, 0) /
-                      reviews.length
-                    ).toFixed(1)}
-                    /5
+                    Average rating: {averageRating}/5
                   </span>
                 )}
               </div>
@@ -506,16 +527,14 @@ export default function ItemView() {
                           </div>
                           <div className="flex items-center">
                             {[...Array(5)].map((_, i) => (
-                              <span
+                              <FaStar
                                 key={`star-${review._id}-${i}`}
                                 className={
                                   i < review.rating
                                     ? "text-yellow-500"
                                     : "text-gray-300"
                                 }
-                              >
-                                ★
-                              </span>
+                              />
                             ))}
                           </div>
                           <div className="text-sm text-gray-500">
@@ -527,13 +546,13 @@ export default function ItemView() {
                             {editingId === review._id ? (
                               <>
                                 <button
-                                  onClick={() => updateReview(review._id)}
+                                  onClick={handleUpdateReview}
                                   className="px-2 py-1 text-sm text-green-600 hover:text-green-800"
                                 >
                                   Save
                                 </button>
                                 <button
-                                  onClick={() => setEditingId(null)}
+                                  onClick={cancelEditing}
                                   className="px-2 py-1 text-sm text-gray-600 hover:text-gray-800"
                                 >
                                   Cancel
@@ -542,17 +561,13 @@ export default function ItemView() {
                             ) : (
                               <>
                                 <button
-                                  onClick={() => {
-                                    setEditingId(review._id);
-                                    setEditText(review.text);
-                                    setRating(review.rating);
-                                  }}
+                                  onClick={() => startEditing(review)}
                                   className="px-2 py-1 text-sm text-blue-600 hover:text-blue-800"
                                 >
                                   Edit
                                 </button>
                                 <button
-                                  onClick={() => deleteReview(review._id)}
+                                  onClick={() => handleDeleteReview(review._id)}
                                   className="px-2 py-1 text-sm text-red-600 hover:text-red-800"
                                 >
                                   Delete
