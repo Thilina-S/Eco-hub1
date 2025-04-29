@@ -64,24 +64,44 @@ export const deleteProduct = async (req, res) => {
 
 // ----- Review Functions -----
 // Add new review
-// Add review
+// Add new review
 export const addReview = async (req, res) => {
   try {
+    const { productId } = req.params;
+    const { userId, name, text, rating } = req.body;
+
+    // Ensure required fields are present
+    if (!userId || !name || !text || !rating) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    // Create a new review with the current date automatically set
     const newReview = await Review.create({
-      productId: req.params.productId,
-      userId: req.body.userId,
-      name: req.body.name,
-      text: req.body.text,
-      rating: req.body.rating,
+      productId,
+      userId,
+      name,
+      text,
+      rating,
+      date: new Date().toISOString(),  // Automatically set the current date
       isCurrentUser: true
     });
-    
-    res.status(201).json({ 
-      message: 'Review added successfully', 
-      newReview 
-    });
+
+    // Return success response
+    res.status(201).json({ message: 'Review added successfully', newReview });
   } catch (err) {
+    console.error(err);  // Log the error for better insight
     res.status(500).json({ message: 'Failed to add review', error: err.message });
+  }
+};
+
+// Get reviews for a product
+export const getReviews = async (req, res) => {
+  const { productId } = req.params;
+  try {
+    const reviews = await Review.find({ productId });
+    res.status(200).json(reviews);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to retrieve reviews', error: err.message });
   }
 };
 
