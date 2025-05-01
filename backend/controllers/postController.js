@@ -46,7 +46,7 @@ export const updatePost = async (req, res) => {
 
     post.description = req.body.description || post.description;
     post.location = req.body.location || post.location;
-    
+
     const updatedPost = await post.save();
     res.json(updatedPost);
   } catch (error) {
@@ -84,10 +84,10 @@ export const addComment = async (req, res) => {
 
     post.comments.push(newComment);
     await post.save();
-    
+
     const populatedPost = await Post.findById(post._id)
       .populate('comments.user', 'name profilePhoto');
-    
+
     res.json(populatedPost.comments);
   } catch (error) {
     res.status(500).json({ message: 'Failed to add comment', error: error.message });
@@ -112,7 +112,7 @@ export const updateComment = async (req, res) => {
 
     const populatedPost = await Post.findById(post._id)
       .populate('comments.user', 'name profilePhoto');
-    
+
     res.json(populatedPost.comments);
   } catch (error) {
     res.status(500).json({ message: 'Failed to update comment', error: error.message });

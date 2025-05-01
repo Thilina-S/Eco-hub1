@@ -200,62 +200,46 @@ const Post = () => {
   const handleUpdateComment = async (postId, commentId) => {
     if (editedCommentText.trim()) {
       try {
-        // Update the comment on the backend
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/posts/${postId}/comments/${commentId}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-          body: JSON.stringify({ text: editedCommentText }),
+        // Update comment on the backend
+        const response = await apiClient.put(`/posts/${postId}/comments/${commentId}`, {
+          text: editedCommentText
         });
-  
-        const updatedComment = await response.json();
-  
+        
         // Update local state
-        setComments((prevComments) => ({
+        setComments(prevComments => ({
           ...prevComments,
           [postId]: prevComments[postId].map((comment) =>
-            comment._id === commentId ? { ...comment, text: updatedComment.text } : comment
-          ),
+            comment.id === commentId
+              ? { ...comment, text: editedCommentText }
+              : comment
+          )
         }));
-  
-        setEditingCommentId(null); // Reset the editing state
-        showNotification("Comment updated successfully!"); // Display success notification
+        
+        setEditingCommentId(null);
       } catch (err) {
         console.error("Error updating comment:", err);
         showNotification("Failed to update comment. Please try again.");
       }
     }
   };
-  
 
   const handleDeleteComment = async (postId, commentId) => {
     try {
-      // Delete the comment from the backend
-      await fetch(`${import.meta.env.VITE_API_URL}/posts/${postId}/comments/${commentId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      const response = await apiClient.delete(`/posts/${postId}/comments/${commentId}`);
+      const updatedComments = response.data;  // Make sure the response contains the updated comments array
   
-      // Update the local state to remove the deleted comment
       setComments((prevComments) => ({
         ...prevComments,
-        [postId]: prevComments[postId].filter((comment) => comment._id !== commentId),
+        [postId]: updatedComments,  // Replacing old comments with the updated comments array
       }));
   
-      // Update the post's comment count locally
       setPosts((prevPosts) =>
         prevPosts.map((post) =>
-          post._id === postId && post.commentCount > 0
-            ? { ...post, commentCount: post.commentCount - 1 }
+          post.id === postId
+            ? { ...post, commentCount: updatedComments.length } // Update comment count
             : post
         )
       );
-  
-      showNotification("Comment deleted successfully!"); // Display success notification
     } catch (err) {
       console.error("Error deleting comment:", err);
       showNotification("Failed to delete comment. Please try again.");

@@ -5,6 +5,7 @@ import {
   updatePost,
   deletePost,
   addComment,
+  updateComment,
   deleteComment,
   toggleLike
 } from '../controllers/postController.js';
@@ -21,7 +22,8 @@ router.delete('/:id', authMiddleware, deletePost);
 
 // Comment routes
 router.post('/:postId/comments', authMiddleware, addComment);
-router.delete('/:postId/comments/:commentId', authMiddleware, deleteComment);
+router.put('/:postId/comments/:commentId', authMiddleware, updateComment); // Comment update route
+router.delete('/:postId/comments/:commentId', authMiddleware, deleteComment); // Comment delete route
 
 // Like routes
 router.post('/:postId/likes', authMiddleware, toggleLike);
