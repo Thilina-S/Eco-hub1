@@ -19,6 +19,9 @@ import MyPosts from "./components/pages/MyPosts.jsx";
 import Wishlist from "./components/pages/Wishlist.jsx";
 import AdminDashboard from "./components/pages/AdminDashboard.jsx";
 import Logout from "./components/pages/logout.jsx";
+import ForgotPassword from "./components/pages/ForgotPassword.jsx";
+import ResetPassword from "./components/pages/ResetPassword.jsx";
+
 function App() {
   return (
     <Router>
@@ -44,6 +47,8 @@ function App() {
             <Route path="/wishlist" element={<Wishlist />} />
             <Route path="/admindashboard" element={<AdminDashboard />} />
             <Route path="/logout" element={<Logout />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
           </Routes>
         </main>
         <Footer />

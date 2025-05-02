@@ -59,9 +59,9 @@ export default function SignIn() {
 
       if (response.ok) {
         // Store token and user data
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+
         setShowSuccessPopup(true);
         setTimeout(() => {
           navigate("/");
@@ -105,7 +105,10 @@ export default function SignIn() {
 
             <form className="space-y-6" onSubmit={handleSubmit}>
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   Your Email
                 </label>
                 <input
@@ -118,11 +121,16 @@ export default function SignIn() {
                   value={formData.email}
                   onChange={handleChange}
                 />
-                {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email}</p>}
+                {errors.email && (
+                  <p className="mt-1 text-sm text-red-500">{errors.email}</p>
+                )}
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   Your Password
                 </label>
                 <div className="relative mt-1">
@@ -148,7 +156,9 @@ export default function SignIn() {
                     )}
                   </button>
                 </div>
-                {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password}</p>}
+                {errors.password && (
+                  <p className="mt-1 text-sm text-red-500">{errors.password}</p>
+                )}
               </div>
 
               <div>
@@ -167,7 +177,10 @@ export default function SignIn() {
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
                 Don't have an account?{" "}
-                <Link to="/signup" className="font-medium text-green-600 hover:text-green-500">
+                <Link
+                  to="/signup"
+                  className="font-medium text-green-600 hover:text-green-500"
+                >
                   Sign Up
                 </Link>
               </p>
@@ -176,10 +189,16 @@ export default function SignIn() {
         </div>
       </div>
 
+      <p className="mt-2 text-sm text-right text-blue-600 hover:underline">
+        <Link to="/forgot-password">Forgot password?</Link>
+      </p>
+
       {showSuccessPopup && (
         <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center w-full h-screen bg-gray-500 bg-opacity-50">
           <div className="p-6 bg-white rounded-lg shadow-lg">
-            <h3 className="text-lg font-semibold text-green-600">Login Successful!</h3>
+            <h3 className="text-lg font-semibold text-green-600">
+              Login Successful!
+            </h3>
             <p className="mt-2 text-gray-700">You are now logged in.</p>
           </div>
         </div>

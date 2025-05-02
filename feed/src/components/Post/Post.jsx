@@ -11,6 +11,23 @@ const API_URL = import.meta.env.VITE_API_URL;
 // Get token from localStorage - you'll need to implement your authentication system
 const getAuthToken = () => localStorage.getItem('token');
 
+// Get current user info from localStorage
+const getCurrentUserInfo = () => {
+  try {
+    // Get user data from localStorage (assuming you store this on login)
+    const userId = localStorage.getItem('userId');
+    const userName = localStorage.getItem('userName');
+    
+    return {
+      userId,
+      userName: userName || "Current User" // Fallback name if not stored
+    };
+  } catch (error) {
+    console.error("Error getting current user info:", error);
+    return { userId: null, userName: "Current User" };
+  }
+};
+
 // Axios instance with auth header
 const apiClient = axios.create({
   baseURL: API_URL,
@@ -34,6 +51,7 @@ apiClient.interceptors.request.use(
 const Post = () => {
   const [posts, setPosts] = useState([]);
   const [comments, setComments] = useState({});
+  const [showComments, setShowComments] = useState({}); // Track which posts have comments shown
   const [newComment, setNewComment] = useState("");
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editedCommentText, setEditedCommentText] = useState("");
@@ -52,8 +70,15 @@ const Post = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentUser, setCurrentUser] = useState({ userId: null, userName: "Current User" });
   const commentInputRef = useRef(null);
 
+  // Fetch current user info on component mount
+  useEffect(() => {
+    const userInfo = getCurrentUserInfo();
+    setCurrentUser(userInfo);
+  }, []);
+  
   // Fetch all posts on component mount
   useEffect(() => {
     fetchPosts();
@@ -63,6 +88,7 @@ const Post = () => {
     setIsLoading(true);
     try {
       const response = await apiClient.get('/posts');
+      const userInfo = getCurrentUserInfo();
       
       // Transform backend data to match frontend structure
       const transformedPosts = response.data.map(post => {
@@ -73,14 +99,22 @@ const Post = () => {
           [post._id]: postComments.map(comment => ({
             id: comment._id,
             user: comment.user.name,
+            userId: comment.user._id, // Store user ID for checking ownership
             text: comment.text,
-            isCurrentUser: checkIfCurrentUser(comment.user._id),
+            isCurrentUser: comment.user._id === userInfo.userId,
           }))
+        }));
+
+        // Initialize all posts with comments hidden
+        setShowComments(prev => ({
+          ...prev,
+          [post._id]: false
         }));
 
         return {
           id: post._id,
           username: post.user.name,
+          userId: post.user._id, // Store user ID for checking ownership
           location: post.location || "",
           date: new Date(post.createdAt).toLocaleDateString("en-US", {
             month: "long",
@@ -91,9 +125,9 @@ const Post = () => {
           likes: post.likes || [],
           likeCount: post.likes?.length || 0,
           commentCount: post.comments?.length || 0,
-          isLiked: checkIfUserLiked(post.likes),
+          isLiked: checkIfUserLiked(post.likes, userInfo.userId),
           imageUrl: post.image ? `${API_URL}${post.image}` : defaultImage,
-          isCurrentUser: checkIfCurrentUser(post.user._id),
+          isCurrentUser: post.user._id === userInfo.userId,
         };
       });
 
@@ -107,23 +141,21 @@ const Post = () => {
   };
 
   // Helper function to check if current user liked a post
-  const checkIfUserLiked = (likes) => {
-    // You'll need to implement logic to get current user ID from your auth system
-    const currentUserId = getCurrentUserId();
-    return likes?.includes(currentUserId) || false;
+  const checkIfUserLiked = (likes, userId) => {
+    return likes?.includes(userId) || false;
   };
 
   // Helper function to check if a post/comment belongs to current user
-  const checkIfCurrentUser = (userId) => {
-    // You'll need to implement logic to get current user ID from your auth system
-    const currentUserId = getCurrentUserId();
-    return userId === currentUserId;
+  const checkIfCurrentUser = (postUserId) => {
+    const userId = currentUser.userId || localStorage.getItem('userId');
+    return postUserId === userId;
   };
 
-  // Placeholder function to get current user ID - replace with your auth logic
-  const getCurrentUserId = () => {
-    // Return the user ID from your auth context or localStorage
-    return localStorage.getItem('userId') || "user_id"; // Default for testing
+  const toggleComments = (postId) => {
+    setShowComments(prev => ({
+      ...prev,
+      [postId]: !prev[postId]
+    }));
   };
 
   const handleLike = async (postId) => {
@@ -162,12 +194,13 @@ const Post = () => {
         // Assuming the backend returns the updated comments array
         const latestComment = response.data[response.data.length - 1];
         
-        // Update local comments state
+        // Update local comments state with the actual user info
         const newCommentObj = {
           id: latestComment._id,
-          user: "CurrentUser", // Frontend display name
+          user: currentUser.userName, // Use the stored username
+          userId: currentUser.userId, // Use the stored user ID
           text: newComment,
-          isCurrentUser: true,
+          isCurrentUser: true, // This is the current user's comment
         };
         
         setComments(prevComments => ({
@@ -183,6 +216,12 @@ const Post = () => {
               : post
           )
         );
+        
+        // Show comments when a new comment is added
+        setShowComments(prev => ({
+          ...prev,
+          [postId]: true
+        }));
         
         setNewComment("");
       } catch (err) {
@@ -229,15 +268,17 @@ const Post = () => {
       const response = await apiClient.delete(`/posts/${postId}/comments/${commentId}`);
       const updatedPost = response.data;
   
+      // Filter out the deleted comment from local state
       setComments((prevComments) => ({
         ...prevComments,
-        [postId]: updatedPost.comments,
+        [postId]: prevComments[postId].filter(comment => comment.id !== commentId)
       }));
   
+      // Update post comment count
       setPosts((prevPosts) =>
         prevPosts.map((post) =>
           post.id === postId
-            ? { ...post, commentCount: updatedPost.comments.length }
+            ? { ...post, commentCount: post.commentCount - 1 }
             : post
         )
       );
@@ -319,10 +360,11 @@ const Post = () => {
       const response = await axios.post(`${API_URL}/posts`, formData, config);
       const newPost = response.data;
 
-      // Create frontend post object
+      // Create frontend post object with current user's actual name
       const newPostObj = {
         id: newPost._id,
-        username: "Current User", // You can get this from your auth context
+        username: currentUser.userName, // Use stored username instead of hardcoding
+        userId: currentUser.userId, // Use stored user ID
         location: currentPost.location || "",
         date: new Date().toLocaleDateString("en-US", {
           month: "long",
@@ -335,13 +377,19 @@ const Post = () => {
         commentCount: 0,
         isLiked: false,
         imageUrl: newPost.image ? `${API_URL}${newPost.image}` : defaultImage,
-        isCurrentUser: true,
+        isCurrentUser: true, // This is the current user's post
       };
 
       setPosts([newPostObj, ...posts]);
       setComments(prev => ({
         ...prev,
         [newPostObj.id]: []
+      }));
+      
+      // Initialize with comments hidden
+      setShowComments(prev => ({
+        ...prev,
+        [newPostObj.id]: false
       }));
       
       setShowCreateModal(false);
@@ -449,7 +497,13 @@ const Post = () => {
     }, 3000);
   };
 
-  const focusCommentInput = () => {
+  const focusCommentInput = (postId) => {
+    // Show the comments section when user clicks on comment button
+    setShowComments(prev => ({
+      ...prev,
+      [postId]: true
+    }));
+    
     if (commentInputRef.current) {
       commentInputRef.current.focus();
     }
@@ -461,8 +515,8 @@ const Post = () => {
       <div className={styles.leftSidebar}>
         <div className={styles.sidebarContent}>
           <div className={styles.profileSection}>
-            <div className={styles.sidebarAvatar}>CU</div>
-            <span className={styles.profileName}>Current User</span>
+            <div className={styles.sidebarAvatar}>{currentUser.userName.charAt(0)}</div>
+            <span className={styles.profileName}>{currentUser.userName}</span>
           </div>
           <nav className={styles.navMenu}>
             <button className={styles.navItem}>
@@ -714,9 +768,12 @@ const Post = () => {
                   <span className={styles.likeCount}>
                     {post.likeCount} {post.likeCount === 1 ? "like" : "likes"}
                   </span>
-                  <span className={styles.commentCount}>
+                  <button 
+                    className={styles.commentCount}
+                    onClick={() => toggleComments(post.id)}
+                  >
                     {post.commentCount} {post.commentCount === 1 ? "comment" : "comments"}
-                  </span>
+                  </button>
                 </div>
 
                 <div className={styles.postActions}>
@@ -728,7 +785,7 @@ const Post = () => {
                   </button>
                   <button 
                     className={styles.actionButton}
-                    onClick={focusCommentInput}
+                    onClick={() => focusCommentInput(post.id)}
                   >
                     <span className={styles.actionIcon}>💬</span> Comment
                   </button>
@@ -737,86 +794,88 @@ const Post = () => {
                   </button>
                 </div>
 
-                <div className={styles.commentsSection}>
-                  {comments[post.id]?.map((comment) => (
-                    <div key={comment.id} className={`${styles.comment} ${editingCommentId === comment.id ? styles.editing : ''}`}>
-                      <div className={styles.commentContent}>
-                        <span className={styles.commentUser}>{comment.user}</span>
-                        <span className={styles.commentText}>
-                          {editingCommentId === comment.id ? (
-                            <input
-                              type="text"
-                              value={editedCommentText}
-                              onChange={(e) => setEditedCommentText(e.target.value)}
-                              className={styles.editInput}
-                            />
-                          ) : (
-                            comment.text
-                          )}
-                        </span>
-                      </div>
-
-                      {comment.isCurrentUser && (
-                        <div className={styles.commentActions}>
-                          {editingCommentId === comment.id ? (
-                            <>
-                              <button
-                                onClick={() => handleUpdateComment(post.id, comment.id)}
-                                className={styles.commentActionButton}
-                              >
-                                Save
-                              </button>
-                              <button
-                                onClick={() => setEditingCommentId(null)}
-                                className={styles.commentActionButton}
-                              >
-                                Cancel
-                              </button>
-                            </>
-                          ) : (
-                            <>
-                              <button
-                                onClick={() =>
-                                  handleEditComment(comment.id, comment.text)
-                                }
-                                className={styles.commentActionButton}
-                              >
-                                Edit
-                              </button>
-                              <button
-                                onClick={() => handleDeleteComment(post.id, comment.id)}
-                                className={styles.commentActionButton}
-                              >
-                                Delete
-                              </button>
-                            </>
-                          )}
+                {showComments[post.id] && (
+                  <div className={styles.commentsSection}>
+                    {comments[post.id]?.map((comment) => (
+                      <div key={comment.id} className={`${styles.comment} ${editingCommentId === comment.id ? styles.editing : ''}`}>
+                        <div className={styles.commentContent}>
+                          <span className={styles.commentUser}>{comment.user}</span>
+                          <span className={styles.commentText}>
+                            {editingCommentId === comment.id ? (
+                              <input
+                                type="text"
+                                value={editedCommentText}
+                                onChange={(e) => setEditedCommentText(e.target.value)}
+                                className={styles.editInput}
+                              />
+                            ) : (
+                              comment.text
+                            )}
+                          </span>
                         </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
 
-                <form
-                  onSubmit={(e) => handleCommentSubmit(e, post.id)}
-                  className={styles.commentForm}
-                >
-                  <input
-                    type="text"
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    placeholder="Add a comment..."
-                    className={styles.commentInput}
-                    ref={commentInputRef}
-                  />
-                  <button
-                    type="submit"
-                    className={styles.commentButton}
-                    disabled={!newComment.trim()}
-                  >
-                    Post
-                  </button>
-                </form>
+                        {comment.isCurrentUser && (
+                          <div className={styles.commentActions}>
+                            {editingCommentId === comment.id ? (
+                              <>
+                                <button
+                                  onClick={() => handleUpdateComment(post.id, comment.id)}
+                                  className={styles.commentActionButton}
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  onClick={() => setEditingCommentId(null)}
+                                  className={styles.commentActionButton}
+                                >
+                                  Cancel
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <button
+                                  onClick={() =>
+                                    handleEditComment(comment.id, comment.text)
+                                  }
+                                  className={styles.commentActionButton}
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteComment(post.id, comment.id)}
+                                  className={styles.commentActionButton}
+                                >
+                                  Delete
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    
+                    <form
+                      onSubmit={(e) => handleCommentSubmit(e, post.id)}
+                      className={styles.commentForm}
+                    >
+                      <input
+                        type="text"
+                        value={newComment}
+                        onChange={(e) => setNewComment(e.target.value)}
+                        placeholder="Add a comment..."
+                        className={styles.commentInput}
+                        ref={commentInputRef}
+                      />
+                      <button
+                        type="submit"
+                        className={styles.commentButton}
+                        disabled={!newComment.trim()}
+                      >
+                        Post
+                      </button>
+                    </form>
+                  </div>
+                )}
               </div>
             ))}
           </>
