@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { BsFillEyeFill, BsFillEyeSlashFill } from "react-icons/bs";
-import SignInImage from "/SignIn.png"; // Corrected image import
+import SignInImage from "/SignIn.png";
 
 export default function SignIn() {
   const [showPassword, setShowPassword] = useState(false);
@@ -58,7 +58,6 @@ export default function SignIn() {
       const data = await response.json();
 
       if (response.ok) {
-        // Store token and user data
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
 
@@ -174,7 +173,8 @@ export default function SignIn() {
               </div>
             </form>
 
-            <div className="mt-6 text-center">
+            {/* Sign-up + Forgot Password Positioned Below */}
+            <div className="mt-6 space-y-4 text-center">
               <p className="text-sm text-gray-600">
                 Don't have an account?{" "}
                 <Link
@@ -184,14 +184,18 @@ export default function SignIn() {
                   Sign Up
                 </Link>
               </p>
+              <p>
+                <Link
+                  to="/forgot-password"
+                  className="text-sm font-semibold text-green-600 hover:underline"
+                >
+                  Forgot password?
+                </Link>
+              </p>
             </div>
           </div>
         </div>
       </div>
-
-      <p className="mt-2 text-sm text-right text-blue-600 hover:underline">
-        <Link to="/forgot-password">Forgot password?</Link>
-      </p>
 
       {showSuccessPopup && (
         <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center w-full h-screen bg-gray-500 bg-opacity-50">
