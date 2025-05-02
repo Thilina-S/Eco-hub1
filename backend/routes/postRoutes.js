@@ -23,7 +23,8 @@ router.delete('/:id', authMiddleware, deletePost);
 // Comment routes
 router.post('/:postId/comments', authMiddleware, addComment);
 router.put('/:postId/comments/:commentId', authMiddleware, updateComment); // Comment update route
-router.delete('/:postId/comments/:commentId', authMiddleware, deleteComment); // Comment delete route
+router.delete('/:postId/comments/:commentId', authMiddleware, deleteComment);
+
 
 // Like routes
 router.post('/:postId/likes', authMiddleware, toggleLike);

@@ -122,23 +122,33 @@ export const updateComment = async (req, res) => {
 // Delete Comment
 export const deleteComment = async (req, res) => {
   try {
-    const post = await Post.findById(req.params.postId);
+    const { postId, commentId } = req.params; // Extract both IDs from params
+    console.log("Received postId:", postId, "and commentId:", commentId); // Log the IDs for debugging
+
+    const post = await Post.findById(postId);
     if (!post) return res.status(404).json({ message: 'Post not found' });
 
-    const comment = post.comments.id(req.params.commentId);
+    const comment = post.comments.id(commentId);
     if (!comment) return res.status(404).json({ message: 'Comment not found' });
 
     if (comment.user.toString() !== req.userId) {
       return res.status(403).json({ message: 'Not authorized to delete this comment' });
     }
 
-    comment.remove();
+    // Use pull to remove the comment from the post
+    post.comments.pull(commentId);
     await post.save();
-    res.json({ message: 'Comment deleted successfully' });
+
+    res.json(post); // Return updated post data
   } catch (error) {
+    console.error("Error deleting comment:", error); // Log the error for debugging
     res.status(500).json({ message: 'Failed to delete comment', error: error.message });
   }
 };
+
+
+
+
 
 // Like/Unlike Post
 export const toggleLike = async (req, res) => {

@@ -225,28 +225,36 @@ const Post = () => {
 
   const handleDeleteComment = async (postId, commentId) => {
     try {
+      console.log("Deleting comment with postId:", postId, "and commentId:", commentId); // Log the IDs
       const response = await apiClient.delete(`/posts/${postId}/comments/${commentId}`);
-      const updatedComments = response.data;  // Make sure the response contains the updated comments array
+      const updatedPost = response.data;
   
       setComments((prevComments) => ({
         ...prevComments,
-        [postId]: updatedComments,  // Replacing old comments with the updated comments array
+        [postId]: updatedPost.comments,
       }));
   
       setPosts((prevPosts) =>
         prevPosts.map((post) =>
           post.id === postId
-            ? { ...post, commentCount: updatedComments.length } // Update comment count
+            ? { ...post, commentCount: updatedPost.comments.length }
             : post
         )
       );
     } catch (err) {
       console.error("Error deleting comment:", err);
+      if (err.response) {
+        console.error("Server responded with:", err.response.data);
+      } else if (err.request) {
+        console.error("Request was made but no response received:", err.request);
+      } else {
+        console.error("Error setting up the request:", err.message);
+      }
       showNotification("Failed to delete comment. Please try again.");
     }
   };
   
-
+  
   const openCreateModal = (type) => {
     setModalType(type);
     setCurrentPost({
