@@ -21,6 +21,7 @@ import AdminDashboard from "./components/pages/AdminDashboard.jsx";
 import Logout from "./components/pages/logout.jsx";
 import ForgotPassword from "./components/pages/ForgotPassword.jsx";
 import ResetPassword from "./components/pages/ResetPassword.jsx";
+import MyReviews from "./components/pages/MyReviews.jsx"
 
 function App() {
   return (
@@ -47,6 +48,7 @@ function App() {
             <Route path="/wishlist" element={<Wishlist />} />
             <Route path="/admindashboard" element={<AdminDashboard />} />
             <Route path="/logout" element={<Logout />} />
+            <Route path="/myreviews" element={<MyReviews />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password/:token" element={<ResetPassword />} />
           </Routes>

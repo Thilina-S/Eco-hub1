@@ -130,7 +130,7 @@ export default function CheckoutPage() {
   return (
     <div className="min-h-screen bg-[#0e1b13] text-white font-sans p-4">
       <header className="mb-6 text-3xl font-bold text-center text-green-400">
-        CARNAGE
+        Eco Hub
       </header>
 
       <div className="grid max-w-6xl gap-8 mx-auto md:grid-cols-3">
