@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import jsPDF from 'jspdf'; // Import jsPDF
+import jsPDF from 'jspdf';
 
 export default function MyItems() {
   const navigate = useNavigate();
@@ -231,8 +231,9 @@ export default function MyItems() {
     setSearchQuery(e.target.value);
   };
 
+  // Safe search implementation with optional chaining
   const filteredProducts = products.filter((product) =>
-    product.title.toLowerCase().includes(searchQuery.toLowerCase())
+    product?.title?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // Generate PDF function
