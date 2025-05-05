@@ -28,7 +28,7 @@ export default function ItemView() {
   const [newReview, setNewReview] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [editText, setEditText] = useState("");
-  const [rating, setRating] = useState(0);
+  const [rating, setRating] = useState(5);
   const [currentUser, setCurrentUser] = useState(null);
 
   // Fetch current user (mock for this example)
@@ -60,17 +60,18 @@ export default function ItemView() {
     }
   }, [productId, product]);
 
-  // Fetch reviews as soon as productId is available
+  // Fetch reviews for the product
   useEffect(() => {
-    if (productId && currentUser) {
+    if (productId) {
       const fetchReviews = async () => {
         try {
           const response = await axios.get(
             `${import.meta.env.VITE_API_URL}/products/reviews/${productId}`
           );
+          // Add isCurrentUser flag to each review
           const processedReviews = response.data.map((review) => ({
             ...review,
-            isCurrentUser: review.userId === currentUser.id,
+            isCurrentUser: currentUser && review.userId === currentUser.id,
           }));
           setReviews(processedReviews);
         } catch (error) {
@@ -79,7 +80,7 @@ export default function ItemView() {
       };
       fetchReviews();
     }
-  }, [productId, currentUser]); // Fetch reviews when the productId or currentUser changes
+  }, [productId, currentUser]);
 
   // Load wishlist and cart from localStorage
   useEffect(() => {
@@ -156,7 +157,7 @@ export default function ItemView() {
   // Review handlers
   const handleAddReview = async (e) => {
     e.preventDefault();
-    if (rating === 0) return; // Only check if rating is selected
+    if (!newReview.trim()) return;
 
     try {
       const response = await axios.post(
@@ -164,55 +165,30 @@ export default function ItemView() {
         {
           userId: currentUser?.id,
           name: currentUser?.name || "Anonymous",
-          text: newReview.trim() || "No text review provided",
+          text: newReview,
           rating,
         }
       );
 
-      if (response.data.newReview) {
-        // Directly update the reviews state with the new review
-        setReviews([response.data.newReview, ...reviews]); // Add the new review at the top
-        setNewReview(""); // Clear the review input
-        setRating(0); // Reset the rating
-        showPopup("Review added successfully");
-
-        // Optionally, refetch the reviews to ensure consistency
-        const updatedReviews = await axios.get(
-          `${import.meta.env.VITE_API_URL}/products/reviews/${product._id}`
-        );
-        setReviews(updatedReviews.data); // Update the reviews state with latest data
-      } else {
-        showPopup("Failed to add review: Invalid response format");
-      }
+      setReviews([
+        {
+          ...response.data.newReview,
+          isCurrentUser: true,
+        },
+        ...reviews,
+      ]);
+      setNewReview("");
+      setRating(5);
+      showPopup("Review added successfully");
     } catch (error) {
-      const errMsg = error.response?.data?.error || error.message;
-      showPopup("Failed to add review: " + errMsg);
+      console.error("Failed to add review:", error);
+      showPopup("Failed to add review");
     }
   };
 
-  // Fetch the reviews every time the productId changes (like when the page reloads)
-  useEffect(() => {
-    if (productId && currentUser) {
-      const fetchReviews = async () => {
-        try {
-          const response = await axios.get(
-            `${import.meta.env.VITE_API_URL}/products/reviews/${productId}`
-          );
-          console.log("Fetched reviews:", response.data);
-          const processedReviews = response.data.map((review) => ({
-            ...review,
-            isCurrentUser: review.userId === currentUser.id,
-          }));
-          setReviews(processedReviews); // Set fetched reviews
-        } catch (error) {
-          console.error("Failed to fetch reviews:", error);
-        }
-      };
-      fetchReviews();
-    }
-  }, [productId, currentUser]); // Ensure that the effect runs whenever productId changes
-
   const handleUpdateReview = async () => {
+    if (!editText.trim()) return;
+
     try {
       const response = await axios.put(
         `${import.meta.env.VITE_API_URL}/products/reviews/${editingId}`,
@@ -253,11 +229,7 @@ export default function ItemView() {
 
   const startEditing = (review) => {
     setEditingId(review._id);
-    setEditText(
-      !review.text || review.text === "No text review provided"
-        ? ""
-        : review.text
-    );
+    setEditText(review.text);
     setRating(review.rating);
   };
 
@@ -270,8 +242,7 @@ export default function ItemView() {
   const averageRating =
     reviews.length > 0
       ? (
-          reviews.reduce((sum, review) => sum + review.rating, 0) /
-          reviews.length
+          reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
         ).toFixed(1)
       : 0;
 
@@ -478,76 +449,43 @@ export default function ItemView() {
 
           {/* Reviews Section */}
           <div className="p-6 border-t border-gray-200">
-            <h1 className="mb-8 text-2xl font-bold text-green-700 text-left tracking-wide">
-              Rating and review of {product?.title || "this product"}
-            </h1>
+            <h1 className="mb-6 text-2xl font-bold">Customer Reviews</h1>
 
             {/* Add Review Form */}
             {currentUser?.isAuthenticated ? (
-              <div className="p-6 mb-8 bg-white rounded-lg shadow-md">
-                <h2 className="mb-4 text-xl font-bold text-black">
-                  Write a Review
-                </h2>
-                <form onSubmit={handleAddReview} className="space-y-4">
-                  {/* Rating Selection */}
-                  <div>
-                    <label className="block mb-2 text-sm font-medium text-black">
-                      Your Rating
-                    </label>
-                    <div className="flex items-center space-x-2">
-                      {[1, 2, 3, 4, 5].map((num) => (
-                        <button
-                          key={`rating-${num}`}
-                          type="button"
-                          onClick={() => {
-                            if (rating === num) {
-                              setRating(num - 1);
-                            } else {
-                              setRating(num);
-                            }
-                          }}
-                          className={`p-2 rounded-full transition-colors ${
-                            rating >= num
-                              ? "bg-yellow-100 text-yellow-500"
-                              : "bg-gray-100 text-gray-400 hover:bg-yellow-50"
-                          }`}
-                        >
-                          <FaStar size={24} />
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+              <div className="mb-8">
+                <div className="mb-4">
+                  <label className="block mb-2 text-sm font-medium">Rating</label>
+                  <select
+                    value={rating}
+                    onChange={(e) => setRating(Number(e.target.value))}
+                    className="p-2 border border-gray-300 rounded"
+                  >
+                    {[5, 4, 3, 2, 1].map((num) => (
+                      <option key={`rating-${num}`} value={num}>
+                        {num} star{num !== 1 ? "s" : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-                  {/* Review Text */}
-                  <div>
-                    <label className="block mb-2 text-sm font-medium text-black">
-                      Your Review (Optional)
-                    </label>
-                    <textarea
-                      value={newReview}
-                      onChange={(e) => setNewReview(e.target.value)}
-                      placeholder="Share your experience with this product... (Optional)"
-                      className="w-full p-4 text-black border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 min-h-[120px] placeholder-gray-400"
-                      rows="4"
-                      maxLength="500"
-                    />
-                    <div className="flex items-center justify-between mt-2">
-                      <span className="text-sm text-gray-500">
-                        {500 - newReview.length} characters remaining
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Submit Button */}
-                  <div className="flex justify-end">
+                <form onSubmit={handleAddReview}>
+                  <textarea
+                    value={newReview}
+                    onChange={(e) => setNewReview(e.target.value)}
+                    placeholder="Write your review..."
+                    className="w-full p-3 mb-2 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    rows="3"
+                    maxLength="200"
+                  />
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-500">
+                      {200 - newReview.length} characters remaining
+                    </span>
                     <button
                       type="submit"
-                      disabled={rating === 0}
-                      className={`px-6 py-3 text-white rounded-lg transition-colors ${
-                        rating === 0
-                          ? "bg-gray-400 cursor-not-allowed"
-                          : "bg-green-600 hover:bg-green-700"
-                      }`}
+                      className="px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700 disabled:opacity-50"
+                      disabled={!newReview.trim()}
                     >
                       Submit Review
                     </button>
@@ -555,87 +493,51 @@ export default function ItemView() {
                 </form>
               </div>
             ) : (
-              <div className="p-6 mb-8 text-center bg-white rounded-lg shadow-md">
-                <h2 className="mb-2 text-xl font-bold text-black">
-                  Want to Share Your Experience?
-                </h2>
-                <p className="mb-4 text-gray-600">
-                  Please log in to leave a review
-                </p>
-                <button
-                  onClick={() => navigate("/login")}
-                  className="px-6 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700"
-                >
-                  Log In
-                </button>
+              <div className="p-4 mb-8 text-center bg-gray-100 rounded">
+                <p>Please log in to leave a review</p>
               </div>
             )}
 
             {/* Reviews List */}
-            <div className="mt-8">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h2 className="text-2xl font-bold text-black">
-                    Customer Reviews
-                  </h2>
-                  <div className="flex items-center mt-2 space-x-4">
-                    <div className="flex items-center">
-                      <span className="text-3xl font-bold text-black">
-                        {averageRating}
-                      </span>
-                      <span className="ml-2 text-gray-600">out of 5</span>
-                    </div>
-                    <div className="flex items-center">
-                      <span className="text-gray-600">
-                        {reviews.length} reviews
-                      </span>
-                    </div>
-                  </div>
-                </div>
+            <div>
+              <div className="mb-4 text-lg font-semibold">
+                Reviews [{reviews.length}]
+                {reviews.length > 0 && (
+                  <span className="ml-2 text-sm font-normal text-gray-500">
+                    Average rating: {averageRating}/5
+                  </span>
+                )}
               </div>
 
               {reviews.length === 0 ? (
-                <div className="p-8 text-center bg-white rounded-lg shadow-md">
-                  <p className="text-lg text-gray-600">
-                    No reviews yet. Be the first to review!
-                  </p>
-                </div>
+                <p className="text-gray-500">
+                  No reviews yet. Be the first to review!
+                </p>
               ) : (
-                <div className="space-y-6">
+                <div className="space-y-4">
                   {reviews.map((review) => (
                     <div
                       key={`review-${review._id}`}
-                      className="p-6 bg-white rounded-lg shadow-md"
+                      className="p-4 border-b border-gray-200"
                     >
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-4">
-                            <div className="font-medium text-black text-lg">
-                              <span
-                                className={
-                                  review.isCurrentUser
-                                    ? "font-bold text-green-700"
-                                    : ""
-                                }
-                              >
-                                {review.name || "Anonymous"}
-                              </span>
-                            </div>
-                            <div className="flex items-center">
-                              {[...Array(5)].map((_, i) => (
-                                <FaStar
-                                  key={`star-${review._id}-${i}`}
-                                  className={`${
-                                    i < review.rating
-                                      ? "text-yellow-500"
-                                      : "text-gray-300"
-                                  }`}
-                                  size={18}
-                                />
-                              ))}
-                            </div>
+                      <div className="flex justify-between">
+                        <div>
+                          <div className="font-medium">
+                            {review.name || "Anonymous"}
                           </div>
-                          <div className="mt-2 text-sm text-gray-500">
+                          <div className="flex items-center">
+                            {[...Array(5)].map((_, i) => (
+                              <FaStar
+                                key={`star-${review._id}-${i}`}
+                                className={
+                                  i < review.rating
+                                    ? "text-yellow-500"
+                                    : "text-gray-300"
+                                }
+                              />
+                            ))}
+                          </div>
+                          <div className="text-sm text-gray-500">
                             {new Date(review.createdAt).toLocaleString()}
                           </div>
                         </div>
@@ -645,13 +547,13 @@ export default function ItemView() {
                               <>
                                 <button
                                   onClick={handleUpdateReview}
-                                  className="px-3 py-1 text-sm text-white bg-green-600 rounded hover:bg-green-700"
+                                  className="px-2 py-1 text-sm text-green-600 hover:text-green-800"
                                 >
                                   Save
                                 </button>
                                 <button
                                   onClick={cancelEditing}
-                                  className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800"
+                                  className="px-2 py-1 text-sm text-gray-600 hover:text-gray-800"
                                 >
                                   Cancel
                                 </button>
@@ -660,21 +562,13 @@ export default function ItemView() {
                               <>
                                 <button
                                   onClick={() => startEditing(review)}
-                                  className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800"
+                                  className="px-2 py-1 text-sm text-blue-600 hover:text-blue-800"
                                 >
                                   Edit
                                 </button>
                                 <button
-                                  onClick={() => {
-                                    if (
-                                      window.confirm(
-                                        "Are you sure you want to delete this review?"
-                                      )
-                                    ) {
-                                      handleDeleteReview(review._id);
-                                    }
-                                  }}
-                                  className="px-3 py-1 text-sm text-red-600 hover:text-red-800"
+                                  onClick={() => handleDeleteReview(review._id)}
+                                  className="px-2 py-1 text-sm text-red-600 hover:text-red-800"
                                 >
                                   Delete
                                 </button>
@@ -685,42 +579,27 @@ export default function ItemView() {
                       </div>
 
                       {editingId === review._id ? (
-                        <div className="mt-4 space-y-4">
-                          <div className="flex items-center space-x-2">
-                            {[1, 2, 3, 4, 5].map((num) => (
-                              <button
-                                key={`edit-rating-${num}`}
-                                type="button"
-                                onClick={() => setRating(num)}
-                                className={`p-2 rounded-full transition-colors ${
-                                  rating >= num
-                                    ? "bg-yellow-100 text-yellow-500"
-                                    : "bg-gray-100 text-gray-400 hover:bg-yellow-50"
-                                }`}
-                              >
-                                <FaStar size={20} />
-                              </button>
+                        <>
+                          <select
+                            value={rating}
+                            onChange={(e) => setRating(Number(e.target.value))}
+                            className="p-2 mt-2 border border-gray-300 rounded"
+                          >
+                            {[5, 4, 3, 2, 1].map((num) => (
+                              <option key={`edit-rating-${num}`} value={num}>
+                                {num} star{num !== 1 ? "s" : ""}
+                              </option>
                             ))}
-                          </div>
+                          </select>
                           <textarea
                             value={editText}
                             onChange={(e) => setEditText(e.target.value)}
-                            className="w-full p-3 text-black border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                            rows="3"
-                            placeholder="Type here..."
+                            className="w-full p-2 mt-2 border border-gray-300 rounded"
+                            rows="2"
                           />
-                        </div>
+                        </>
                       ) : (
-                        <div className="mt-4">
-                          {review.text &&
-                          review.text !== "No text review provided" ? (
-                            <p className="text-black">{review.text}</p>
-                          ) : (
-                            <p className="text-gray-500 italic">
-                              No text review provided
-                            </p>
-                          )}
-                        </div>
+                        <p className="mt-2">{review.text}</p>
                       )}
                     </div>
                   ))}
