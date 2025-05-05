@@ -7,16 +7,31 @@ const MyPosts = () => {
   const [filteredPosts, setFilteredPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [userId, setUserId] = useState(null);
 
-  // Fetch posts from API
+  // Fetch the logged-in user's ID from the localStorage or session
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      const decoded = JSON.parse(atob(token.split('.')[1]));
+      setUserId(decoded.userId);  // Assuming the token contains the userId
+    }
+  }, []);
+
+  // Fetch posts for the current logged-in user
   useEffect(() => {
     const fetchPosts = async () => {
+      if (!userId) return; // Only fetch posts if userId is available
+
       try {
         const response = await fetch(`${import.meta.env.VITE_API_URL}/posts`);
         if (!response.ok) throw new Error("Failed to fetch posts");
         const data = await response.json();
-        setPosts(data);
-        setFilteredPosts(data); // Initially display all posts
+
+        // Filter the posts to show only the current user's posts
+        const userPosts = data.filter(post => post.user._id === userId);
+        setPosts(userPosts);
+        setFilteredPosts(userPosts); // Initially display all the user's posts
         setLoading(false);
       } catch (error) {
         console.error("Error fetching posts:", error);
@@ -24,7 +39,7 @@ const MyPosts = () => {
       }
     };
     fetchPosts();
-  }, []);
+  }, [userId]);
 
   // Search filter by keyword (description or title)
   const handleSearch = (event) => {
