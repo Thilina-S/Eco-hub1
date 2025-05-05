@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import connectDB from './config/db.js';
+import multer from 'multer'; // Add this import
 
 // Route imports
 import authRoutes from './routes/authRoutes.js';
@@ -25,7 +26,7 @@ app.use(cors({
 app.use(bodyParser.json({ limit: '5mb' }));
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Static files serving
+// Static files serving - make sure path is correct
 app.use('/uploads', express.static('uploads'));
 
 // API Routes
@@ -36,7 +37,7 @@ app.use('/api/posts', postRoutes);  // Added post routes
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.status(200).json({ 
+  res.status(200).json({
     status: 'OK',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development'
@@ -51,8 +52,8 @@ app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     return res.status(400).json({
       success: false,
-      message: err.code === 'LIMIT_FILE_SIZE' 
-        ? 'File size too large' 
+      message: err.code === 'LIMIT_FILE_SIZE'
+        ? 'File size too large'
         : 'File upload error'
     });
   }
