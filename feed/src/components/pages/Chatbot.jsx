@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { PencilIcon, TrashIcon } from "@heroicons/react/24/solid";
+import { toast } from "react-toastify";
 
-// ChatMessage Component to render each message with update and delete buttons
 const ChatMessage = ({ message, isUser, onUpdate, onDelete, index }) => {
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"} mb-2`}>
@@ -9,10 +9,8 @@ const ChatMessage = ({ message, isUser, onUpdate, onDelete, index }) => {
         className={`max-w-xs p-3 rounded-lg ${
           isUser ? "bg-[#006400] text-white" : "bg-[#90EE90] text-black"
         }`}
-      >
-        {message}
-      </div>
-      {/* Show update and delete icons only for user's messages */}
+        dangerouslySetInnerHTML={{ __html: message }}
+      />
       {isUser && (
         <div className="flex flex-col items-center mt-2 space-y-1">
           <button
@@ -40,27 +38,71 @@ const Chatbot = () => {
   const [input, setInput] = useState("");
   const [editingIndex, setEditingIndex] = useState(null);
   const [editingText, setEditingText] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSendMessage = () => {
-    if (input.trim()) {
-      // Send user message
-      setMessages([...messages, { text: input, isUser: true }]);
-      setInput("");
+  const delayPara = (index, nextWord) => {
+    setTimeout(() => {
+      setMessages(prev => {
+        const last = prev[prev.length - 1];
+        const updated = [...prev.slice(0, -1), {
+          ...last,
+          text: last.text + nextWord,
+        }];
+        return updated;
+      });
+    }, 20 * index);
+  };
 
-      // Simulate bot response
-      setTimeout(() => {
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          { text: "I'm here to help! How can I assist you?", isUser: false },
-        ]);
-      }, 1000);
+  const handleSendMessage = async () => {
+    if (!input.trim()) return;
+
+    const userMessage = { text: input, isUser: true };
+    setMessages(prev => [...prev, userMessage]);
+    setInput("");
+    setLoading(true);
+
+    try {
+      const res = await fetch("http://localhost:5000/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: input }),
+      });
+
+      const data = await res.json();
+
+      if (data.reply) {
+        // Format and animate response
+        const responseArray = data.reply.split("**");
+        const newResponse = responseArray.map((chunk, i) =>
+          i % 2 === 1 ? `<b>${chunk}</b>` : chunk
+        ).join("");
+
+        const formatted = newResponse.replace(/\*/g, "<br>");
+        const wordArray = formatted.split(" ");
+
+        // Add an empty message first, to update with delay
+        setMessages(prev => [...prev, { text: "", isUser: false }]);
+
+        wordArray.forEach((word, i) => delayPara(i, word + " "));
+      } else {
+        throw new Error("Invalid reply from Gemini");
+      }
+    } catch (error) {
+      console.error("Error during AI generation:", error);
+      toast.error("Error during AI generation.");
+      setMessages(prev => [
+        ...prev,
+        { text: "Error: Could not get response from AI.", isUser: false },
+      ]);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleUpdateMessage = (index) => {
     const messageToUpdate = messages[index];
     setEditingIndex(index);
-    setEditingText(messageToUpdate.text);
+    setEditingText(messageToUpdate.text.replace(/<[^>]*>?/gm, '')); // Remove HTML for editing
   };
 
   const handleSaveUpdate = () => {
@@ -75,7 +117,6 @@ const Chatbot = () => {
   };
 
   const handleDeleteMessage = (index) => {
-    // Delete the user message and corresponding bot message (the next message)
     const updatedMessages = messages.filter((_, i) => i !== index && i !== index + 1);
     setMessages(updatedMessages);
   };
@@ -83,7 +124,6 @@ const Chatbot = () => {
   return (
     <div className="flex flex-col h-screen bg-gray-100 p-4">
       <div className="flex-1 overflow-auto p-4 bg-white shadow-md rounded-lg">
-        {/* Render all messages */}
         {messages.map((msg, index) => (
           <ChatMessage
             key={index}
@@ -96,7 +136,6 @@ const Chatbot = () => {
         ))}
       </div>
 
-      {/* If editing a message, show an input field to save the update */}
       {editingIndex !== null ? (
         <div className="mt-4 flex">
           <input
@@ -113,7 +152,6 @@ const Chatbot = () => {
           </button>
         </div>
       ) : (
-        // If not editing, show the send message input
         <div className="mt-4 flex">
           <input
             type="text"
@@ -121,12 +159,14 @@ const Chatbot = () => {
             placeholder="Type your message..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
           />
           <button
             className="p-2 bg-[#006400] text-white rounded-r-lg"
             onClick={handleSendMessage}
+            disabled={loading}
           >
-            Send
+            {loading ? "..." : "Send"}
           </button>
         </div>
       )}
