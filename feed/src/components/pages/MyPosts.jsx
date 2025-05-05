@@ -65,6 +65,20 @@ const MyPosts = () => {
     doc.save("posts.pdf");
   };
 
+  // Function to get full profile photo URL
+  const getProfilePhotoUrl = (profilePhoto) => {
+    if (!profilePhoto) return "https://via.placeholder.com/40";
+    if (profilePhoto.startsWith('http')) return profilePhoto;
+    return `${import.meta.env.VITE_API_URL}${profilePhoto}`;
+  };
+
+  // Function to get full post image URL
+  const getPostImageUrl = (image) => {
+    if (!image) return null;
+    if (image.startsWith('http')) return image;
+    return `${import.meta.env.VITE_API_URL}${image}`;
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -80,7 +94,6 @@ const MyPosts = () => {
         <button
           onClick={generatePDF}
           className="px-6 py-2 font-semibold text-white rounded-lg shadow-md bg-[#006400]"
-
         >
           Download as PDF
         </button>
@@ -113,7 +126,7 @@ const MyPosts = () => {
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
                     <img
-                      src={post.user.profilePhoto || "https://via.placeholder.com/40"}
+                      src={getProfilePhotoUrl(post.user.profilePhoto)}
                       alt={post.user.name}
                       className="object-cover w-10 h-10 rounded-full"
                     />
@@ -127,7 +140,7 @@ const MyPosts = () => {
                 <td className="px-6 py-4">
                   {post.image && (
                     <img
-                      src={`${import.meta.env.VITE_API_URL}/../${post.image}`}
+                      src={getPostImageUrl(post.image)}
                       alt="Post"
                       className="object-cover w-20 h-20 rounded"
                     />
@@ -139,7 +152,7 @@ const MyPosts = () => {
                     {post.comments.map((comment) => (
                       <div key={comment._id} className="flex items-start">
                         <img
-                          src={comment.user.profilePhoto || "https://via.placeholder.com/32"}
+                          src={getProfilePhotoUrl(comment.user.profilePhoto)}
                           alt={comment.user.name}
                           className="object-cover w-6 h-6 mt-1 rounded-full"
                         />
@@ -163,7 +176,7 @@ const MyPosts = () => {
           <div key={post._id} className="p-4 bg-white rounded-lg shadow">
             <div className="flex items-center mb-4">
               <img
-                src={post.user.profilePhoto || "https://via.placeholder.com/40"}
+                src={getProfilePhotoUrl(post.user.profilePhoto)}
                 alt={post.user.name}
                 className="object-cover w-10 h-10 rounded-full"
               />
@@ -175,7 +188,7 @@ const MyPosts = () => {
 
             {post.image && (
               <img
-                src={`${import.meta.env.VITE_API_URL}/../${post.image}`}
+                src={getPostImageUrl(post.image)}
                 alt="Post"
                 className="object-cover w-full h-48 mb-4 rounded-lg"
               />
@@ -192,7 +205,7 @@ const MyPosts = () => {
               {post.comments.map((comment) => (
                 <div key={comment._id} className="flex items-start mb-3">
                   <img
-                    src={comment.user.profilePhoto || "https://via.placeholder.com/32"}
+                    src={getProfilePhotoUrl(comment.user.profilePhoto)}
                     alt={comment.user.name}
                     className="object-cover w-6 h-6 rounded-full"
                   />
