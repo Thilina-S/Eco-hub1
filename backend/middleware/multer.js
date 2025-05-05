@@ -45,7 +45,7 @@ export const profileUpload = multer({
   limits: {
     fileSize: 2 * 1024 * 1024 // 2MB limit for profiles
   }
-}).single('profile');
+}).single('profilePhoto');
 
 // Post/Product upload middleware
 export const postUpload = multer({

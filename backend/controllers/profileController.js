@@ -11,13 +11,15 @@ export const getProfile = async (req, res) => {
       });
     }
 
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    
     res.status(200).json({
       success: true,
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
-        profilePhoto: user.profilePhoto,
+        profilePhoto: user.profilePhoto ? `${baseUrl}${user.profilePhoto}` : null,
         joinDate: user.createdAt
       }
     });
@@ -66,6 +68,8 @@ export const updateProfile = async (req, res) => {
 
     await user.save();
 
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    
     res.status(200).json({
       success: true,
       message: 'Profile updated successfully',
@@ -73,7 +77,7 @@ export const updateProfile = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        profilePhoto: user.profilePhoto,
+        profilePhoto: user.profilePhoto ? `${baseUrl}${user.profilePhoto}` : null,
         joinDate: user.createdAt
       }
     });
