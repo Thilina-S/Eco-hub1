@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/solid';
-import React from 'react'; // Add this line
+import React from 'react';
+
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -144,10 +145,11 @@ export default function Profile() {
 
       const data = await response.json();
       setUser({
-        ...data.user,
+        ...user,
         name: data.user?.name || '',
         email: data.user?.email || '',
-        password: '********'
+        password: '********',
+        profilePhoto: data.user?.profilePhoto || user.profilePhoto
       });
       setIsEditModalOpen(false);
       setShowSuccess(true);
@@ -210,15 +212,16 @@ export default function Profile() {
         body: formData
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(data.message || 'Failed to upload photo');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to upload photo');
       }
+
+      const data = await response.json();
 
       setUser(prev => ({
         ...prev,
-        profilePhoto: data.profilePhoto || null
+        profilePhoto: data.profilePhoto
       }));
       setShowImageSuccess(true);
       setTimeout(() => setShowImageSuccess(false), 3000);
@@ -303,6 +306,15 @@ export default function Profile() {
                       src={user.profilePhoto} 
                       alt="Profile" 
                       className="object-cover w-full h-full"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = '';
+                        // Fixed the error here - safer way to handle this without referencing classList
+                        const fallbackDiv = e.target.parentElement?.querySelector('div');
+                        if (fallbackDiv) {
+                          fallbackDiv.classList.remove('hidden');
+                        }
+                      }}
                     />
                   ) : (
                     <div className="flex items-center justify-center w-full h-full text-4xl text-gray-600 bg-gray-200">
@@ -375,6 +387,12 @@ export default function Profile() {
                 {errors.api && (
                   <div className="p-3 mt-4 text-sm text-red-600 rounded-md bg-red-50">
                     {errors.api}
+                  </div>
+                )}
+
+                {errors.profilePhoto && (
+                  <div className="p-3 mt-4 text-sm text-red-600 rounded-md bg-red-50">
+                    {errors.profilePhoto}
                   </div>
                 )}
               </div>

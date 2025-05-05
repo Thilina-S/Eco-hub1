@@ -37,10 +37,14 @@ router.post('/photo', upload.single('profilePhoto'), async (req, res) => {
     user.profilePhoto = `/uploads/${req.file.filename}`;
     await user.save();
 
+    // Return the full URL of the uploaded photo
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const fullPhotoUrl = `${baseUrl}${user.profilePhoto}`;
+    
     res.status(200).json({
       success: true,
       message: 'Profile photo uploaded successfully',
-      profilePhoto: user.profilePhoto
+      profilePhoto: fullPhotoUrl
     });
   } catch (error) {
     console.error('Error uploading profile photo:', error);

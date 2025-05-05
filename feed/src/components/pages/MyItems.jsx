@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import jsPDF from 'jspdf';
 
 export default function MyItems() {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ export default function MyItems() {
     stock: "",
   });
   const [formErrors, setFormErrors] = useState({});
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Fetch products from backend
   useEffect(() => {
@@ -225,6 +227,35 @@ export default function MyItems() {
     }
   };
 
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  // Safe search implementation with optional chaining
+  const filteredProducts = products.filter((product) =>
+    product?.title?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Generate PDF function
+  const generatePdf = () => {
+    const doc = new jsPDF();
+
+    doc.setFontSize(20);
+    doc.text("Product List", 14, 22);
+
+    let y = 30;
+    filteredProducts.forEach((product) => {
+      doc.setFontSize(12);
+      doc.text(`Title: ${product.title}`, 14, y);
+      doc.text(`Price: Rs. ${product.price}`, 14, y + 6);
+      doc.text(`Discount: ${product.discount}%`, 14, y + 12);
+      doc.text(`Stock: ${product.stock}`, 14, y + 18);
+      y += 30;
+    });
+
+    doc.save("products.pdf");
+  };
+
   return (
     <div className="relative min-h-screen px-6 py-8 bg-gray-100">
       {/* Notification message */}
@@ -250,12 +281,29 @@ export default function MyItems() {
           >
             Add New Item
           </button>
+          <button
+            onClick={generatePdf}
+            className="px-4 py-2 text-white bg-[#006400] rounded shadow focus:outline-none"
+          >
+            Generate PDF
+          </button>
         </div>
+      </div>
+
+      {/* Search Bar */}
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="Search by Title"
+          value={searchQuery}
+          onChange={handleSearchChange}
+          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+        />
       </div>
 
       {/* Table Container with horizontal scroll for small screens */}
       <div className="w-full overflow-x-auto bg-white rounded-lg shadow">
-        {products.length > 0 ? (
+        {filteredProducts.length > 0 ? (
           <table className="w-full overflow-hidden">
             <thead>
               <tr className="text-white bg-green-700">
@@ -269,7 +317,7 @@ export default function MyItems() {
               </tr>
             </thead>
             <tbody>
-              {products.map((product) => {
+              {filteredProducts.map((product) => {
                 const originalPrice = Math.round(
                   product.price / (1 - product.discount / 100)
                 );

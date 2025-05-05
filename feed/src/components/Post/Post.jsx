@@ -17,7 +17,7 @@ const getCurrentUserInfo = () => {
     // Get user data from localStorage (assuming you store this on login)
     const userId = localStorage.getItem('userId');
     const userName = localStorage.getItem('userName');
-    
+
     return {
       userId,
       userName: userName || "Current User" // Fallback name if not stored
@@ -78,7 +78,7 @@ const Post = () => {
     const userInfo = getCurrentUserInfo();
     setCurrentUser(userInfo);
   }, []);
-  
+
   // Fetch all posts on component mount
   useEffect(() => {
     fetchPosts();
@@ -89,7 +89,7 @@ const Post = () => {
     try {
       const response = await apiClient.get('/posts');
       const userInfo = getCurrentUserInfo();
-      
+
       // Transform backend data to match frontend structure
       const transformedPosts = response.data.map(post => {
         // Initialize comments state for this post
@@ -111,6 +111,15 @@ const Post = () => {
           [post._id]: false
         }));
 
+        // Fix image URL by ensuring it has the full path
+        let imageUrl = defaultImage;
+        if (post.image) {
+          // If image path starts with http, use as is, otherwise prepend API_URL
+          imageUrl = post.image.startsWith('http') 
+            ? post.image 
+            : `${API_URL}/${post.image.replace(/^\/+/, '')}`;
+        }
+
         return {
           id: post._id,
           username: post.user.name,
@@ -126,7 +135,7 @@ const Post = () => {
           likeCount: post.likes?.length || 0,
           commentCount: post.comments?.length || 0,
           isLiked: checkIfUserLiked(post.likes, userInfo.userId),
-          imageUrl: post.image ? `${API_URL}${post.image}` : defaultImage,
+          imageUrl: imageUrl,
           isCurrentUser: post.user._id === userInfo.userId,
         };
       });
@@ -162,7 +171,7 @@ const Post = () => {
     try {
       // Toggle like/unlike on the backend
       const response = await apiClient.post(`/posts/${postId}/likes`);
-      
+
       // Update UI
       setPosts((prevPosts) =>
         prevPosts.map((post) =>
@@ -189,7 +198,7 @@ const Post = () => {
         const response = await apiClient.post(`/posts/${postId}/comments`, {
           text: newComment
         });
-        
+
         // Get the new comment from the response
         // Assuming the backend returns the updated comments array
         const latestComment = response.data[response.data.length - 1];
@@ -243,7 +252,7 @@ const Post = () => {
         const response = await apiClient.put(`/posts/${postId}/comments/${commentId}`, {
           text: editedCommentText
         });
-        
+
         // Update local state
         setComments(prevComments => ({
           ...prevComments,
@@ -267,13 +276,13 @@ const Post = () => {
       console.log("Deleting comment with postId:", postId, "and commentId:", commentId); // Log the IDs
       const response = await apiClient.delete(`/posts/${postId}/comments/${commentId}`);
       const updatedPost = response.data;
-  
+
       // Filter out the deleted comment from local state
       setComments((prevComments) => ({
         ...prevComments,
         [postId]: prevComments[postId].filter(comment => comment.id !== commentId)
       }));
-  
+
       // Update post comment count
       setPosts((prevPosts) =>
         prevPosts.map((post) =>
@@ -294,8 +303,7 @@ const Post = () => {
       showNotification("Failed to delete comment. Please try again.");
     }
   };
-  
-  
+
   const openCreateModal = (type) => {
     setModalType(type);
     setCurrentPost({
@@ -360,6 +368,15 @@ const Post = () => {
       const response = await axios.post(`${API_URL}/posts`, formData, config);
       const newPost = response.data;
 
+      // Get proper image URL with full path
+      let imageUrl = defaultImage;
+      if (newPost.image) {
+        // If image path starts with http, use as is, otherwise prepend API_URL
+        imageUrl = newPost.image.startsWith('http') 
+          ? newPost.image 
+          : `${API_URL}/${newPost.image.replace(/^\/+/, '')}`;
+      }
+
       // Create frontend post object with current user's actual name
       const newPostObj = {
         id: newPost._id,
@@ -376,7 +393,7 @@ const Post = () => {
         likeCount: 0,
         commentCount: 0,
         isLiked: false,
-        imageUrl: newPost.image ? `${API_URL}${newPost.image}` : defaultImage,
+        imageUrl: imageUrl,
         isCurrentUser: true, // This is the current user's post
       };
 
@@ -440,28 +457,50 @@ const Post = () => {
         };
 
         // Update post with new image
-        await axios.put(`${API_URL}/posts/${currentPost.id}`, formData, config);
+        const response = await axios.put(`${API_URL}/posts/${currentPost.id}`, formData, config);
+        
+        // Get updated image URL from response
+        let imageUrl = currentPost.imagePreview;
+        if (response.data && response.data.image) {
+          // If image path starts with http, use as is, otherwise prepend API_URL
+          imageUrl = response.data.image.startsWith('http') 
+            ? response.data.image 
+            : `${API_URL}/${response.data.image.replace(/^\/+/, '')}`;
+        }
+        
+        // Update local state with the new image URL
+        setPosts(
+          posts.map((post) =>
+            post.id === currentPost.id
+              ? {
+                  ...post,
+                  description: currentPost.description,
+                  location: currentPost.location || "",
+                  imageUrl: imageUrl,
+                }
+              : post
+          )
+        );
       } else {
         // Just update text fields
         await apiClient.put(`/posts/${currentPost.id}`, {
           description: currentPost.description,
           location: currentPost.location || ""
         });
+        
+        // Update local state
+        setPosts(
+          posts.map((post) =>
+            post.id === currentPost.id
+              ? {
+                  ...post,
+                  description: currentPost.description,
+                  location: currentPost.location || "",
+                }
+              : post
+          )
+        );
       }
-
-      // Update local state
-      setPosts(
-        posts.map((post) =>
-          post.id === currentPost.id
-            ? {
-                ...post,
-                description: currentPost.description,
-                location: currentPost.location || "",
-                imageUrl: currentPost.imagePreview || post.imageUrl,
-              }
-            : post
-        )
-      );
 
       setShowEditModal(false);
       showNotification("Post updated successfully!");
@@ -475,7 +514,7 @@ const Post = () => {
     try {
       // Delete post on the backend
       await apiClient.delete(`/posts/${postId}`);
-      
+
       // Update local state
       setPosts(posts.filter((post) => post.id !== postId));
       setShowOptionsMenu(null);
@@ -503,7 +542,7 @@ const Post = () => {
       ...prev,
       [postId]: true
     }));
-    
+
     if (commentInputRef.current) {
       commentInputRef.current.focus();
     }

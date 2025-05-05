@@ -2,7 +2,10 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import bodyParser from 'body-parser';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import connectDB from './config/db.js';
+import multer from 'multer';
 
 // Route imports
 import authRoutes from './routes/authRoutes.js';
@@ -10,6 +13,10 @@ import profileRoutes from './routes/profileRoutes.js';
 import productRoutes from './routes/productRoutes.js';
 import postRoutes from './routes/postRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
+
+// Get __dirname equivalent in ES module
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
@@ -26,8 +33,8 @@ app.use(cors({
 app.use(bodyParser.json({ limit: '5mb' }));
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Static files serving
-app.use('/uploads', express.static('uploads'));
+// Static files serving - with absolute path
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // API Routes
 app.use('/api/auth', authRoutes);
@@ -38,7 +45,7 @@ app.use('/api/ai', aiRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.status(200).json({ 
+  res.status(200).json({
     status: 'OK',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development'
@@ -53,8 +60,8 @@ app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     return res.status(400).json({
       success: false,
-      message: err.code === 'LIMIT_FILE_SIZE' 
-        ? 'File size too large' 
+      message: err.code === 'LIMIT_FILE_SIZE'
+        ? 'File size too large'
         : 'File upload error'
     });
   }

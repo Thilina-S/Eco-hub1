@@ -5,7 +5,11 @@ import Review from '../models/reviewModel.js';  // Import Review model
 // Add new product
 export const addProduct = async (req, res) => {
   const { title, price, discount, stock } = req.body;
-  const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+  
+  // Update this line to include the full URL path
+  const imageUrl = req.file 
+    ? `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}` 
+    : null;
 
   try {
     const newProduct = new Product({
@@ -37,11 +41,18 @@ export const getProducts = async (req, res) => {
 export const updateProduct = async (req, res) => {
   const { id } = req.params;
   const { title, price, discount, stock } = req.body;
+  
+  // Handle image update if there's a new file
+  let updateData = { title, price, discount, stock };
+  
+  if (req.file) {
+    updateData.imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+  }
 
   try {
     const updatedProduct = await Product.findByIdAndUpdate(
       id,
-      { title, price, discount, stock },
+      updateData,
       { new: true }
     );
     res.status(200).json(updatedProduct);
@@ -63,7 +74,6 @@ export const deleteProduct = async (req, res) => {
 };
 
 // ----- Review Functions -----
-// Add new review
 // Add new review
 export const addReview = async (req, res) => {
   try {

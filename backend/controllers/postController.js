@@ -7,11 +7,14 @@ export const createPost = async (req, res) => {
     const { description, location } = req.body;
     const user = await User.findById(req.userId);
 
+    // Ensure full image URL is formed when image is uploaded
+    const imageUrl = req.file ? `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}` : null;
+
     const newPost = new Post({
       user: req.userId,
       description,
       location,
-      image: req.file?.path
+      image: imageUrl,
     });
 
     const savedPost = await newPost.save();
@@ -28,7 +31,16 @@ export const getAllPosts = async (req, res) => {
       .populate('user', 'name profilePhoto')
       .populate('comments.user', 'name profilePhoto')
       .sort('-createdAt');
-    res.json(posts);
+
+    // Format image URLs to ensure the full path is included
+    const formattedPosts = posts.map(post => {
+      const imageUrl = post.image
+        ? `${req.protocol}://${req.get('host')}/uploads/${post.image.replace(/^\/+/, '')}`
+        : null;
+      return { ...post.toObject(), imageUrl };  // Return the formatted post with imageUrl
+    });
+
+    res.json(formattedPosts);
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch posts', error: error.message });
   }
@@ -46,6 +58,10 @@ export const updatePost = async (req, res) => {
 
     post.description = req.body.description || post.description;
     post.location = req.body.location || post.location;
+
+    if (req.file) {
+      post.image = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;  // Update image path
+    }
 
     const updatedPost = await post.save();
     res.json(updatedPost);
@@ -122,8 +138,7 @@ export const updateComment = async (req, res) => {
 // Delete Comment
 export const deleteComment = async (req, res) => {
   try {
-    const { postId, commentId } = req.params; // Extract both IDs from params
-    console.log("Received postId:", postId, "and commentId:", commentId); // Log the IDs for debugging
+    const { postId, commentId } = req.params;
 
     const post = await Post.findById(postId);
     if (!post) return res.status(404).json({ message: 'Post not found' });
@@ -135,20 +150,14 @@ export const deleteComment = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to delete this comment' });
     }
 
-    // Use pull to remove the comment from the post
     post.comments.pull(commentId);
     await post.save();
 
     res.json(post); // Return updated post data
   } catch (error) {
-    console.error("Error deleting comment:", error); // Log the error for debugging
     res.status(500).json({ message: 'Failed to delete comment', error: error.message });
   }
 };
-
-
-
-
 
 // Like/Unlike Post
 export const toggleLike = async (req, res) => {
