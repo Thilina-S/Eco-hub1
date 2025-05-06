@@ -31,14 +31,31 @@ export default function ItemView() {
   const [rating, setRating] = useState(5);
   const [currentUser, setCurrentUser] = useState(null);
 
-  // Fetch current user (mock for this example)
+  // Fetch current user from backend
   useEffect(() => {
-    const mockUser = {
-      id: "user123",
-      name: "John Doe",
-      isAuthenticated: true,
+    const fetchCurrentUser = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          return; // No token, no authenticated user
+        }
+        
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL}/users/me`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setCurrentUser(response.data); // Assuming the backend sends the current logged-in user data
+      } catch (error) {
+        console.error("Failed to fetch current user:", error);
+        // Don't remove token automatically, as it might be valid but the endpoint has an issue
+        // localStorage.removeItem("token");
+      }
     };
-    setCurrentUser(mockUser);
+    fetchCurrentUser();
   }, []);
 
   // Fetch product if not passed via state
@@ -66,7 +83,7 @@ export default function ItemView() {
       const fetchReviews = async () => {
         try {
           const response = await axios.get(
-            `${import.meta.env.VITE_API_URL}/products/reviews/${productId}`
+            `${import.meta.env.VITE_API_URL}/products/${productId}/reviews`
           );
           // Add isCurrentUser flag to each review
           const processedReviews = response.data.map((review) => ({
@@ -127,6 +144,11 @@ export default function ItemView() {
   const discountedPrice =
     product.price - (product.price * (product.discount || 0)) / 100;
 
+  // Check if user is authenticated (has token)
+  // We're only checking for token existence, not requiring currentUser to be loaded
+  // This ensures that even if the /users/me endpoint has issues, users can still leave reviews
+  const isAuthenticated = !!localStorage.getItem("token");
+
   // Show popup message
   const showPopup = (msg) => {
     setMessage(msg);
@@ -160,19 +182,46 @@ export default function ItemView() {
     if (!newReview.trim()) return;
 
     try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        showPopup("Please log in to leave a review");
+        return;
+      }
+
+      // Create a user object for the review if currentUser is not available
+      const userData = currentUser || { 
+        id: "current-user", // fallback ID
+        name: "User" // fallback name
+      };
+
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/products/reviews/${product._id}`,
+        `${import.meta.env.VITE_API_URL}/products/${product._id}/reviews`,
         {
-          userId: currentUser?.id,
-          name: currentUser?.name || "Anonymous",
+          userId: userData.id,
+          name: userData.name || "User",
           text: newReview,
           rating,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
+      // Add the new review to the list
+      const newReviewData = response.data.newReview || {
+        _id: Date.now().toString(), // fallback ID if not returned
+        userId: userData.id,
+        name: userData.name,
+        text: newReview,
+        rating: rating,
+        date: new Date().toISOString()
+      };
+
       setReviews([
         {
-          ...response.data.newReview,
+          ...newReviewData,
           isCurrentUser: true,
         },
         ...reviews,
@@ -182,7 +231,8 @@ export default function ItemView() {
       showPopup("Review added successfully");
     } catch (error) {
       console.error("Failed to add review:", error);
-      showPopup("Failed to add review");
+      // Don't tell user they need to log in again if there's another API error
+      showPopup("Failed to add review. Please try again later.");
     }
   };
 
@@ -190,11 +240,22 @@ export default function ItemView() {
     if (!editText.trim()) return;
 
     try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        showPopup("Please log in to update a review");
+        return;
+      }
+
       const response = await axios.put(
-        `${import.meta.env.VITE_API_URL}/products/reviews/${editingId}`,
+        `${import.meta.env.VITE_API_URL}/products/${product._id}/reviews/${editingId}`,
         {
           text: editText,
           rating,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
@@ -216,8 +277,19 @@ export default function ItemView() {
 
   const handleDeleteReview = async (reviewId) => {
     try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        showPopup("Please log in to delete a review");
+        return;
+      }
+
       await axios.delete(
-        `${import.meta.env.VITE_API_URL}/products/reviews/${reviewId}`
+        `${import.meta.env.VITE_API_URL}/products/${product._id}/reviews/${reviewId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       setReviews(reviews.filter((review) => review._id !== reviewId));
       showPopup("Review deleted successfully");
@@ -452,7 +524,7 @@ export default function ItemView() {
             <h1 className="mb-6 text-2xl font-bold">Customer Reviews</h1>
 
             {/* Add Review Form */}
-            {currentUser?.isAuthenticated ? (
+            {isAuthenticated ? (
               <div className="mb-8">
                 <div className="mb-4">
                   <label className="block mb-2 text-sm font-medium">Rating</label>
@@ -495,6 +567,12 @@ export default function ItemView() {
             ) : (
               <div className="p-4 mb-8 text-center bg-gray-100 rounded">
                 <p>Please log in to leave a review</p>
+                <button 
+                  onClick={() => navigate('/login')}
+                  className="px-4 py-2 mt-2 text-white bg-green-600 rounded hover:bg-green-700"
+                >
+                  Log In
+                </button>
               </div>
             )}
 
@@ -538,7 +616,7 @@ export default function ItemView() {
                             ))}
                           </div>
                           <div className="text-sm text-gray-500">
-                            {new Date(review.createdAt).toLocaleString()}
+                            {new Date(review.date).toLocaleString()}
                           </div>
                         </div>
                         {review.isCurrentUser && (
