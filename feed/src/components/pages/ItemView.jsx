@@ -123,10 +123,8 @@ export default function ItemView() {
     if (productId) {
       const fetchReviews = async () => {
         try {
-          // Use the apiClient here too
           const response = await apiClient.get(`/products/${productId}/reviews`);
-          
-          // Add isCurrentUser flag to each review
+
           const processedReviews = response.data.map((review) => ({
             ...review,
             isCurrentUser: currentUser && review.userId === currentUser.id,
@@ -179,8 +177,6 @@ export default function ItemView() {
     product.price - (product.price * (product.discount || 0)) / 100;
 
   // Check if user is authenticated (has token)
-  // We're only checking for token existence, not requiring currentUser to be loaded
-  // This ensures that even if the /users/me endpoint has issues, users can still leave reviews
   const isAuthenticated = !!localStorage.getItem("token");
 
   // Show popup message
@@ -196,7 +192,6 @@ export default function ItemView() {
       : [...wishlist, { ...product, quantity: 1 }];
 
     setWishlist(updatedWishlist);
-    localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
     showPopup(isInWishlist ? "Removed from wishlist" : "Added to wishlist");
   };
 
@@ -206,7 +201,6 @@ export default function ItemView() {
       : [...cart, { ...product, quantity: 1 }];
 
     setCart(updatedCart);
-    localStorage.setItem("cart", JSON.stringify(updatedCart));
     showPopup(isInCart ? "Removed from cart" : "Added to cart");
   };
 
@@ -222,14 +216,13 @@ export default function ItemView() {
         return;
       }
 
-      // Create a user object for the review if currentUser is not available
       const userData = currentUser || { 
-        id: "current-user", // fallback ID
-        name: "User" // fallback name
+        id: "current-user", 
+        name: "User" 
       };
 
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/products/${product._id}/reviews`,
+      await apiClient.post(
+        `/products/${product._id}/reviews`,
         {
           userId: userData.id,
           name: userData.name || "User",
@@ -243,29 +236,19 @@ export default function ItemView() {
         }
       );
 
-      // Add the new review to the list
-      const newReviewData = response.data.newReview || {
-        _id: Date.now().toString(), // fallback ID if not returned
-        userId: userData.id,
-        name: userData.name,
-        text: newReview,
-        rating: rating,
-        date: new Date().toISOString()
-      };
-
-      setReviews([
-        {
-          ...newReviewData,
-          isCurrentUser: true,
+      // After adding the review, fetch the updated reviews
+      const updatedReviews = await apiClient.get(`/products/${product._id}/reviews`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-        ...reviews,
-      ]);
-      setNewReview("");
+      });
+
+      setReviews(updatedReviews.data);
+      setNewReview(""); 
       setRating(5);
       showPopup("Review added successfully");
     } catch (error) {
       console.error("Failed to add review:", error);
-      // Don't tell user they need to log in again if there's another API error
       showPopup("Failed to add review. Please try again later.");
     }
   };
@@ -280,8 +263,8 @@ export default function ItemView() {
         return;
       }
 
-      const response = await axios.put(
-        `${import.meta.env.VITE_API_URL}/products/${product._id}/reviews/${editingId}`,
+      const response = await apiClient.put(
+        `/products/${product._id}/reviews/${editingId}`,
         {
           text: editText,
           rating,
@@ -293,15 +276,16 @@ export default function ItemView() {
         }
       );
 
-      setReviews(
-        reviews.map((review) =>
-          review._id === editingId
-            ? { ...response.data.updatedReview, isCurrentUser: true }
-            : review
-        )
-      );
-      setEditingId(null);
-      setEditText("");
+      // After updating, fetch the updated reviews
+      const updatedReviews = await apiClient.get(`/products/${product._id}/reviews`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setReviews(updatedReviews.data); // Update reviews
+      setEditingId(null); // Reset editing state
+      setEditText(""); // Clear edit input
       showPopup("Review updated successfully");
     } catch (error) {
       console.error("Failed to update review:", error);
@@ -317,15 +301,23 @@ export default function ItemView() {
         return;
       }
 
-      await axios.delete(
-        `${import.meta.env.VITE_API_URL}/products/${product._id}/reviews/${reviewId}`,
+      await apiClient.delete(
+        `/products/${product._id}/reviews/${reviewId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
-      setReviews(reviews.filter((review) => review._id !== reviewId));
+
+      // After deletion, fetch the updated reviews
+      const updatedReviews = await apiClient.get(`/products/${product._id}/reviews`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setReviews(updatedReviews.data); // Update reviews
       showPopup("Review deleted successfully");
     } catch (error) {
       console.error("Failed to delete review:", error);
