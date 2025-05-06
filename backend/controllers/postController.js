@@ -71,6 +71,7 @@ export const updatePost = async (req, res) => {
 };
 
 // Delete Post
+// Delete Post
 export const deletePost = async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
@@ -80,12 +81,14 @@ export const deletePost = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to delete this post' });
     }
 
-    await post.remove();
+    // Use deleteOne or findByIdAndDelete
+    await Post.findByIdAndDelete(req.params.id);
     res.json({ message: 'Post deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Failed to delete post', error: error.message });
   }
 };
+
 
 // Add Comment
 export const addComment = async (req, res) => {
