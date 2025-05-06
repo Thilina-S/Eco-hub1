@@ -1,20 +1,29 @@
+// productRoutes.js
 import express from 'express';
-import { profileUpload, postUpload } from '../middleware/multer.js'; // Using named exports
-import { addProduct, getProducts, updateProduct, deleteProduct } from '../controllers/productController.js';
-import { addReview, getReviews, updateReview, deleteReview } from '../controllers/productController.js';
+import { postUpload } from '../middleware/multer.js';
+import { 
+  addProduct, 
+  getProducts, 
+  updateProduct, 
+  deleteProduct,
+  addReview,
+  getReviews,
+  updateReview,
+  deleteReview
+} from '../controllers/productController.js';
 
 const router = express.Router();
 
 // Product Routes
-router.post('/', postUpload, addProduct); // Use postUpload for product images
+router.post('/', postUpload, addProduct);
 router.get('/', getProducts);
-router.put('/:id', postUpload, updateProduct); // Allow image updates with PUT requests
+router.put('/:id', postUpload, updateProduct);
 router.delete('/:id', deleteProduct);
 
-// Review Routes
-router.post('/reviews/:productId', addReview);
-router.get('/reviews/:productId', getReviews);
-router.put('/reviews/:reviewId', updateReview);
-router.delete('/reviews/:reviewId', deleteReview);
+// Review Routes - Updated path structure
+router.post('/:productId/reviews', addReview);
+router.get('/:productId/reviews', getReviews);
+router.put('/:productId/reviews/:reviewId', updateReview);
+router.delete('/:productId/reviews/:reviewId', deleteReview);
 
 export default router;

@@ -10,10 +10,37 @@ import {
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 
+// Create a reusable API client with auth token handling
+const createApiClient = () => {
+  const apiClient = axios.create({
+    baseURL: import.meta.env.VITE_API_URL,
+    headers: {
+      'Content-Type': 'application/json',
+    }
+  });
+
+  // Add auth token interceptor
+  apiClient.interceptors.request.use(
+    config => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    },
+    error => Promise.reject(error)
+  );
+
+  return apiClient;
+};
+
 export default function ItemView() {
   const location = useLocation();
   const navigate = useNavigate();
   const { productId } = useParams();
+  
+  // Create API client instance
+  const apiClient = createApiClient();
 
   // State for product, wishlist, and cart
   const [product, setProduct] = useState(location.state?.product || null);
@@ -30,15 +57,47 @@ export default function ItemView() {
   const [editText, setEditText] = useState("");
   const [rating, setRating] = useState(5);
   const [currentUser, setCurrentUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Fetch current user (mock for this example)
+  // Fetch current user from backend
   useEffect(() => {
-    const mockUser = {
-      id: "user123",
-      name: "John Doe",
-      isAuthenticated: true,
+    const fetchCurrentUser = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          setIsLoading(false);
+          return; // No token, no authenticated user
+        }
+        
+        // Use the apiClient instead of direct axios call
+        const response = await apiClient.get('/profile');
+        
+        // Update user state with consistent structure similar to Post.jsx
+        setCurrentUser({
+          id: response.data.user.id,
+          userId: response.data.user.id, // Adding both for compatibility
+          name: response.data.user.name,
+          userName: response.data.user.name, // Adding both for compatibility
+          profilePhoto: response.data.user.profilePhoto
+        });
+        
+        setIsLoading(false);
+      } catch (err) {
+        console.error("Error fetching current user:", err);
+        setError("Failed to load user data");
+        setIsLoading(false);
+        
+        // Check for 401 unauthorized specifically
+        if (err.response && err.response.status === 401) {
+          // Token might be invalid or expired
+          // You could choose to clear token here, but only if you're sure
+          // localStorage.removeItem("token");
+        }
+      }
     };
-    setCurrentUser(mockUser);
+    
+    fetchCurrentUser();
   }, []);
 
   // Fetch product if not passed via state
@@ -46,9 +105,8 @@ export default function ItemView() {
     if (!product && productId) {
       const fetchProduct = async () => {
         try {
-          const response = await axios.get(
-            `${import.meta.env.VITE_API_URL}/products/${productId}`
-          );
+          // Use the apiClient here too
+          const response = await apiClient.get(`/products/${productId}`);
           setProduct(response.data);
         } catch (error) {
           console.error("Failed to fetch product:", error);
@@ -65,14 +123,13 @@ export default function ItemView() {
     if (productId) {
       const fetchReviews = async () => {
         try {
-          const response = await axios.get(
-            `${import.meta.env.VITE_API_URL}/products/reviews/${productId}`
-          );
-          // Add isCurrentUser flag to each review
+          const response = await apiClient.get(`/products/${productId}/reviews`);
+
           const processedReviews = response.data.map((review) => ({
             ...review,
             isCurrentUser: currentUser && review.userId === currentUser.id,
           }));
+          
           setReviews(processedReviews);
         } catch (error) {
           console.error("Failed to fetch reviews:", error);
@@ -81,14 +138,6 @@ export default function ItemView() {
       fetchReviews();
     }
   }, [productId, currentUser]);
-
-  // Load wishlist and cart from localStorage
-  useEffect(() => {
-    const savedWishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
-    const savedCart = JSON.parse(localStorage.getItem("cart") || "[]");
-    setWishlist(savedWishlist);
-    setCart(savedCart);
-  }, []);
 
   // Handle if no product is found
   if (loading) {
@@ -127,6 +176,9 @@ export default function ItemView() {
   const discountedPrice =
     product.price - (product.price * (product.discount || 0)) / 100;
 
+  // Check if user is authenticated (has token)
+  const isAuthenticated = !!localStorage.getItem("token");
+
   // Show popup message
   const showPopup = (msg) => {
     setMessage(msg);
@@ -140,7 +192,6 @@ export default function ItemView() {
       : [...wishlist, { ...product, quantity: 1 }];
 
     setWishlist(updatedWishlist);
-    localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
     showPopup(isInWishlist ? "Removed from wishlist" : "Added to wishlist");
   };
 
@@ -150,7 +201,6 @@ export default function ItemView() {
       : [...cart, { ...product, quantity: 1 }];
 
     setCart(updatedCart);
-    localStorage.setItem("cart", JSON.stringify(updatedCart));
     showPopup(isInCart ? "Removed from cart" : "Added to cart");
   };
 
@@ -160,29 +210,46 @@ export default function ItemView() {
     if (!newReview.trim()) return;
 
     try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/products/reviews/${product._id}`,
+      const token = localStorage.getItem("token");
+      if (!token) {
+        showPopup("Please log in to leave a review");
+        return;
+      }
+
+      const userData = currentUser || { 
+        id: "current-user", 
+        name: "User" 
+      };
+
+      await apiClient.post(
+        `/products/${product._id}/reviews`,
         {
-          userId: currentUser?.id,
-          name: currentUser?.name || "Anonymous",
+          userId: userData.id,
+          name: userData.name || "User",
           text: newReview,
           rating,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
-      setReviews([
-        {
-          ...response.data.newReview,
-          isCurrentUser: true,
+      // After adding the review, fetch the updated reviews
+      const updatedReviews = await apiClient.get(`/products/${product._id}/reviews`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-        ...reviews,
-      ]);
-      setNewReview("");
+      });
+
+      setReviews(updatedReviews.data);
+      setNewReview(""); 
       setRating(5);
       showPopup("Review added successfully");
     } catch (error) {
       console.error("Failed to add review:", error);
-      showPopup("Failed to add review");
+      showPopup("Failed to add review. Please try again later.");
     }
   };
 
@@ -190,23 +257,35 @@ export default function ItemView() {
     if (!editText.trim()) return;
 
     try {
-      const response = await axios.put(
-        `${import.meta.env.VITE_API_URL}/products/reviews/${editingId}`,
+      const token = localStorage.getItem("token");
+      if (!token) {
+        showPopup("Please log in to update a review");
+        return;
+      }
+
+      const response = await apiClient.put(
+        `/products/${product._id}/reviews/${editingId}`,
         {
           text: editText,
           rating,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
-      setReviews(
-        reviews.map((review) =>
-          review._id === editingId
-            ? { ...response.data.updatedReview, isCurrentUser: true }
-            : review
-        )
-      );
-      setEditingId(null);
-      setEditText("");
+      // After updating, fetch the updated reviews
+      const updatedReviews = await apiClient.get(`/products/${product._id}/reviews`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setReviews(updatedReviews.data); // Update reviews
+      setEditingId(null); // Reset editing state
+      setEditText(""); // Clear edit input
       showPopup("Review updated successfully");
     } catch (error) {
       console.error("Failed to update review:", error);
@@ -216,10 +295,29 @@ export default function ItemView() {
 
   const handleDeleteReview = async (reviewId) => {
     try {
-      await axios.delete(
-        `${import.meta.env.VITE_API_URL}/products/reviews/${reviewId}`
+      const token = localStorage.getItem("token");
+      if (!token) {
+        showPopup("Please log in to delete a review");
+        return;
+      }
+
+      await apiClient.delete(
+        `/products/${product._id}/reviews/${reviewId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
-      setReviews(reviews.filter((review) => review._id !== reviewId));
+
+      // After deletion, fetch the updated reviews
+      const updatedReviews = await apiClient.get(`/products/${product._id}/reviews`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setReviews(updatedReviews.data); // Update reviews
       showPopup("Review deleted successfully");
     } catch (error) {
       console.error("Failed to delete review:", error);
@@ -452,7 +550,7 @@ export default function ItemView() {
             <h1 className="mb-6 text-2xl font-bold">Customer Reviews</h1>
 
             {/* Add Review Form */}
-            {currentUser?.isAuthenticated ? (
+            {isAuthenticated ? (
               <div className="mb-8">
                 <div className="mb-4">
                   <label className="block mb-2 text-sm font-medium">Rating</label>
@@ -495,6 +593,12 @@ export default function ItemView() {
             ) : (
               <div className="p-4 mb-8 text-center bg-gray-100 rounded">
                 <p>Please log in to leave a review</p>
+                <button 
+                  onClick={() => navigate('/login')}
+                  className="px-4 py-2 mt-2 text-white bg-green-600 rounded hover:bg-green-700"
+                >
+                  Log In
+                </button>
               </div>
             )}
 
@@ -538,7 +642,7 @@ export default function ItemView() {
                             ))}
                           </div>
                           <div className="text-sm text-gray-500">
-                            {new Date(review.createdAt).toLocaleString()}
+                            {new Date(review.date).toLocaleString()}
                           </div>
                         </div>
                         {review.isCurrentUser && (
