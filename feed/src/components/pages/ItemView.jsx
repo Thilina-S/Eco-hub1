@@ -10,10 +10,37 @@ import {
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 
+// Create a reusable API client with auth token handling
+const createApiClient = () => {
+  const apiClient = axios.create({
+    baseURL: import.meta.env.VITE_API_URL,
+    headers: {
+      'Content-Type': 'application/json',
+    }
+  });
+
+  // Add auth token interceptor
+  apiClient.interceptors.request.use(
+    config => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    },
+    error => Promise.reject(error)
+  );
+
+  return apiClient;
+};
+
 export default function ItemView() {
   const location = useLocation();
   const navigate = useNavigate();
   const { productId } = useParams();
+  
+  // Create API client instance
+  const apiClient = createApiClient();
 
   // State for product, wishlist, and cart
   const [product, setProduct] = useState(location.state?.product || null);
@@ -30,6 +57,8 @@ export default function ItemView() {
   const [editText, setEditText] = useState("");
   const [rating, setRating] = useState(5);
   const [currentUser, setCurrentUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Fetch current user from backend
   useEffect(() => {
@@ -37,24 +66,37 @@ export default function ItemView() {
       try {
         const token = localStorage.getItem("token");
         if (!token) {
+          setIsLoading(false);
           return; // No token, no authenticated user
         }
         
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/users/me`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setCurrentUser(response.data); // Assuming the backend sends the current logged-in user data
-      } catch (error) {
-        console.error("Failed to fetch current user:", error);
-        // Don't remove token automatically, as it might be valid but the endpoint has an issue
-        // localStorage.removeItem("token");
+        // Use the apiClient instead of direct axios call
+        const response = await apiClient.get('/profile');
+        
+        // Update user state with consistent structure similar to Post.jsx
+        setCurrentUser({
+          id: response.data.user.id,
+          userId: response.data.user.id, // Adding both for compatibility
+          name: response.data.user.name,
+          userName: response.data.user.name, // Adding both for compatibility
+          profilePhoto: response.data.user.profilePhoto
+        });
+        
+        setIsLoading(false);
+      } catch (err) {
+        console.error("Error fetching current user:", err);
+        setError("Failed to load user data");
+        setIsLoading(false);
+        
+        // Check for 401 unauthorized specifically
+        if (err.response && err.response.status === 401) {
+          // Token might be invalid or expired
+          // You could choose to clear token here, but only if you're sure
+          // localStorage.removeItem("token");
+        }
       }
     };
+    
     fetchCurrentUser();
   }, []);
 
@@ -63,9 +105,8 @@ export default function ItemView() {
     if (!product && productId) {
       const fetchProduct = async () => {
         try {
-          const response = await axios.get(
-            `${import.meta.env.VITE_API_URL}/products/${productId}`
-          );
+          // Use the apiClient here too
+          const response = await apiClient.get(`/products/${productId}`);
           setProduct(response.data);
         } catch (error) {
           console.error("Failed to fetch product:", error);
@@ -82,14 +123,15 @@ export default function ItemView() {
     if (productId) {
       const fetchReviews = async () => {
         try {
-          const response = await axios.get(
-            `${import.meta.env.VITE_API_URL}/products/${productId}/reviews`
-          );
+          // Use the apiClient here too
+          const response = await apiClient.get(`/products/${productId}/reviews`);
+          
           // Add isCurrentUser flag to each review
           const processedReviews = response.data.map((review) => ({
             ...review,
             isCurrentUser: currentUser && review.userId === currentUser.id,
           }));
+          
           setReviews(processedReviews);
         } catch (error) {
           console.error("Failed to fetch reviews:", error);
@@ -98,14 +140,6 @@ export default function ItemView() {
       fetchReviews();
     }
   }, [productId, currentUser]);
-
-  // Load wishlist and cart from localStorage
-  useEffect(() => {
-    const savedWishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
-    const savedCart = JSON.parse(localStorage.getItem("cart") || "[]");
-    setWishlist(savedWishlist);
-    setCart(savedCart);
-  }, []);
 
   // Handle if no product is found
   if (loading) {
