@@ -1,32 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
+import axios from "axios";
 import PostActions from "./PostActions";
 import defaultImage from "../../assets/images/forhome.png";
 import styles from "./Post.module.css";
-import "../../assets/images/forhome.png";
-import axios from "axios";
 
 // API base URL from environment variable
 const API_URL = import.meta.env.VITE_API_URL;
-
-// Get token from localStorage - you'll need to implement your authentication system
-const getAuthToken = () => localStorage.getItem('token');
-
-// Get current user info from localStorage
-const getCurrentUserInfo = () => {
-  try {
-    // Get user data from localStorage (assuming you store this on login)
-    const userId = localStorage.getItem('userId');
-    const userName = localStorage.getItem('userName');
-
-    return {
-      userId,
-      userName: userName || "Current User" // Fallback name if not stored
-    };
-  } catch (error) {
-    console.error("Error getting current user info:", error);
-    return { userId: null, userName: "Current User" };
-  }
-};
 
 // Axios instance with auth header
 const apiClient = axios.create({
@@ -39,7 +18,7 @@ const apiClient = axios.create({
 // Add auth token to every request
 apiClient.interceptors.request.use(
   config => {
-    const token = getAuthToken();
+    const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -51,7 +30,7 @@ apiClient.interceptors.request.use(
 const Post = () => {
   const [posts, setPosts] = useState([]);
   const [comments, setComments] = useState({});
-  const [showComments, setShowComments] = useState({}); // Track which posts have comments shown
+  const [showComments, setShowComments] = useState({});
   const [newComment, setNewComment] = useState("");
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editedCommentText, setEditedCommentText] = useState("");
@@ -70,38 +49,53 @@ const Post = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [currentUser, setCurrentUser] = useState({ userId: null, userName: "Current User" });
+  const [currentUser, setCurrentUser] = useState(null);
   const commentInputRef = useRef(null);
 
-  // Fetch current user info on component mount
-  useEffect(() => {
-    const userInfo = getCurrentUserInfo();
-    setCurrentUser(userInfo);
-  }, []);
+  // Fetch current user info from backend
+  const fetchCurrentUser = async () => {
+    try {
+      const response = await apiClient.get('/profile');
+      setCurrentUser({
+        userId: response.data.user.id,
+        userName: response.data.user.name,
+        profilePhoto: response.data.user.profilePhoto
+      });
+    } catch (err) {
+      console.error("Error fetching current user:", err);
+      setError("Failed to load user data");
+    }
+  };
 
-  // Fetch all posts on component mount
-  useEffect(() => {
-    fetchPosts();
-  }, []);
-
+  // Fetch all posts from backend
   const fetchPosts = async () => {
     setIsLoading(true);
     try {
-      const response = await apiClient.get('/posts');
-      const userInfo = getCurrentUserInfo();
+      const [postsResponse, userResponse] = await Promise.all([
+        apiClient.get('/posts'),
+        apiClient.get('/profile')
+      ]);
 
-      // Transform backend data to match frontend structure
-      const transformedPosts = response.data.map(post => {
+      // Set current user from profile response
+      setCurrentUser({
+        userId: userResponse.data.user.id,
+        userName: userResponse.data.user.name,
+        profilePhoto: userResponse.data.user.profilePhoto
+      });
+
+      // Transform posts data
+      const transformedPosts = postsResponse.data.map(post => {
         // Initialize comments state for this post
         const postComments = post.comments || [];
         setComments(prev => ({
           ...prev,
           [post._id]: postComments.map(comment => ({
             id: comment._id,
-            user: comment.user.name,
-            userId: comment.user._id, // Store user ID for checking ownership
             text: comment.text,
-            isCurrentUser: comment.user._id === userInfo.userId,
+            userId: comment.user._id,
+            userName: comment.user.name,
+            isCurrentUser: comment.user._id === userResponse.data.user.id,
+            createdAt: comment.createdAt
           }))
         }));
 
@@ -111,10 +105,9 @@ const Post = () => {
           [post._id]: false
         }));
 
-        // Fix image URL by ensuring it has the full path
+        // Handle image URL
         let imageUrl = defaultImage;
         if (post.image) {
-          // If image path starts with http, use as is, otherwise prepend API_URL
           imageUrl = post.image.startsWith('http') 
             ? post.image 
             : `${API_URL}/${post.image.replace(/^\/+/, '')}`;
@@ -122,21 +115,17 @@ const Post = () => {
 
         return {
           id: post._id,
-          username: post.user.name,
-          userId: post.user._id, // Store user ID for checking ownership
-          location: post.location || "",
-          date: new Date(post.createdAt).toLocaleDateString("en-US", {
-            month: "long",
-            day: "numeric",
-            year: "numeric",
-          }),
           description: post.description,
+          location: post.location || "",
+          imageUrl,
+          userId: post.user._id,
+          userName: post.user.name,
+          createdAt: post.createdAt,
           likes: post.likes || [],
           likeCount: post.likes?.length || 0,
           commentCount: post.comments?.length || 0,
-          isLiked: checkIfUserLiked(post.likes, userInfo.userId),
-          imageUrl: imageUrl,
-          isCurrentUser: post.user._id === userInfo.userId,
+          isLiked: post.likes?.includes(userResponse.data.user.id) || false,
+          isCurrentUser: post.user._id === userResponse.data.user.id
         };
       });
 
@@ -144,23 +133,39 @@ const Post = () => {
       setIsLoading(false);
     } catch (err) {
       console.error("Error fetching posts:", err);
-      setError("Failed to load posts. Please try again later.");
+      setError("Failed to load posts");
       setIsLoading(false);
     }
   };
 
-  // Helper function to check if current user liked a post
-  const checkIfUserLiked = (likes, userId) => {
-    return likes?.includes(userId) || false;
-  };
+  // Fetch data on component mount
+  useEffect(() => {
+    fetchCurrentUser();
+    fetchPosts();
+  }, []);
 
-  // Helper function to check if a post/comment belongs to current user
-  const checkIfCurrentUser = (postUserId) => {
-    const userId = currentUser.userId || localStorage.getItem('userId');
-    return postUserId === userId;
-  };
-
-  const toggleComments = (postId) => {
+  const toggleComments = async (postId) => {
+    // If comments aren't loaded yet, fetch them
+    if (!comments[postId]) {
+      try {
+        const response = await apiClient.get(`/posts/${postId}/comments`);
+        setComments(prev => ({
+          ...prev,
+          [postId]: response.data.map(comment => ({
+            id: comment._id,
+            text: comment.text,
+            userId: comment.user._id,
+            userName: comment.user.name,
+            isCurrentUser: comment.user._id === currentUser?.userId,
+            createdAt: comment.createdAt
+          }))
+        }));
+      } catch (err) {
+        console.error("Error fetching comments:", err);
+        showNotification("Failed to load comments");
+      }
+    }
+    
     setShowComments(prev => ({
       ...prev,
       [postId]: !prev[postId]
@@ -169,74 +174,64 @@ const Post = () => {
 
   const handleLike = async (postId) => {
     try {
-      // Toggle like/unlike on the backend
-      const response = await apiClient.post(`/posts/${postId}/likes`);
-
-      // Update UI
-      setPosts((prevPosts) =>
-        prevPosts.map((post) =>
+      await apiClient.post(`/posts/${postId}/likes`);
+      
+      setPosts(prevPosts =>
+        prevPosts.map(post =>
           post.id === postId
             ? {
                 ...post,
                 isLiked: !post.isLiked,
                 likeCount: post.isLiked ? post.likeCount - 1 : post.likeCount + 1,
+                likes: post.isLiked
+                  ? post.likes.filter(id => id !== currentUser.userId)
+                  : [...post.likes, currentUser.userId]
               }
             : post
         )
       );
     } catch (err) {
-      console.error("Error liking/unliking post:", err);
-      showNotification("Failed to update like status. Please try again.");
+      console.error("Error liking post:", err);
+      showNotification("Failed to update like");
     }
   };
 
   const handleCommentSubmit = async (e, postId) => {
     e.preventDefault();
-    if (newComment.trim()) {
-      try {
-        // Add comment on the backend
-        const response = await apiClient.post(`/posts/${postId}/comments`, {
-          text: newComment
-        });
+    if (!newComment.trim()) return;
 
-        // Get the new comment from the response
-        // Assuming the backend returns the updated comments array
-        const latestComment = response.data[response.data.length - 1];
-        
-        // Update local comments state with the actual user info
-        const newCommentObj = {
-          id: latestComment._id,
-          user: currentUser.userName, // Use the stored username
-          userId: currentUser.userId, // Use the stored user ID
-          text: newComment,
-          isCurrentUser: true, // This is the current user's comment
-        };
-        
-        setComments(prevComments => ({
-          ...prevComments,
-          [postId]: [...(prevComments[postId] || []), newCommentObj]
-        }));
+    try {
+      const response = await apiClient.post(`/posts/${postId}/comments`, {
+        text: newComment
+      });
 
-        // Update post comment count
-        setPosts((prevPosts) =>
-          prevPosts.map((post) =>
-            post.id === postId
-              ? { ...post, commentCount: post.commentCount + 1 }
-              : post
-          )
-        );
-        
-        // Show comments when a new comment is added
-        setShowComments(prev => ({
-          ...prev,
-          [postId]: true
-        }));
-        
-        setNewComment("");
-      } catch (err) {
-        console.error("Error adding comment:", err);
-        showNotification("Failed to add comment. Please try again.");
-      }
+      const newCommentData = {
+        id: response.data._id,
+        text: newComment,
+        userId: currentUser.userId,
+        userName: currentUser.userName,
+        isCurrentUser: true,
+        createdAt: new Date().toISOString()
+      };
+
+      setComments(prev => ({
+        ...prev,
+        [postId]: [...(prev[postId] || []), newCommentData]
+      }));
+
+      setPosts(prevPosts =>
+        prevPosts.map(post =>
+          post.id === postId
+            ? { ...post, commentCount: post.commentCount + 1 }
+            : post
+        )
+      );
+
+      setNewComment("");
+      setShowComments(prev => ({ ...prev, [postId]: true }));
+    } catch (err) {
+      console.error("Error adding comment:", err);
+      showNotification("Failed to add comment");
     }
   };
 
@@ -246,61 +241,51 @@ const Post = () => {
   };
 
   const handleUpdateComment = async (postId, commentId) => {
-    if (editedCommentText.trim()) {
-      try {
-        // Update comment on the backend
-        const response = await apiClient.put(`/posts/${postId}/comments/${commentId}`, {
-          text: editedCommentText
-        });
+    if (!editedCommentText.trim()) return;
 
-        // Update local state
-        setComments(prevComments => ({
-          ...prevComments,
-          [postId]: prevComments[postId].map((comment) =>
-            comment.id === commentId
-              ? { ...comment, text: editedCommentText }
-              : comment
-          )
-        }));
-        
-        setEditingCommentId(null);
-      } catch (err) {
-        console.error("Error updating comment:", err);
-        showNotification("Failed to update comment. Please try again.");
-      }
+    try {
+      await apiClient.put(`/posts/${postId}/comments/${commentId}`, {
+        text: editedCommentText
+      });
+
+      setComments(prev => ({
+        ...prev,
+        [postId]: prev[postId].map(comment =>
+          comment.id === commentId
+            ? { ...comment, text: editedCommentText }
+            : comment
+        )
+      }));
+
+      setEditingCommentId(null);
+      showNotification("Comment updated");
+    } catch (err) {
+      console.error("Error updating comment:", err);
+      showNotification("Failed to update comment");
     }
   };
 
   const handleDeleteComment = async (postId, commentId) => {
     try {
-      console.log("Deleting comment with postId:", postId, "and commentId:", commentId); // Log the IDs
-      const response = await apiClient.delete(`/posts/${postId}/comments/${commentId}`);
-      const updatedPost = response.data;
+      await apiClient.delete(`/posts/${postId}/comments/${commentId}`);
 
-      // Filter out the deleted comment from local state
-      setComments((prevComments) => ({
-        ...prevComments,
-        [postId]: prevComments[postId].filter(comment => comment.id !== commentId)
+      setComments(prev => ({
+        ...prev,
+        [postId]: prev[postId].filter(comment => comment.id !== commentId)
       }));
 
-      // Update post comment count
-      setPosts((prevPosts) =>
-        prevPosts.map((post) =>
+      setPosts(prevPosts =>
+        prevPosts.map(post =>
           post.id === postId
             ? { ...post, commentCount: post.commentCount - 1 }
             : post
         )
       );
+
+      showNotification("Comment deleted");
     } catch (err) {
       console.error("Error deleting comment:", err);
-      if (err.response) {
-        console.error("Server responded with:", err.response.data);
-      } else if (err.request) {
-        console.error("Request was made but no response received:", err.request);
-      } else {
-        console.error("Error setting up the request:", err.message);
-      }
-      showNotification("Failed to delete comment. Please try again.");
+      showNotification("Failed to delete comment");
     }
   };
 
@@ -318,10 +303,7 @@ const Post = () => {
 
   const handlePostInputChange = (e) => {
     const { name, value } = e.target;
-    setCurrentPost((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setCurrentPost(prev => ({ ...prev, [name]: value }));
   };
 
   const handleImageChange = (e) => {
@@ -329,7 +311,7 @@ const Post = () => {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setCurrentPost((prev) => ({
+        setCurrentPost(prev => ({
           ...prev,
           image: file,
           imagePreview: reader.result,
@@ -344,81 +326,48 @@ const Post = () => {
     if (!currentPost.description.trim()) return;
 
     try {
-      // Create FormData for file upload
       const formData = new FormData();
       formData.append('description', currentPost.description);
-      
-      if (currentPost.location) {
-        formData.append('location', currentPost.location);
-      }
-      
-      if (currentPost.image) {
-        formData.append('image', currentPost.image);
-      }
+      if (currentPost.location) formData.append('location', currentPost.location);
+      if (currentPost.image) formData.append('image', currentPost.image);
 
-      // Custom headers for form data
-      const config = {
+      const response = await axios.post(`${API_URL}/posts`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${getAuthToken()}`
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
-      };
+      });
 
-      // Create post on the backend
-      const response = await axios.post(`${API_URL}/posts`, formData, config);
-      const newPost = response.data;
-
-      // Get proper image URL with full path
-      let imageUrl = defaultImage;
-      if (newPost.image) {
-        // If image path starts with http, use as is, otherwise prepend API_URL
-        imageUrl = newPost.image.startsWith('http') 
-          ? newPost.image 
-          : `${API_URL}/${newPost.image.replace(/^\/+/, '')}`;
-      }
-
-      // Create frontend post object with current user's actual name
-      const newPostObj = {
-        id: newPost._id,
-        username: currentUser.userName, // Use stored username instead of hardcoding
-        userId: currentUser.userId, // Use stored user ID
-        location: currentPost.location || "",
-        date: new Date().toLocaleDateString("en-US", {
-          month: "long",
-          day: "numeric",
-          year: "numeric",
-        }),
-        description: currentPost.description,
+      const newPost = {
+        id: response.data._id,
+        description: response.data.description,
+        location: response.data.location || "",
+        imageUrl: response.data.image 
+          ? `${API_URL}/${response.data.image.replace(/^\/+/, '')}`
+          : defaultImage,
+        userId: currentUser.userId,
+        userName: currentUser.userName,
+        createdAt: new Date().toISOString(),
         likes: [],
         likeCount: 0,
         commentCount: 0,
         isLiked: false,
-        imageUrl: imageUrl,
-        isCurrentUser: true, // This is the current user's post
+        isCurrentUser: true
       };
 
-      setPosts([newPostObj, ...posts]);
-      setComments(prev => ({
-        ...prev,
-        [newPostObj.id]: []
-      }));
-      
-      // Initialize with comments hidden
-      setShowComments(prev => ({
-        ...prev,
-        [newPostObj.id]: false
-      }));
-      
+      setPosts(prev => [newPost, ...prev]);
+      setComments(prev => ({ ...prev, [newPost.id]: [] }));
+      setShowComments(prev => ({ ...prev, [newPost.id]: false }));
       setShowCreateModal(false);
       showNotification("Post created successfully!");
     } catch (err) {
       console.error("Error creating post:", err);
-      showNotification("Failed to create post. Please try again.");
+      showNotification("Failed to create post");
     }
   };
 
   const handleEditPost = (postId) => {
-    const postToEdit = posts.find((post) => post.id === postId);
+    const postToEdit = posts.find(post => post.id === postId);
     if (postToEdit) {
       setCurrentPost({
         id: postId,
@@ -437,91 +386,54 @@ const Post = () => {
     if (!currentPost.description.trim()) return;
 
     try {
-      // If there's a new image, we need to use FormData
-      if (currentPost.image) {
-        const formData = new FormData();
-        formData.append('description', currentPost.description);
-        
-        if (currentPost.location) {
-          formData.append('location', currentPost.location);
-        }
-        
-        formData.append('image', currentPost.image);
+      const formData = new FormData();
+      formData.append('description', currentPost.description);
+      if (currentPost.location) formData.append('location', currentPost.location);
+      if (currentPost.image) formData.append('image', currentPost.image);
 
-        // Custom headers for form data
-        const config = {
+      const response = await axios.put(
+        `${API_URL}/posts/${currentPost.id}`,
+        formData,
+        {
           headers: {
             'Content-Type': 'multipart/form-data',
-            'Authorization': `Bearer ${getAuthToken()}`
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
-        };
-
-        // Update post with new image
-        const response = await axios.put(`${API_URL}/posts/${currentPost.id}`, formData, config);
-        
-        // Get updated image URL from response
-        let imageUrl = currentPost.imagePreview;
-        if (response.data && response.data.image) {
-          // If image path starts with http, use as is, otherwise prepend API_URL
-          imageUrl = response.data.image.startsWith('http') 
-            ? response.data.image 
-            : `${API_URL}/${response.data.image.replace(/^\/+/, '')}`;
         }
-        
-        // Update local state with the new image URL
-        setPosts(
-          posts.map((post) =>
-            post.id === currentPost.id
-              ? {
-                  ...post,
-                  description: currentPost.description,
-                  location: currentPost.location || "",
-                  imageUrl: imageUrl,
-                }
-              : post
-          )
-        );
-      } else {
-        // Just update text fields
-        await apiClient.put(`/posts/${currentPost.id}`, {
-          description: currentPost.description,
-          location: currentPost.location || ""
-        });
-        
-        // Update local state
-        setPosts(
-          posts.map((post) =>
-            post.id === currentPost.id
-              ? {
-                  ...post,
-                  description: currentPost.description,
-                  location: currentPost.location || "",
-                }
-              : post
-          )
-        );
-      }
+      );
+
+      setPosts(prevPosts =>
+        prevPosts.map(post =>
+          post.id === currentPost.id
+            ? {
+                ...post,
+                description: currentPost.description,
+                location: currentPost.location || "",
+                imageUrl: response.data.image
+                  ? `${API_URL}/${response.data.image.replace(/^\/+/, '')}`
+                  : post.imageUrl
+              }
+            : post
+        )
+      );
 
       setShowEditModal(false);
       showNotification("Post updated successfully!");
     } catch (err) {
       console.error("Error updating post:", err);
-      showNotification("Failed to update post. Please try again.");
+      showNotification("Failed to update post");
     }
   };
 
   const handleDeletePost = async (postId) => {
     try {
-      // Delete post on the backend
       await apiClient.delete(`/posts/${postId}`);
-
-      // Update local state
-      setPosts(posts.filter((post) => post.id !== postId));
+      setPosts(prev => prev.filter(post => post.id !== postId));
       setShowOptionsMenu(null);
       showNotification("Post deleted successfully!");
     } catch (err) {
       console.error("Error deleting post:", err);
-      showNotification("Failed to delete post. Please try again.");
+      showNotification("Failed to delete post");
     }
   };
 
@@ -531,21 +443,20 @@ const Post = () => {
 
   const showNotification = (message) => {
     setNotification(message);
-    setTimeout(() => {
-      setNotification(null);
-    }, 3000);
+    setTimeout(() => setNotification(null), 3000);
   };
 
   const focusCommentInput = (postId) => {
-    // Show the comments section when user clicks on comment button
-    setShowComments(prev => ({
-      ...prev,
-      [postId]: true
-    }));
-
+    setShowComments(prev => ({ ...prev, [postId]: true }));
     if (commentInputRef.current) {
       commentInputRef.current.focus();
     }
+  };
+
+  // Format date for display
+  const formatDate = (dateString) => {
+    const options = { month: "long", day: "numeric", year: "numeric" };
+    return new Date(dateString).toLocaleDateString("en-US", options);
   };
 
   return (
@@ -554,8 +465,12 @@ const Post = () => {
       <div className={styles.leftSidebar}>
         <div className={styles.sidebarContent}>
           <div className={styles.profileSection}>
-            <div className={styles.sidebarAvatar}>{currentUser.userName.charAt(0)}</div>
-            <span className={styles.profileName}>{currentUser.userName}</span>
+            <div className={styles.sidebarAvatar}>
+              {currentUser?.userName?.charAt(0) || 'U'}
+            </div>
+            <span className={styles.profileName}>
+              {currentUser?.userName || 'User'}
+            </span>
           </div>
           <nav className={styles.navMenu}>
             <button className={styles.navItem}>
@@ -563,15 +478,6 @@ const Post = () => {
             </button>
             <button className={styles.navItem}>
               <span className={styles.navIcon}>👤</span> Profile
-            </button>
-            <button className={styles.navItem}>
-              <span className={styles.navIcon}>👥</span> Friends
-            </button>
-            <button className={styles.navItem}>
-              <span className={styles.navIcon}>📸</span> Photos
-            </button>
-            <button className={styles.navItem}>
-              <span className={styles.navIcon}>⚙️</span> Settings
             </button>
           </nav>
         </div>
@@ -596,38 +502,18 @@ const Post = () => {
               >
                 <span className={styles.postButtonIcon}>📷</span> Photo
               </button>
-              <button
-                onClick={() => openCreateModal("video")}
-                className={styles.postButton}
-              >
-                <span className={styles.postButtonIcon}>🎥</span> Video
-              </button>
-              <button
-                onClick={() => openCreateModal("feeling")}
-                className={styles.postButton}
-              >
-                <span className={styles.postButtonIcon}>😊</span> Feeling
-              </button>
             </div>
 
             {showCreateModal && (
               <div className={styles.postModalOverlay}>
                 <div className={styles.postModal}>
-                  <h3>
-                    Create{" "}
-                    {modalType === "photo"
-                      ? "Photo"
-                      : modalType === "video"
-                      ? "Video"
-                      : "Feeling"}{" "}
-                    Post
-                  </h3>
+                  <h3>Create Post</h3>
                   <form onSubmit={handleSubmitPost}>
                     <textarea
                       name="description"
                       value={currentPost.description}
                       onChange={handlePostInputChange}
-                      placeholder={`What's on your mind?`}
+                      placeholder="What's on your mind?"
                       className={styles.postTextarea}
                       required
                     />
@@ -639,36 +525,24 @@ const Post = () => {
                       placeholder="Add location"
                       className={styles.postInput}
                     />
-                    {modalType !== "feeling" && (
-                      <div className={styles.mediaUpload}>
-                        <label>
-                          <input
-                            type="file"
-                            onChange={handleImageChange}
-                            accept={modalType === "photo" ? "image/*" : "video/*"}
-                            className={styles.fileInput}
-                          />
-                          <span className={styles.uploadButton}>
-                            Add {modalType === "photo" ? "Photo" : "Video"}
-                          </span>
-                        </label>
-                        {currentPost.imagePreview &&
-                          (modalType === "photo" ? (
-                            <img
-                              src={currentPost.imagePreview}
-                              alt="Preview"
-                              className={styles.mediaPreview}
-                            />
-                          ) : (
-                            <video controls className={styles.mediaPreview}>
-                              <source
-                                src={currentPost.imagePreview}
-                                type="video/mp4"
-                              />
-                            </video>
-                          ))}
-                      </div>
-                    )}
+                    <div className={styles.mediaUpload}>
+                      <label>
+                        <input
+                          type="file"
+                          onChange={handleImageChange}
+                          accept="image/*"
+                          className={styles.fileInput}
+                        />
+                        <span className={styles.uploadButton}>Add Photo</span>
+                      </label>
+                      {currentPost.imagePreview && (
+                        <img
+                          src={currentPost.imagePreview}
+                          alt="Preview"
+                          className={styles.mediaPreview}
+                        />
+                      )}
+                    </div>
                     <div className={styles.modalButtons}>
                       <button
                         type="button"
@@ -752,12 +626,13 @@ const Post = () => {
                   <div className={styles.headerTop}>
                     <div className={styles.userInfo}>
                       <div className={styles.userAvatar}>
-                        {post.username.charAt(0)}
+                        {post.userName.charAt(0)}
                       </div>
                       <div>
-                        <h3 className={styles.username}>{post.username}</h3>
+                        <h3 className={styles.username}>{post.userName}</h3>
                         <p className={styles.meta}>
-                          {post.location} - {post.date}
+                          {post.location && `${post.location} • `}
+                          {formatDate(post.createdAt)}
                         </p>
                       </div>
                     </div>
@@ -828,9 +703,6 @@ const Post = () => {
                   >
                     <span className={styles.actionIcon}>💬</span> Comment
                   </button>
-                  <button className={styles.actionButton}>
-                    <span className={styles.actionIcon}>↗️</span> Share
-                  </button>
                 </div>
 
                 {showComments[post.id] && (
@@ -838,7 +710,7 @@ const Post = () => {
                     {comments[post.id]?.map((comment) => (
                       <div key={comment.id} className={`${styles.comment} ${editingCommentId === comment.id ? styles.editing : ''}`}>
                         <div className={styles.commentContent}>
-                          <span className={styles.commentUser}>{comment.user}</span>
+                          <span className={styles.commentUser}>{comment.userName}</span>
                           <span className={styles.commentText}>
                             {editingCommentId === comment.id ? (
                               <input
@@ -933,24 +805,10 @@ const Post = () => {
               className={styles.searchInput}
             />
           </div>
-          <div className={styles.suggestions}>
-            <h3 className={styles.suggestionsTitle}>Suggested Friends</h3>
-            <div className={styles.suggestionItem}>
-              <div className={styles.suggestionAvatar}>J</div>
-              <span>John Doe</span>
-              <button className={styles.addFriendButton}>Add Friend</button>
-            </div>
-            <div className={styles.suggestionItem}>
-              <div className={styles.suggestionAvatar}>S</div>
-              <span>Sarah Smith</span>
-              <button className={styles.addFriendButton}>Add Friend</button>
-            </div>
-          </div>
           <div className={styles.trending}>
             <h3 className={styles.suggestionsTitle}>Trending Topics</h3>
-            <div className={styles.trendingItem}>#Circular Economy & Zero Waste</div>
-            <div className={styles.trendingItem}>#Smart Waste Technologies</div>
-            <div className={styles.trendingItem}>#E-Waste Management</div>
+            <div className={styles.trendingItem}>#Circular Economy</div>
+            <div className={styles.trendingItem}>#Zero Waste</div>
           </div>
         </div>
       </div>
