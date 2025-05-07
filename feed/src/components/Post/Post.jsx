@@ -383,45 +383,91 @@ const Post = () => {
 
   const handleUpdatePost = async (e) => {
     e.preventDefault();
-    if (!currentPost.description.trim()) return;
-
+    
+    // Validate required fields
+    if (!currentPost.description.trim()) {
+      showNotification("Post description cannot be empty");
+      return;
+    }
+  
     try {
-      const formData = new FormData();
-      formData.append('description', currentPost.description);
-      if (currentPost.location) formData.append('location', currentPost.location);
-      if (currentPost.image) formData.append('image', currentPost.image);
-
-      const response = await axios.put(
-        `${API_URL}/posts/${currentPost.id}`,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
+      let response;
+      const config = {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
-      );
-
+      };
+  
+      // Check if we're updating with a new image
+      if (currentPost.image) {
+        const formData = new FormData();
+        formData.append('description', currentPost.description);
+        if (currentPost.location) formData.append('location', currentPost.location);
+        formData.append('image', currentPost.image);
+        
+        config.headers['Content-Type'] = 'multipart/form-data';
+        
+        response = await axios.put(
+          `${API_URL}/posts/${currentPost.id}`,
+          formData,
+          config
+        );
+      } else {
+        // No image update, just send JSON
+        config.headers['Content-Type'] = 'application/json';
+        
+        response = await axios.put(
+          `${API_URL}/posts/${currentPost.id}`,
+          {
+            description: currentPost.description,
+            location: currentPost.location || ""
+          },
+          config
+        );
+      }
+  
+      // Check if response is valid
+      if (!response.data) {
+        throw new Error("No data returned from server");
+      }
+  
+      // Update the posts state with the new data
       setPosts(prevPosts =>
         prevPosts.map(post =>
           post.id === currentPost.id
             ? {
                 ...post,
-                description: currentPost.description,
-                location: currentPost.location || "",
-                imageUrl: response.data.image
-                  ? `${API_URL}/${response.data.image.replace(/^\/+/, '')}`
-                  : post.imageUrl
+                description: response.data.description || currentPost.description,
+                location: response.data.location || currentPost.location || "",
+                imageUrl: response.data.image 
+                  ? response.data.image.startsWith('http')
+                    ? response.data.image
+                    : `${API_URL}/${response.data.image.replace(/^\/+/, '')}`
+                  : post.imageUrl, // Keep old image if no new one was provided
+                updatedAt: response.data.updatedAt || new Date().toISOString()
               }
             : post
         )
       );
-
+  
       setShowEditModal(false);
       showNotification("Post updated successfully!");
     } catch (err) {
       console.error("Error updating post:", err);
-      showNotification("Failed to update post");
+      
+      let errorMessage = "Failed to update post";
+      if (err.response) {
+        // Handle specific error messages from backend
+        if (err.response.data && err.response.data.message) {
+          errorMessage = err.response.data.message;
+        } else if (err.response.status === 401) {
+          errorMessage = "Unauthorized - Please login again";
+        } else if (err.response.status === 404) {
+          errorMessage = "Post not found";
+        }
+      }
+      
+      showNotification(errorMessage);
     }
   };
 
