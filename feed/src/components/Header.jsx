@@ -2,14 +2,68 @@
 
 import { useState, useEffect } from "react"
 import { Link, useNavigate, useLocation } from "react-router-dom"
-import { FiShoppingCart, FiUser, FiHeart, FiMenu, FiX, FiSearch } from "react-icons/fi"
+import { FiShoppingCart, FiHeart, FiMenu, FiX, FiSearch, FiLogOut, FiSettings } from "react-icons/fi"
 
-const Header = ({ isAuthenticated }) => {
+const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [scrolled, setScrolled] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [currentUser, setCurrentUser] = useState(null)
+  const [showUserDropdown, setShowUserDropdown] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
+
+  // Check authentication status on component mount and when localStorage changes
+  useEffect(() => {
+    const checkAuthStatus = () => {
+      const token = localStorage.getItem("token")
+      setIsAuthenticated(!!token)
+
+      if (token) {
+        // Fetch user data if token exists
+        fetchUserData(token)
+      } else {
+        setCurrentUser(null)
+      }
+    }
+
+    checkAuthStatus()
+
+    // Listen for storage events (when token is added/removed in another tab)
+    window.addEventListener("storage", checkAuthStatus)
+
+    return () => {
+      window.removeEventListener("storage", checkAuthStatus)
+    }
+  }, [])
+
+  // Fetch user data from API
+  const fetchUserData = async (token) => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/profile`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setCurrentUser({
+          name: data.user.name,
+          id: data.user.id,
+          profilePhoto: data.user.profilePhoto,
+        })
+      } else {
+        // If response is not ok, token might be invalid
+        localStorage.removeItem("token")
+        setIsAuthenticated(false)
+        setCurrentUser(null)
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error)
+    }
+  }
 
   useEffect(() => {
     const handleScroll = () => {
@@ -34,6 +88,18 @@ const Header = ({ isAuthenticated }) => {
     return location.pathname === path ? "font-semibold underline" : "hover:underline"
   }
 
+  const handleLogout = () => {
+    localStorage.removeItem("token")
+    setIsAuthenticated(false)
+    setCurrentUser(null)
+    setShowUserDropdown(false)
+    navigate("/signin")
+  }
+
+  const toggleUserDropdown = () => {
+    setShowUserDropdown(!showUserDropdown)
+  }
+
   return (
     <header
       className={`sticky top-0 z-50 w-full transition-all duration-300 ${scrolled ? "shadow-md" : ""}`}
@@ -44,16 +110,26 @@ const Header = ({ isAuthenticated }) => {
           {/* Logo */}
           <div className="flex-shrink-0">
             <Link to="/" className="flex items-center">
-              <span className="text-2xl font-bold" style={{ color: "black" }}>Eco Hub</span>
+              <span className="text-2xl font-bold" style={{ color: "black" }}>
+                Eco Hub
+              </span>
             </Link>
           </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-8">
-            <Link to="/" className={isActive("/")} style={{ color: "black" }}>Home</Link>
-            <Link to="/marketplace" className={isActive("/marketplace")} style={{ color: "black" }}>Marketplace</Link>
-            <Link to="/aboutus" className={isActive("/aboutus")} style={{ color: "black" }}>About Us</Link>
-            <Link to="/contactus" className={isActive("/contactus")} style={{ color: "black" }}>Contact</Link>
+            <Link to="/" className={isActive("/")} style={{ color: "black" }}>
+              Home
+            </Link>
+            <Link to="/marketplace" className={isActive("/marketplace")} style={{ color: "black" }}>
+              Marketplace
+            </Link>
+            <Link to="/aboutus" className={isActive("/aboutus")} style={{ color: "black" }}>
+              About Us
+            </Link>
+            <Link to="/contactus" className={isActive("/contactus")} style={{ color: "black" }}>
+              Contact
+            </Link>
           </nav>
 
           {/* Search Bar */}
@@ -87,26 +163,60 @@ const Header = ({ isAuthenticated }) => {
                 <Link to="/wishlist" className="p-2 rounded-full hover:bg-opacity-20 hover:bg-black">
                   <FiHeart className="h-6 w-6" style={{ color: "black" }} />
                 </Link>
-                <div className="relative group">
-                  <button className="p-2 rounded-full hover:bg-opacity-20 hover:bg-black flex items-center">
-                    <FiUser className="h-6 w-6" style={{ color: "black" }} />
+                <div className="relative">
+                  <button
+                    onClick={toggleUserDropdown}
+                    className="p-2 rounded-full hover:bg-opacity-20 hover:bg-black flex items-center"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center text-white font-semibold">
+                      {currentUser?.name?.charAt(0) || "U"}
+                    </div>
                   </button>
-                  <div className="absolute right-0 w-48 mt-2 origin-top-right bg-white divide-y divide-gray-100 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
-                    <div className="py-1">
-                      <Link to="/profile" className="block px-4 py-2 text-sm text-black hover:bg-gray-100">Profile</Link>
-                      <Link to="/myitems" className="block px-4 py-2 text-sm text-black hover:bg-gray-100">My Items</Link>
-                      <Link to="/myposts" className="block px-4 py-2 text-sm text-black hover:bg-gray-100">My Posts</Link>
-                      <Link to="/myreviews" className="block px-4 py-2 text-sm text-black hover:bg-gray-100">My Reviews</Link>
+                  {showUserDropdown && (
+                    <div className="absolute right-0 w-48 mt-2 origin-top-right bg-white divide-y divide-gray-100 rounded-md shadow-lg">
+                      <div className="py-1">
+                        <div className="px-4 py-2 text-sm text-gray-700 font-medium border-b border-gray-100">
+                          {currentUser?.name || "User"}
+                        </div>
+                        <Link to="/profile" className="block px-4 py-2 text-sm text-black hover:bg-gray-100">
+                          Profile
+                        </Link>
+                        <Link to="/myitems" className="block px-4 py-2 text-sm text-black hover:bg-gray-100">
+                          My Items
+                        </Link>
+                        <Link to="/myposts" className="block px-4 py-2 text-sm text-black hover:bg-gray-100">
+                          My Posts
+                        </Link>
+                        <Link to="/myreviews" className="block px-4 py-2 text-sm text-black hover:bg-gray-100">
+                          My Reviews
+                        </Link>
+                        <Link to="/settings" className="block px-4 py-2 text-sm text-black hover:bg-gray-100">
+                          <div className="flex items-center">
+                            <FiSettings className="mr-2" />
+                            Settings
+                          </div>
+                        </Link>
+                      </div>
+                      <div className="py-1">
+                        <button
+                          onClick={handleLogout}
+                          className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                        >
+                          <div className="flex items-center">
+                            <FiLogOut className="mr-2" />
+                            Logout
+                          </div>
+                        </button>
+                      </div>
                     </div>
-                    <div className="py-1">
-                      <Link to="/logout" className="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Logout</Link>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </>
             ) : (
               <>
-                <Link to="/signin" className="px-4 py-2" style={{ color: "black" }}>Sign In</Link>
+                <Link to="/signin" className="px-4 py-2" style={{ color: "black" }}>
+                  Sign In
+                </Link>
                 <Link
                   to="/signup"
                   className="px-4 py-2 bg-black text-white rounded-md border border-black hover:bg-opacity-90"
@@ -173,17 +283,33 @@ const Header = ({ isAuthenticated }) => {
           <div className="pt-4 pb-3 border-t border-gray-200">
             {isAuthenticated ? (
               <div className="px-2 space-y-1">
-                {["/profile", "/cart", "/wishlist", "/myitems", "/myposts", "/myreviews", "/logout"].map((path) => (
+                <div className="px-3 py-2 rounded-md text-base font-medium text-black">
+                  {currentUser?.name || "User"}
+                </div>
+                {["/profile", "/cart", "/wishlist", "/myitems", "/myposts", "/myreviews", "/settings"].map((path) => (
                   <Link
                     key={path}
                     to={path}
                     className="block px-3 py-2 rounded-md text-base font-medium hover:bg-gray-100"
                     onClick={closeMenu}
-                    style={{ color: path === "/logout" ? "red" : "black" }}
+                    style={{ color: "black" }}
                   >
-                    {path.slice(1).replace(/my/, "My ").replace(/([a-z])([A-Z])/g, "$1 $2")}
+                    {path
+                      .slice(1)
+                      .replace(/my/, "My ")
+                      .replace(/([a-z])([A-Z])/g, "$1 $2")}
                   </Link>
                 ))}
+                <button
+                  onClick={() => {
+                    handleLogout()
+                    closeMenu()
+                  }}
+                  className="block w-full text-left px-3 py-2 rounded-md text-base font-medium hover:bg-gray-100"
+                  style={{ color: "red" }}
+                >
+                  Logout
+                </button>
               </div>
             ) : (
               <div className="px-2 space-y-1">
