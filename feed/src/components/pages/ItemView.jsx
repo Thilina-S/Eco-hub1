@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from "react";
-import {
-  FaHeart,
-  FaShoppingCart,
-  FaArrowLeft,
-  FaBars,
-  FaTimes,
-  FaStar,
-} from "react-icons/fa";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { 
+  FaHeart, 
+  FaShoppingCart, 
+  FaArrowLeft, 
+  FaStar,
+  FaBars,
+  FaTimes
+} from "react-icons/fa";
 
-// Create a reusable API client with auth token handling
+// Create an API client for authenticated requests
 const createApiClient = () => {
   const apiClient = axios.create({
     baseURL: import.meta.env.VITE_API_URL,
@@ -19,7 +19,6 @@ const createApiClient = () => {
     }
   });
 
-  // Add auth token interceptor
   apiClient.interceptors.request.use(
     config => {
       const token = localStorage.getItem('token');
@@ -35,29 +34,23 @@ const createApiClient = () => {
 };
 
 export default function ItemView() {
-  const location = useLocation();
+  const { productId } = useParams();  // Get productId from URL params
   const navigate = useNavigate();
-  const { productId } = useParams();
-  
-  // Create API client instance
-  const apiClient = createApiClient();
+  const apiClient = createApiClient();  // Initialize API client
 
-  // State for product, wishlist, and cart
-  const [product, setProduct] = useState(location.state?.product || null);
+  // States to store product and reviews data
+  const [product, setProduct] = useState(null);
+  const [reviews, setReviews] = useState([]);
+  const [message, setMessage] = useState("");
   const [wishlist, setWishlist] = useState([]);
   const [cart, setCart] = useState([]);
-  const [message, setMessage] = useState("");
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [loading, setLoading] = useState(!location.state?.product);
-
-  // State for reviews and user
-  const [reviews, setReviews] = useState([]);
   const [newReview, setNewReview] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [editText, setEditText] = useState("");
   const [rating, setRating] = useState(5);
   const [currentUser, setCurrentUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   // Fetch current user from backend
@@ -66,14 +59,13 @@ export default function ItemView() {
       try {
         const token = localStorage.getItem("token");
         if (!token) {
-          setIsLoading(false);
+          setLoading(false);
           return; // No token, no authenticated user
         }
         
-        // Use the apiClient instead of direct axios call
         const response = await apiClient.get('/profile');
         
-        // Update user state with consistent structure similar to Post.jsx
+        // Update user state with consistent structure
         setCurrentUser({
           id: response.data.user.id,
           userId: response.data.user.id, // Adding both for compatibility
@@ -82,17 +74,15 @@ export default function ItemView() {
           profilePhoto: response.data.user.profilePhoto
         });
         
-        setIsLoading(false);
+        setLoading(false);
       } catch (err) {
         console.error("Error fetching current user:", err);
         setError("Failed to load user data");
-        setIsLoading(false);
+        setLoading(false);
         
         // Check for 401 unauthorized specifically
         if (err.response && err.response.status === 401) {
           // Token might be invalid or expired
-          // You could choose to clear token here, but only if you're sure
-          // localStorage.removeItem("token");
         }
       }
     };
@@ -100,23 +90,21 @@ export default function ItemView() {
     fetchCurrentUser();
   }, []);
 
-  // Fetch product if not passed via state
+  // Fetch product when the component mounts
   useEffect(() => {
-    if (!product && productId) {
-      const fetchProduct = async () => {
-        try {
-          // Use the apiClient here too
-          const response = await apiClient.get(`/products/${productId}`);
-          setProduct(response.data);
-        } catch (error) {
-          console.error("Failed to fetch product:", error);
-        } finally {
-          setLoading(false);
-        }
-      };
-      fetchProduct();
-    }
-  }, [productId, product]);
+    const fetchProduct = async () => {
+      try {
+        const response = await apiClient.get(`/products/${productId}`);
+        setProduct(response.data);
+        setLoading(false);
+      } catch (error) {
+        console.error("Failed to fetch product:", error);
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [productId]);  // Re-fetch when productId changes
 
   // Fetch reviews for the product
   useEffect(() => {
@@ -124,12 +112,28 @@ export default function ItemView() {
       const fetchReviews = async () => {
         try {
           const response = await apiClient.get(`/products/${productId}/reviews`);
-
-          const processedReviews = response.data.map((review) => ({
-            ...review,
-            isCurrentUser: currentUser && review.userId === currentUser.id,
-          }));
           
+          // Process reviews to mark those belonging to current user
+          const processedReviews = response.data.map((review) => {
+            // For debugging
+            console.log("Review:", review);
+            console.log("Current User:", currentUser);
+            
+            // Check ID match in multiple formats to ensure compatibility
+            const isUsersReview = 
+              currentUser && 
+              (review.userId === currentUser.id || 
+               review.userId === currentUser.userId || 
+               review.user_id === currentUser.id ||
+               review._id === currentUser.id);
+            
+            return {
+              ...review,
+              isCurrentUser: isUsersReview,
+            };
+          });
+          
+          console.log("Processed Reviews:", processedReviews);
           setReviews(processedReviews);
         } catch (error) {
           console.error("Failed to fetch reviews:", error);
@@ -139,7 +143,16 @@ export default function ItemView() {
     }
   }, [productId, currentUser]);
 
-  // Handle if no product is found
+  // Show popup message
+  const showPopup = (msg) => {
+    setMessage(msg);
+    setTimeout(() => setMessage(""), 3000);
+  };
+
+  // Check if user is authenticated (has token)
+  const isAuthenticated = !!localStorage.getItem("token");
+
+  // Handle if product is still loading
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen px-6 py-8 bg-gray-100">
@@ -152,6 +165,7 @@ export default function ItemView() {
     );
   }
 
+  // Handle if no product is found
   if (!product) {
     return (
       <div className="flex items-center justify-center min-h-screen px-6 py-8 bg-gray-100">
@@ -170,80 +184,65 @@ export default function ItemView() {
     );
   }
 
+  // Calculate discounted price
+  const discountedPrice = product.price - (product.price * (product.discount || 0)) / 100;
+
   // Product status checks
   const isInWishlist = wishlist.some((item) => item.id === product._id);
   const isInCart = cart.some((item) => item.id === product._id);
-  const discountedPrice =
-    product.price - (product.price * (product.discount || 0)) / 100;
 
-  // Check if user is authenticated (has token)
-  const isAuthenticated = !!localStorage.getItem("token");
-
-  // Show popup message
-  const showPopup = (msg) => {
-    setMessage(msg);
-    setTimeout(() => setMessage(""), 3000);
-  };
-
-  // Wishlist and cart handlers
+  // Handle Wishlist toggle
   const toggleWishlist = () => {
     const updatedWishlist = isInWishlist
       ? wishlist.filter((item) => item.id !== product._id)
       : [...wishlist, { ...product, quantity: 1 }];
-
+    
     setWishlist(updatedWishlist);
     showPopup(isInWishlist ? "Removed from wishlist" : "Added to wishlist");
   };
 
+  // Handle Cart toggle
   const toggleCart = () => {
     const updatedCart = isInCart
       ? cart.filter((item) => item.id !== product._id)
       : [...cart, { ...product, quantity: 1 }];
-
+    
     setCart(updatedCart);
     showPopup(isInCart ? "Removed from cart" : "Added to cart");
   };
 
-  // Review handlers
+  // Handle Review Add
   const handleAddReview = async (e) => {
     e.preventDefault();
     if (!newReview.trim()) return;
 
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
+      if (!isAuthenticated) {
         showPopup("Please log in to leave a review");
         return;
       }
 
-      const userData = currentUser || { 
-        id: "current-user", 
-        name: "User" 
-      };
+      const userData = currentUser || { id: "current-user", name: "User" };
 
       await apiClient.post(
-        `/products/${product._id}/reviews`,
+        `/products/${productId}/reviews`,
         {
           userId: userData.id,
           name: userData.name || "User",
           text: newReview,
           rating,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
         }
       );
 
       // After adding the review, fetch the updated reviews
-      const updatedReviews = await apiClient.get(`/products/${product._id}/reviews`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      setReviews(updatedReviews.data);
+      const updatedReviewsResponse = await apiClient.get(`/products/${productId}/reviews`);
+      
+      const processedReviews = updatedReviewsResponse.data.map((review) => ({
+        ...review,
+        isCurrentUser: currentUser && review.userId === currentUser.id,
+      }));
+      
+      setReviews(processedReviews);
       setNewReview(""); 
       setRating(5);
       showPopup("Review added successfully");
@@ -253,37 +252,44 @@ export default function ItemView() {
     }
   };
 
+  // Handle Review Update
   const handleUpdateReview = async () => {
     if (!editText.trim()) return;
 
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
+      if (!isAuthenticated) {
         showPopup("Please log in to update a review");
         return;
       }
 
-      const response = await apiClient.put(
-        `/products/${product._id}/reviews/${editingId}`,
+      console.log("Updating review with ID:", editingId);
+      await apiClient.put(
+        `/products/${productId}/reviews/${editingId}`,
         {
           text: editText,
           rating,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
         }
       );
 
       // After updating, fetch the updated reviews
-      const updatedReviews = await apiClient.get(`/products/${product._id}/reviews`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const updatedReviewsResponse = await apiClient.get(`/products/${productId}/reviews`);
+      
+      // Process reviews with the same logic as in the fetch function
+      const processedReviews = updatedReviewsResponse.data.map((review) => {
+        const isUsersReview = 
+          currentUser && 
+          (review.userId === currentUser.id || 
+           review.userId === currentUser.userId || 
+           review.user_id === currentUser.id ||
+           review._id === currentUser.id);
+        
+        return {
+          ...review,
+          isCurrentUser: isUsersReview,
+        };
       });
-
-      setReviews(updatedReviews.data); // Update reviews
+      
+      setReviews(processedReviews);
       setEditingId(null); // Reset editing state
       setEditText(""); // Clear edit input
       showPopup("Review updated successfully");
@@ -293,31 +299,36 @@ export default function ItemView() {
     }
   };
 
+  // Handle Review Deletion
   const handleDeleteReview = async (reviewId) => {
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
+      if (!isAuthenticated) {
         showPopup("Please log in to delete a review");
         return;
       }
 
-      await apiClient.delete(
-        `/products/${product._id}/reviews/${reviewId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      console.log("Deleting review with ID:", reviewId);
+      await apiClient.delete(`/products/${productId}/reviews/${reviewId}`);
 
       // After deletion, fetch the updated reviews
-      const updatedReviews = await apiClient.get(`/products/${product._id}/reviews`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const updatedReviewsResponse = await apiClient.get(`/products/${productId}/reviews`);
+      
+      // Process reviews with the same logic as in the fetch function
+      const processedReviews = updatedReviewsResponse.data.map((review) => {
+        const isUsersReview = 
+          currentUser && 
+          (review.userId === currentUser.id || 
+           review.userId === currentUser.userId || 
+           review.user_id === currentUser.id ||
+           review._id === currentUser.id);
+        
+        return {
+          ...review,
+          isCurrentUser: isUsersReview,
+        };
       });
-
-      setReviews(updatedReviews.data); // Update reviews
+      
+      setReviews(processedReviews);
       showPopup("Review deleted successfully");
     } catch (error) {
       console.error("Failed to delete review:", error);
@@ -621,13 +632,16 @@ export default function ItemView() {
                 <div className="space-y-4">
                   {reviews.map((review) => (
                     <div
-                      key={`review-${review._id}`}
+                      key={review._id}
                       className="p-4 border-b border-gray-200"
                     >
                       <div className="flex justify-between">
                         <div>
                           <div className="font-medium">
                             {review.name || "Anonymous"}
+                            {review.isCurrentUser && (
+                              <span className="ml-2 text-xs font-normal text-green-600">(You)</span>
+                            )}
                           </div>
                           <div className="flex items-center">
                             {[...Array(5)].map((_, i) => (
@@ -645,7 +659,9 @@ export default function ItemView() {
                             {new Date(review.date).toLocaleString()}
                           </div>
                         </div>
-                        {review.isCurrentUser && (
+                        
+                        {/* Show edit/delete options */}
+                        {isAuthenticated && (
                           <div className="flex space-x-2">
                             {editingId === review._id ? (
                               <>
