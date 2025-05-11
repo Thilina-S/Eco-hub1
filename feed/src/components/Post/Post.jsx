@@ -669,60 +669,79 @@ export default function PostFeed() {
             </div>
           </div>
 
-          <nav className="space-y-1">
-            <a href="#" className="flex items-center px-4 py-2 text-green-600 rounded-md bg-green-50">
-              <FaHome className="w-5 h-5 mr-3" />
-              Home
-            </a>
+<nav className="space-y-1">
+  <a href="/home" className="flex items-center px-4 py-2 text-green-600 rounded-md bg-green-50">
+    <FaHome className="w-5 h-5 mr-3" />
+    Home
+  </a>
 
-            <a href="#" className="flex items-center px-4 py-2 text-gray-600 rounded-md hover:bg-gray-100">
-              <FaUser className="w-5 h-5 mr-3" />
-              Profile
-            </a>
+  <a href="/profile" className="flex items-center px-4 py-2 text-gray-600 rounded-md hover:bg-gray-100">
+    <FaUser className="w-5 h-5 mr-3" />
+    Profile
+  </a>
 
-            <a href="#" className="flex items-center px-4 py-2 text-gray-600 rounded-md hover:bg-gray-100">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-5 h-5 mr-3"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                />
-              </svg>
-              Marketplace
-            </a>
+  <a href="/marketplace" className="flex items-center px-4 py-2 text-gray-600 rounded-md hover:bg-gray-100">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className="w-5 h-5 mr-3"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+      />
+    </svg>
+    Marketplace
+  </a>
 
-            <a href="#" className="flex items-center px-4 py-2 text-gray-600 rounded-md hover:bg-gray-100">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-5 h-5 mr-3"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                />
-              </svg>
-              My Items
-            </a>
-          </nav>
+  <a href="/myposts" className="flex items-center px-4 py-2 text-gray-600 rounded-md hover:bg-gray-100">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className="w-5 h-5 mr-3"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+      />
+    </svg>
+    My Posts
+  </a>
+
+  <a href="/myitems" className="flex items-center px-4 py-2 text-gray-600 rounded-md hover:bg-gray-100">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className="w-5 h-5 mr-3"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+      />
+    </svg>
+    My Items
+  </a>
+</nav>
+
         </div>
       </div>
 
       {/* Main Content */}
       <div className="flex-1">
         {notification && (
-          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-green-600 text-white px-4 py-2 rounded-md shadow-lg">
+          <div className="fixed z-50 px-4 py-2 text-white transform -translate-x-1/2 bg-green-600 rounded-md shadow-lg top-4 left-1/2">
             {notification}
           </div>
         )}
@@ -826,7 +845,7 @@ export default function PostFeed() {
                 </div>
 
                 {post.imageUrl && (
-                  <div className="w-full h-96 bg-gray-100">
+                  <div className="w-full bg-gray-100 h-96">
                     <img
                       src={post.imageUrl || "/placeholder.svg"}
                       alt="Post content"
@@ -862,7 +881,7 @@ export default function PostFeed() {
                   </button>
 
                   <button
-                    className="flex-1 flex items-center justify-center py-1 text-gray-500 hover:bg-gray-50 rounded-md"
+                    className="flex items-center justify-center flex-1 py-1 text-gray-500 rounded-md hover:bg-gray-50"
                     onClick={() => focusCommentInput(post.id)}
                   >
                     <MessageSquare className="w-5 h-5 mr-2" />
@@ -870,7 +889,7 @@ export default function PostFeed() {
                   </button>
 
                   <button
-                    className="flex-1 flex items-center justify-center py-1 text-gray-500 hover:bg-gray-50 rounded-md"
+                    className="flex items-center justify-center flex-1 py-1 text-gray-500 rounded-md hover:bg-gray-50"
                     onClick={() => openShareModal(post)}
                   >
                     <Share2 className="w-5 h-5 mr-2" />
@@ -880,7 +899,7 @@ export default function PostFeed() {
 
                 {showComments[post.id] && (
                   <div className="p-4 bg-gray-50">
-                    <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">
+                    <div className="mb-4 space-y-3 overflow-y-auto max-h-60">
                       {comments[post.id]?.map((comment) => (
                         <div
                           key={comment.id}
@@ -890,8 +909,8 @@ export default function PostFeed() {
                             {comment.userName.charAt(0)}
                           </div>
                           <div className="flex-1">
-                            <div className="bg-white rounded-lg p-2 shadow-sm">
-                              <div className="flex justify-between items-start">
+                            <div className="p-2 bg-white rounded-lg shadow-sm">
+                              <div className="flex items-start justify-between">
                                 <span className="text-sm font-medium">{comment.userName}</span>
                                 {comment.isCurrentUser && editingCommentId !== comment.id && (
                                   <div className="flex space-x-1">
@@ -912,22 +931,22 @@ export default function PostFeed() {
                               </div>
 
                               {editingCommentId === comment.id ? (
-                                <div className="mt-1 flex space-x-2">
+                                <div className="flex mt-1 space-x-2">
                                   <input
                                     type="text"
                                     value={editedCommentText}
                                     onChange={(e) => setEditedCommentText(e.target.value)}
-                                    className="flex-1 border border-gray-300 rounded-md px-2 py-1 text-sm"
+                                    className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded-md"
                                   />
                                   <button
                                     onClick={() => handleUpdateComment(post.id, comment.id)}
-                                    className="px-2 py-1 bg-green-500 text-white text-xs rounded-md"
+                                    className="px-2 py-1 text-xs text-white bg-green-500 rounded-md"
                                   >
                                     Save
                                   </button>
                                   <button
                                     onClick={() => setEditingCommentId(null)}
-                                    className="px-2 py-1 bg-gray-200 text-gray-700 text-xs rounded-md"
+                                    className="px-2 py-1 text-xs text-gray-700 bg-gray-200 rounded-md"
                                   >
                                     Cancel
                                   </button>
@@ -936,7 +955,7 @@ export default function PostFeed() {
                                 <p className="text-sm text-gray-700">{comment.text}</p>
                               )}
                             </div>
-                            <p className="text-xs text-gray-500 mt-1 ml-2">
+                            <p className="mt-1 ml-2 text-xs text-gray-500">
                               {new Date(comment.createdAt).toLocaleDateString()}
                             </p>
                           </div>
@@ -945,7 +964,7 @@ export default function PostFeed() {
                     </div>
 
                     <form onSubmit={(e) => handleCommentSubmit(e, post.id)} className="flex">
-                      <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white text-xs font-semibold mr-2 flex-shrink-0">
+                      <div className="flex items-center justify-center flex-shrink-0 w-8 h-8 mr-2 text-xs font-semibold text-white bg-green-500 rounded-full">
                         {currentUser?.userName?.charAt(0) || "U"}
                       </div>
                       <input
@@ -958,7 +977,7 @@ export default function PostFeed() {
                       />
                       <button
                         type="submit"
-                        className="ml-2 bg-green-500 text-white rounded-full p-2 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                        className="p-2 ml-2 text-white bg-green-500 rounded-full hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
                         disabled={!newComment.trim()}
                       >
                         <Send className="w-4 h-4" />
@@ -1020,17 +1039,17 @@ export default function PostFeed() {
             <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">
               &#8203;
             </span>
-            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-              <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
+            <div className="inline-block overflow-hidden text-left align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
                 <h3 className="text-lg font-medium text-gray-900">Create Post</h3>
                 <button onClick={() => setShowCreateModal(false)} className="text-gray-400 hover:text-gray-500">
-                  <X className="h-6 w-6" />
+                  <X className="w-6 h-6" />
                 </button>
               </div>
               <form onSubmit={handleSubmitPost}>
                 <div className="px-6 py-4">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center text-white font-semibold">
+                  <div className="flex items-center mb-4 space-x-3">
+                    <div className="flex items-center justify-center w-10 h-10 font-semibold text-white bg-green-500 rounded-full">
                       {currentUser?.userName?.charAt(0) || "U"}
                     </div>
                     <div>
@@ -1043,7 +1062,7 @@ export default function PostFeed() {
                           value={currentPost.location}
                           onChange={handlePostInputChange}
                           placeholder="Add location"
-                          className="bg-transparent border-none p-0 text-xs text-gray-500 focus:ring-0 w-full"
+                          className="w-full p-0 text-xs text-gray-500 bg-transparent border-none focus:ring-0"
                         />
                       </div>
                     </div>
@@ -1057,7 +1076,7 @@ export default function PostFeed() {
                     required
                   ></textarea>
                   <div className="mt-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Add Photo</label>
+                    <label className="block mb-2 text-sm font-medium text-gray-700">Add Photo</label>
                     <div className="flex items-center justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
                       <div className="space-y-1 text-center">
                         {currentPost.imagePreview ? (
@@ -1065,20 +1084,20 @@ export default function PostFeed() {
                             <img
                               src={currentPost.imagePreview || "/placeholder.svg"}
                               alt="Preview"
-                              className="mx-auto h-32 object-cover rounded-md"
+                              className="object-cover h-32 mx-auto rounded-md"
                             />
                             <button
                               type="button"
                               onClick={() => setCurrentPost((prev) => ({ ...prev, image: null, imagePreview: null }))}
-                              className="absolute top-0 right-0 -mt-2 -mr-2 bg-red-500 text-white rounded-full p-1"
+                              className="absolute top-0 right-0 p-1 -mt-2 -mr-2 text-white bg-red-500 rounded-full"
                             >
-                              <X className="h-4 w-4" />
+                              <X className="w-4 h-4" />
                             </button>
                           </div>
                         ) : (
                           <>
                             <svg
-                              className="mx-auto h-12 w-12 text-gray-400"
+                              className="w-12 h-12 mx-auto text-gray-400"
                               stroke="currentColor"
                               fill="none"
                               viewBox="0 0 48 48"
@@ -1094,7 +1113,7 @@ export default function PostFeed() {
                             <div className="flex text-sm text-gray-600">
                               <label
                                 htmlFor="file-upload"
-                                className="relative cursor-pointer bg-white rounded-md font-medium text-green-500 hover:text-green-400 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-green-500"
+                                className="relative font-medium text-green-500 bg-white rounded-md cursor-pointer hover:text-green-400 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-green-500"
                               >
                                 <span>Upload a file</span>
                                 <input
@@ -1115,11 +1134,11 @@ export default function PostFeed() {
                     </div>
                   </div>
                 </div>
-                <div className="px-6 py-4 bg-gray-50 text-right">
+                <div className="px-6 py-4 text-right bg-gray-50">
                   <button
                     type="button"
                     onClick={() => setShowCreateModal(false)}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 mr-2"
+                    className="px-4 py-2 mr-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                   >
                     Cancel
                   </button>
@@ -1147,17 +1166,17 @@ export default function PostFeed() {
             <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">
               &#8203;
             </span>
-            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-              <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
+            <div className="inline-block overflow-hidden text-left align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
                 <h3 className="text-lg font-medium text-gray-900">Edit Post</h3>
                 <button onClick={() => setShowEditModal(false)} className="text-gray-400 hover:text-gray-500">
-                  <X className="h-6 w-6" />
+                  <X className="w-6 h-6" />
                 </button>
               </div>
               <form onSubmit={handleUpdatePost}>
                 <div className="px-6 py-4">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center text-white font-semibold">
+                  <div className="flex items-center mb-4 space-x-3">
+                    <div className="flex items-center justify-center w-10 h-10 font-semibold text-white bg-green-500 rounded-full">
                       {currentUser?.userName?.charAt(0) || "U"}
                     </div>
                     <div>
@@ -1170,7 +1189,7 @@ export default function PostFeed() {
                           value={currentPost.location}
                           onChange={handlePostInputChange}
                           placeholder="Add location"
-                          className="bg-transparent border-none p-0 text-xs text-gray-500 focus:ring-0 w-full"
+                          className="w-full p-0 text-xs text-gray-500 bg-transparent border-none focus:ring-0"
                         />
                       </div>
                     </div>
@@ -1184,7 +1203,7 @@ export default function PostFeed() {
                     required
                   ></textarea>
                   <div className="mt-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Change Photo</label>
+                    <label className="block mb-2 text-sm font-medium text-gray-700">Change Photo</label>
                     <div className="flex items-center justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
                       <div className="space-y-1 text-center">
                         {currentPost.imagePreview ? (
@@ -1192,20 +1211,20 @@ export default function PostFeed() {
                             <img
                               src={currentPost.imagePreview || "/placeholder.svg"}
                               alt="Preview"
-                              className="mx-auto h-32 object-cover rounded-md"
+                              className="object-cover h-32 mx-auto rounded-md"
                             />
                             <button
                               type="button"
                               onClick={() => setCurrentPost((prev) => ({ ...prev, image: null, imagePreview: null }))}
-                              className="absolute top-0 right-0 -mt-2 -mr-2 bg-red-500 text-white rounded-full p-1"
+                              className="absolute top-0 right-0 p-1 -mt-2 -mr-2 text-white bg-red-500 rounded-full"
                             >
-                              <X className="h-4 w-4" />
+                              <X className="w-4 h-4" />
                             </button>
                           </div>
                         ) : (
                           <>
                             <svg
-                              className="mx-auto h-12 w-12 text-gray-400"
+                              className="w-12 h-12 mx-auto text-gray-400"
                               stroke="currentColor"
                               fill="none"
                               viewBox="0 0 48 48"
@@ -1221,7 +1240,7 @@ export default function PostFeed() {
                             <div className="flex text-sm text-gray-600">
                               <label
                                 htmlFor="file-upload-edit"
-                                className="relative cursor-pointer bg-white rounded-md font-medium text-green-500 hover:text-green-400 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-green-500"
+                                className="relative font-medium text-green-500 bg-white rounded-md cursor-pointer hover:text-green-400 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-green-500"
                               >
                                 <span>Upload a file</span>
                                 <input
@@ -1242,11 +1261,11 @@ export default function PostFeed() {
                     </div>
                   </div>
                 </div>
-                <div className="px-6 py-4 bg-gray-50 text-right">
+                <div className="px-6 py-4 text-right bg-gray-50">
                   <button
                     type="button"
                     onClick={() => setShowEditModal(false)}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 mr-2"
+                    className="px-4 py-2 mr-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                   >
                     Cancel
                   </button>
@@ -1273,59 +1292,59 @@ export default function PostFeed() {
             <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">
               &#8203;
             </span>
-            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-              <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
+            <div className="inline-block overflow-hidden text-left align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
                 <h3 className="text-lg font-medium text-gray-900">Share Post</h3>
                 <button onClick={() => setShowShareModal(false)} className="text-gray-400 hover:text-gray-500">
-                  <X className="h-6 w-6" />
+                  <X className="w-6 h-6" />
                 </button>
               </div>
               <div className="px-6 py-4">
                 <div className="mb-4">
-                  <p className="text-sm text-gray-500 mb-2">Share this post with your friends</p>
-                  <div className="flex items-center space-x-2 bg-gray-100 p-2 rounded-md">
+                  <p className="mb-2 text-sm text-gray-500">Share this post with your friends</p>
+                  <div className="flex items-center p-2 space-x-2 bg-gray-100 rounded-md">
                     <Link className="text-gray-500" />
                     <input
                       type="text"
                       value={`${window.location.origin}/post/${sharePost.id}`}
                       readOnly
-                      className="flex-1 bg-transparent border-none focus:ring-0 text-sm"
+                      className="flex-1 text-sm bg-transparent border-none focus:ring-0"
                     />
                     <button
                       onClick={() => copyToClipboard(`${window.location.origin}/post/${sharePost.id}`)}
-                      className="px-2 py-1 bg-green-500 text-white text-xs rounded-md hover:bg-green-600 transition-colors"
+                      className="px-2 py-1 text-xs text-white transition-colors bg-green-500 rounded-md hover:bg-green-600"
                     >
-                      {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                      {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                     </button>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     onClick={() => shareViaFacebook(sharePost)}
-                    className="flex items-center justify-center space-x-2 p-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                    className="flex items-center justify-center p-3 space-x-2 text-white transition-colors bg-blue-600 rounded-md hover:bg-blue-700"
                   >
-                    <FiFacebook className="h-5 w-5" />
+                    <FiFacebook className="w-5 h-5" />
                     <span>Facebook</span>
                   </button>
                   <button
                     onClick={() => shareViaTwitter(sharePost)}
-                    className="flex items-center justify-center space-x-2 p-3 bg-blue-400 text-white rounded-md hover:bg-blue-500 transition-colors"
+                    className="flex items-center justify-center p-3 space-x-2 text-white transition-colors bg-blue-400 rounded-md hover:bg-blue-500"
                   >
-                    <FiTwitter className="h-5 w-5" />
+                    <FiTwitter className="w-5 h-5" />
                     <span>Twitter</span>
                   </button>
                   <button
                     onClick={() => shareViaWhatsApp(sharePost)}
-                    className="flex items-center justify-center space-x-2 p-3 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
+                    className="flex items-center justify-center p-3 space-x-2 text-white transition-colors bg-green-500 rounded-md hover:bg-green-600"
                   >
-                    <FaWhatsapp className="h-5 w-5" />
+                    <FaWhatsapp className="w-5 h-5" />
                     <span>WhatsApp</span>
                   </button>
                   <button
                     onClick={() => shareViaEmail(sharePost)}
-                    className="flex items-center justify-center space-x-2 p-3 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+                    className="flex items-center justify-center p-3 space-x-2 text-white transition-colors bg-gray-600 rounded-md hover:bg-gray-700"
                   >
-                    <Mail className="h-5 w-5" />
+                    <Mail className="w-5 h-5" />
                     <span>Email</span>
                   </button>
                 </div>
