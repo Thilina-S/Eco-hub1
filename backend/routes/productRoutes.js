@@ -1,5 +1,6 @@
 import express from 'express';
 import { postUpload } from '../middleware/multer.js';
+import authMiddleware from '../middleware/authMiddleware.js';
 import { 
   addProduct, 
   getProducts, 
@@ -12,6 +13,7 @@ import {
   getProductById  // Add the new controller function to get product by ID
 } from '../controllers/productController.js';
 
+
 const router = express.Router();
 
 // Product Routes
@@ -22,9 +24,9 @@ router.put('/:id', postUpload, updateProduct); // Update product by ID
 router.delete('/:id', deleteProduct); // Delete product by ID
 
 // Review Routes
-router.post('/:productId/reviews', addReview); // Add review for a product
-router.get('/:productId/reviews', getReviews); // Get reviews for a product
-router.put('/:productId/reviews/:reviewId', updateReview); // Update a review
-router.delete('/:productId/reviews/:reviewId', deleteReview); // Delete a review
+router.post('/:productId/reviews',authMiddleware, addReview); // Add review for a product
+router.get('/:productId/reviews',authMiddleware, getReviews); // Get reviews for a product
+router.put('/:productId/reviews/:reviewId',authMiddleware, updateReview); // Update a review
+router.delete('/:productId/reviews/:reviewId',authMiddleware, deleteReview); // Delete a review
 
 export default router;

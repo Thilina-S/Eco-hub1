@@ -85,20 +85,19 @@ export const deleteProduct = async (req, res) => {
 export const addReview = async (req, res) => {
   try {
     const { productId } = req.params;
-    const { userId, name, text, rating } = req.body;
+    const { name, text, rating } = req.body;
 
-    if (!userId || !name || !text || !rating) {
+    if (!name || !text || !rating) {
       return res.status(400).json({ message: 'Missing required fields' });
     }
 
     const newReview = await Review.create({
       productId,
-      userId,
+      userId: req.userId, // use authenticated user
       name,
       text,
       rating,
       date: new Date().toISOString(),
-      isCurrentUser: true
     });
 
     res.status(201).json({ message: 'Review added successfully', newReview });
@@ -107,6 +106,7 @@ export const addReview = async (req, res) => {
     res.status(500).json({ message: 'Failed to add review', error: err.message });
   }
 };
+
 
 // Get reviews for a product
 export const getReviews = async (req, res) => {
@@ -122,11 +122,18 @@ export const getReviews = async (req, res) => {
 // Update review
 export const updateReview = async (req, res) => {
   try {
-    const updatedReview = await Review.findByIdAndUpdate(
-      req.params.reviewId,
-      { text: req.body.text, rating: req.body.rating, date: 'Edited just now' },
-      { new: true }
-    );
+    const review = await Review.findById(req.params.reviewId);
+    if (!review) return res.status(404).json({ message: 'Review not found' });
+
+    if (review.userId.toString() !== req.userId) {
+      return res.status(403).json({ message: 'You can only update your own review' });
+    }
+
+    review.text = req.body.text;
+    review.rating = req.body.rating;
+    review.date = 'Edited just now';
+
+    const updatedReview = await review.save();
 
     res.status(200).json({ message: 'Review updated successfully', updatedReview });
   } catch (err) {
@@ -137,9 +144,17 @@ export const updateReview = async (req, res) => {
 // Delete review
 export const deleteReview = async (req, res) => {
   try {
-    const deletedReview = await Review.findByIdAndDelete(req.params.reviewId);
-    res.status(200).json({ message: 'Review deleted successfully', deletedReview });
+    const review = await Review.findById(req.params.reviewId);
+    if (!review) return res.status(404).json({ message: 'Review not found' });
+
+    if (review.userId.toString() !== req.userId) {
+      return res.status(403).json({ message: 'You can only delete your own review' });
+    }
+
+    await Review.findByIdAndDelete(req.params.reviewId);
+    res.status(200).json({ message: 'Review deleted successfully' });
   } catch (err) {
     res.status(500).json({ message: 'Failed to delete review', error: err.message });
   }
 };
+
