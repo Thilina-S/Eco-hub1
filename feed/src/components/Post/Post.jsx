@@ -20,7 +20,7 @@ const getCurrentUserInfo = () => {
 
     return {
       userId,
-      userName: userName || "Current User" // Fallback name if not stored
+      userName: userName || "navinda" // Fallback name if not stored
     };
   } catch (error) {
     console.error("Error getting current user info:", error);
@@ -84,6 +84,8 @@ const Post = () => {
     fetchPosts();
   }, []);
 
+
+  
   const fetchPosts = async () => {
     setIsLoading(true);
     try {
@@ -91,54 +93,41 @@ const Post = () => {
       const userInfo = getCurrentUserInfo();
 
       // Transform backend data to match frontend structure
-      const transformedPosts = response.data.map(post => {
-        // Initialize comments state for this post
-        const postComments = post.comments || [];
-        setComments(prev => ({
-          ...prev,
-          [post._id]: postComments.map(comment => ({
-            id: comment._id,
-            user: comment.user.name,
-            userId: comment.user._id, // Store user ID for checking ownership
-            text: comment.text,
-            isCurrentUser: comment.user._id === userInfo.userId,
-          }))
-        }));
+     const transformedPosts = response.data.map(post => {
+  // Extract user information whether it's an object or ID string
+  const user = post.user;
+  const isUserObject = typeof user === 'object' && user !== null;
+  const userId = isUserObject ? user._id : user;
+  const userName = isUserObject ? user.name : 'Unknown User';
+  const isCurrentUser = userId === userInfo.userId;
 
-        // Initialize all posts with comments hidden
-        setShowComments(prev => ({
-          ...prev,
-          [post._id]: false
-        }));
+  // Fix image URL
+  let imageUrl = defaultImage;
+  if (post.image) {
+    imageUrl = post.image.startsWith('http') 
+      ? post.image 
+      : `${API_URL}/${post.image.replace(/^\/+/, '')}`;
+  }
 
-        // Fix image URL by ensuring it has the full path
-        let imageUrl = defaultImage;
-        if (post.image) {
-          // If image path starts with http, use as is, otherwise prepend API_URL
-          imageUrl = post.image.startsWith('http') 
-            ? post.image 
-            : `${API_URL}/${post.image.replace(/^\/+/, '')}`;
-        }
-
-        return {
-          id: post._id,
-          username: post.user.name,
-          userId: post.user._id, // Store user ID for checking ownership
-          location: post.location || "",
-          date: new Date(post.createdAt).toLocaleDateString("en-US", {
-            month: "long",
-            day: "numeric",
-            year: "numeric",
-          }),
-          description: post.description,
-          likes: post.likes || [],
-          likeCount: post.likes?.length || 0,
-          commentCount: post.comments?.length || 0,
-          isLiked: checkIfUserLiked(post.likes, userInfo.userId),
-          imageUrl: imageUrl,
-          isCurrentUser: post.user._id === userInfo.userId,
-        };
-      });
+  return {
+    id: post._id,
+    username: userName,
+    userId: userId,
+    location: post.location || "",
+    date: new Date(post.createdAt).toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    }),
+    description: post.description,
+    likes: post.likes || [],
+    likeCount: post.likes?.length || 0,
+    commentCount: post.comments?.length || 0,
+    isLiked: checkIfUserLiked(post.likes, userInfo.userId),
+    imageUrl: imageUrl,
+    isCurrentUser: isCurrentUser, // Use the computed isCurrentUser
+  };
+});
 
       setPosts(transformedPosts);
       setIsLoading(false);
@@ -529,6 +518,8 @@ const Post = () => {
     setShowOptionsMenu(showOptionsMenu === postId ? null : postId);
   };
 
+  
+
   const showNotification = (message) => {
     setNotification(message);
     setTimeout(() => {
@@ -547,6 +538,8 @@ const Post = () => {
       commentInputRef.current.focus();
     }
   };
+
+  
 
   return (
     <div className={styles.mainContainer}>
