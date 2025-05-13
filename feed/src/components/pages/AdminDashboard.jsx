@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import AdminNotice from './AdminComponents/AdminNotice';
-
+import AdminUsers from './AdminComponents/AdminUsers';
 import { 
   ChevronRight, 
   ChevronLeft, 
@@ -152,7 +152,7 @@ const AdminDashboard = () => {
         {/* Main Content Area */}
         <main className="flex-1 p-6 overflow-y-auto">
           {activeMenu === 'dashboard' && <DashboardContent />}
-          {activeMenu === 'users' && <UsersContent />}
+          {activeMenu === 'users' && <AdminUsers />}
           {activeMenu === 'posts' && <PostsContent />}
           {activeMenu === 'orders' && <OrdersContent />}
           {activeMenu === 'notice' && <AdminNotice />}
@@ -255,101 +255,7 @@ const DashboardContent = () => {
   );
 };
 
-const UsersContent = () => {
-  const users = [
-    { id: 1, name: 'Jane Cooper', email: 'jane@ecohub.com', role: 'Customer', status: 'Active' },
-    { id: 2, name: 'John Smith', email: 'john@ecohub.com', role: 'Customer', status: 'Active' },
-    { id: 3, name: 'Robert Johnson', email: 'robert@ecohub.com', role: 'Vendor', status: 'Inactive' },
-    { id: 4, name: 'Emily Davis', email: 'emily@ecohub.com', role: 'Customer', status: 'Active' },
-    { id: 5, name: 'Michael Wilson', email: 'michael@ecohub.com', role: 'Vendor', status: 'Active' },
-    { id: 6, name: 'Sarah Thompson', email: 'sarah@ecohub.com', role: 'Customer', status: 'Inactive' },
-    { id: 7, name: 'David Brown', email: 'david@ecohub.com', role: 'Vendor', status: 'Active' },
-  ];
-  
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold">Users Management</h2>
-        <button className="flex items-center px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700">
-          <Users size={16} className="mr-2" /> Add New User
-        </button>
-      </div>
-      
-      <div className="overflow-hidden bg-white rounded-lg shadow-md dark:bg-gray-800">
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-          <div className="w-64">
-            <input
-              type="text"
-              placeholder="Search users..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-md dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700"
-            />
-          </div>
-          <div className="flex space-x-2">
-            <select className="px-3 py-2 border border-gray-300 rounded-md dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700">
-              <option>All Roles</option>
-              <option>Customer</option>
-              <option>Vendor</option>
-              <option>Admin</option>
-            </select>
-            <select className="px-3 py-2 border border-gray-300 rounded-md dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700">
-              <option>All Status</option>
-              <option>Active</option>
-              <option>Inactive</option>
-            </select>
-          </div>
-        </div>
-        
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead className="bg-gray-50 dark:bg-gray-700">
-              <tr>
-                <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">ID</th>
-                <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">Name</th>
-                <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">Email</th>
-                <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">Role</th>
-                <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">Status</th>
-                <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
-              {users.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-100 dark:hover:bg-gray-750">
-                  <td className="px-6 py-4 text-sm whitespace-nowrap">{user.id}</td>
-                  <td className="px-6 py-4 text-sm font-medium whitespace-nowrap">{user.name}</td>
-                  <td className="px-6 py-4 text-sm whitespace-nowrap">{user.email}</td>
-                  <td className="px-6 py-4 text-sm whitespace-nowrap">{user.role}</td>
-                  <td className="px-6 py-4 text-sm whitespace-nowrap">
-                    <span className={`px-2 py-1 rounded-full text-xs ${
-                      user.status === 'Active' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 
-                      'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                    }`}>
-                      {user.status}
-                    </span>
-                  </td>
-                  <td className="flex px-6 py-4 space-x-2 text-sm font-medium whitespace-nowrap">
-                    <button className="text-green-600 hover:text-green-900 dark:hover:text-green-400">Edit</button>
-                    <button className="text-red-600 hover:text-red-900 dark:hover:text-red-400">Delete</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        
-        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            Showing <span className="font-medium">1</span> to <span className="font-medium">7</span> of <span className="font-medium">7</span> results
-          </div>
-          <div className="flex space-x-2">
-            <button className="px-3 py-1 border border-gray-300 rounded-md dark:border-gray-600 disabled:opacity-50">Previous</button>
-            <button className="px-3 py-1 text-white bg-green-600 border border-gray-300 rounded-md dark:border-gray-600">1</button>
-            <button className="px-3 py-1 border border-gray-300 rounded-md dark:border-gray-600 disabled:opacity-50">Next</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
+< AdminUsers />
 
 const PostsContent = () => {
   const posts = [

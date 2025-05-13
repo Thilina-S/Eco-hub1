@@ -19,6 +19,16 @@ const userSchema = new mongoose.Schema({
     required: true,
     minlength: 6
   },
+  role: {
+    type: String,
+    enum: ['admin', 'vendor', 'customer'],
+    default: 'customer'
+  },
+  status: {
+    type: String,
+    enum: ['Active', 'Inactive'],
+    default: 'Active'
+  },
   profilePhoto: {
     type: String,
     default: null
@@ -26,6 +36,10 @@ const userSchema = new mongoose.Schema({
   joinDate: {
     type: Date,
     default: Date.now
+  },
+  isVerified: {
+    type: Boolean,
+    default: false
   }
 }, {
   timestamps: true
