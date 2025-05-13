@@ -1,333 +1,330 @@
-import React, { useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+"use client";
 
-const Header = ({ currentUser, handleSignOut }) => {
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { FiShoppingCart, FiHeart, FiMenu, FiX, FiSearch, FiLogOut, FiSettings } from "react-icons/fi";
+
+const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isAvatarOpen, setIsAvatarOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [scrolled, setScrolled] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
+  // Check authentication status on component mount and when localStorage changes
+  useEffect(() => {
+    const checkAuthStatus = () => {
+      const token = localStorage.getItem("token");
+      setIsAuthenticated(!!token);
+
+      if (token) {
+        // Fetch user data if token exists
+        fetchUserData(token);
+      } else {
+        setCurrentUser(null);
+      }
+    };
+
+    checkAuthStatus();
+
+    // Listen for storage events (when token is added/removed in another tab)
+    window.addEventListener("storage", checkAuthStatus);
+
+    return () => {
+      window.removeEventListener("storage", checkAuthStatus);
+    };
+  }, []);
+
+  // Fetch user data from API
+  const fetchUserData = async (token) => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/profile`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setCurrentUser({
+          name: data.user.name,
+          id: data.user.id,
+          profilePhoto: data.user.profilePhoto,
+        });
+      } else {
+        // If response is not ok, token might be invalid
+        localStorage.removeItem("token");
+        setIsAuthenticated(false);
+        setCurrentUser(null);
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    }
   };
 
-  const toggleAvatarMenu = () => {
-    setIsAvatarOpen(!isAvatarOpen);
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      // Navigate to marketplace with search query in the URL
+      navigate(`/marketplace?search=${encodeURIComponent(searchQuery)}`);
+      setSearchQuery(""); // Clear search input after submission
+    }
+  };
+
+  const closeMenu = () => setIsMenuOpen(false);
+
+  const isActive = (path) => {
+    return location.pathname === path ? "font-semibold underline" : "hover:underline";
   };
 
   const handleLogout = () => {
-    handleSignOut();
-    setIsAvatarOpen(false);
+    localStorage.removeItem("token");
+    setIsAuthenticated(false);
+    setCurrentUser(null);
+    setShowUserDropdown(false);
     navigate("/signin");
   };
 
-  // FAQ Button Click Handler
-  const handleFaqClick = () => {
-    navigate("/faq"); // Navigate to the FAQ page when the button is clicked
-  };
-
-  // Check if current path matches the link
-  const isActive = (path) => {
-    return location.pathname === path;
+  const toggleUserDropdown = () => {
+    setShowUserDropdown(!showUserDropdown);
   };
 
   return (
-    <header className="p-4 text-gray-900 bg-green-200 shadow-md">
-      <div className="container relative flex items-center justify-between mx-auto">
-        <h1 className="text-2xl font-bold">Eco Hub</h1>
+    <header
+      className={`sticky top-0 z-50 w-full transition-all duration-300 ${scrolled ? "shadow-md" : ""}`}
+      style={{ backgroundColor: "#b9f7ce", color: "black" }}
+    >
+      <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo */}
+          <div className="flex-shrink-0">
+            <Link to="/" className="flex items-center">
+              <span className="text-2xl font-bold" style={{ color: "black" }}>
+                Eco Hub
+              </span>
+            </Link>
+          </div>
 
-        {/* Desktop Navigation */}
-        <nav className="hidden md:block">
-          <ul className="flex space-x-6">
-            <li>
-              <Link 
-                to="/" 
-                className={`hover:text-green-600 transition-all duration-200 ${isActive('/') ? 'border-b-2 border-green-600' : 'hover:border-b-2 hover:border-green-400'}`}
-              >
-                Home
+          {/* Desktop Navigation */}
+          <nav className="hidden space-x-8 md:flex">
+            <Link to="/" className={isActive("/")} style={{ color: "black" }}>
+              Home
+            </Link>
+            <Link to="/marketplace" className={isActive("/marketplace")} style={{ color: "black" }}>
+              Marketplace
+            </Link>
+            <Link to="/aboutus" className={isActive("/aboutus")} style={{ color: "black" }}>
+              About Us
+            </Link>
+            <Link to="/contactus" className={isActive("/contactus")} style={{ color: "black" }}>
+              Contact
+            </Link>
+            <Link to="/chatbot" className={isActive("/contactus")} style={{ color: "black" }}>
+              Chatbot
+            </Link>
+            {/* Admin Dashboard Link */}
+            {isAuthenticated && currentUser?.name === "admin" && (
+              <Link to="/admindashboard" className={isActive("/admindashboard")} style={{ color: "black" }}>
+                Admin Dashboard
               </Link>
-            </li>
-            <li>
-              <Link 
-                to="/marketplace" 
-                className={`hover:text-green-600 transition-all duration-200 ${isActive('/marketplace') ? 'border-b-2 border-green-600' : 'hover:border-b-2 hover:border-green-400'}`}
-              >
-                Marketplace
-              </Link>
-            </li>
-            <li>
-              <Link 
-                to="/chatbot" 
-                className={`hover:text-green-600 transition-all duration-200 ${isActive('/chatbot') ? 'border-b-2 border-green-600' : 'hover:border-b-2 hover:border-green-400'}`}
-              >
-                Chatbot
-              </Link>
-            </li>
-            <li>
-              <Link 
-                to="/aboutus" 
-                className={`hover:text-green-600 transition-all duration-200 ${isActive('/aboutus') ? 'border-b-2 border-green-600' : 'hover:border-b-2 hover:border-green-400'}`}
-              >
-                About Us
-              </Link>
-            </li>
-            <li>
-              <Link 
-                to="/contactus" 
-                className={`hover:text-green-600 transition-all duration-200 ${isActive('/contactus') ? 'border-b-2 border-green-600' : 'hover:border-b-2 hover:border-green-400'}`}
-              >
-                Contact Us
-              </Link>
-            </li>
-            <li>
-              <Link 
-                to="/faq" 
-                className={`hover:text-green-600 transition-all duration-200 ${isActive('/faq') ? 'border-b-2 border-green-600' : 'hover:border-b-2 hover:border-green-400'}`}
-              >
-                FAQ
-              </Link>
-            </li>
-          </ul>
-        </nav>
-
-        {/* Desktop Avatar */}
-        <div className="relative items-center hidden space-x-6 md:flex">
-          <button
-            onClick={toggleAvatarMenu}
-            className="flex items-center justify-center w-10 h-10 text-white bg-green-500 border-2 border-green-600 rounded-full focus:outline-none"
-          >
-            {currentUser ? (
-              currentUser.profilePicture ? (
-                <img
-                  src={currentUser.profilePicture}
-                  alt="User Avatar"
-                  className="object-cover w-full h-full rounded-full"
-                />
-              ) : (
-                <span>{currentUser.username?.charAt(0).toUpperCase() || 'U'}</span>
-              )
-            ) : (
-              <span>👤</span>
             )}
-          </button>
+          </nav>
 
-          {/* Avatar Dropdown - Desktop */}
-          {isAvatarOpen && (
-            <div className="absolute z-20 w-48 p-2 space-y-1 text-sm text-gray-900 -translate-x-1/2 bg-white rounded shadow-md top-full left-1/2">
-              {currentUser ? (
-                <>
-                  <div className="text-sm font-medium">@{currentUser.username}</div>
-                  <div className="mb-1 text-xs text-gray-600">{currentUser.email}</div>
-                  <Link 
-                    to="/profile" 
-                    className={`block text-green-700 hover:text-green-900 ${isActive('/profile') ? 'border-b-2 border-green-600' : 'hover:border-b-2 hover:border-green-400'}`}
-                  >
-                    Profile
-                  </Link>
+          {/* Search Bar */}
+          <div className="items-center flex-1 hidden max-w-xs mx-4 md:flex">
+            <form onSubmit={handleSearch} className="w-full">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search products..."
+                  className="w-full py-2 pl-10 pr-4 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                <button type="submit" className="absolute inset-y-0 left-0 flex items-center pl-3">
+                  <FiSearch className="w-5 h-5" style={{ color: "black" }} />
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Right Navigation */}
+          <div className="items-center hidden space-x-4 md:flex">
+            {isAuthenticated ? (
+              <>
+                <div className="relative">
                   <button
-                    onClick={handleLogout}
-                    className="block w-full text-left text-red-600 hover:text-red-800"
+                    onClick={toggleUserDropdown}
+                    className="flex items-center p-2 rounded-full hover:bg-opacity-20 hover:bg-black"
                   >
-                    Logout
+                    <div className="flex items-center justify-center w-8 h-8 font-semibold text-white bg-green-600 rounded-full">
+                      {currentUser?.name?.charAt(0) || "U"}
+                    </div>
                   </button>
-                </>
-              ) : (
-                <>
-                  <Link 
-                    to="/signin" 
-                    className={`block text-green-700 hover:text-green-900 ${isActive('/signin') ? 'border-b-2 border-green-600' : 'hover:border-b-2 hover:border-green-400'}`}
-                  >
-                    Sign In
-                  </Link>
-                  <Link 
-                    to="/signup" 
-                    className={`block text-green-700 hover:text-green-900 ${isActive('/signup') ? 'border-b-2 border-green-600' : 'hover:border-b-2 hover:border-green-400'}`}
-                  >
-                    Sign Up
-                  </Link>
-                  <Link 
-                    to="/profile" 
-                    className={`block text-green-700 hover:text-green-900 ${isActive('/profile') ? 'border-b-2 border-green-600' : 'hover:border-b-2 hover:border-green-400'}`}
-                  >
-                    Profile
-                  </Link>
-                </>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Mobile Avatar & Menu Toggle */}
-        <div className="relative flex items-center space-x-4 md:hidden">
-          <button
-            onClick={toggleAvatarMenu}
-            className="flex items-center justify-center text-white bg-green-500 border-2 border-green-600 rounded-full w-9 h-9"
-          >
-            {currentUser ? (
-              currentUser.profilePicture ? (
-                <img
-                  src={currentUser.profilePicture}
-                  alt="User Avatar"
-                  className="object-cover w-full h-full rounded-full"
-                />
-              ) : (
-                <span>{currentUser.username?.charAt(0).toUpperCase() || 'U'}</span>
-              )
+                  {showUserDropdown && (
+                    <div className="absolute right-0 w-48 mt-2 origin-top-right bg-white divide-y divide-gray-100 rounded-md shadow-lg">
+                      <div className="py-1">
+                        <div className="px-4 py-2 text-sm font-medium text-gray-700 border-b border-gray-100">
+                          {currentUser?.name || "User"}
+                        </div>
+                        <Link to="/profile" className="block px-4 py-2 text-sm text-black hover:bg-gray-100">
+                          Profile
+                        </Link>
+                        <Link to="/settings" className="block px-4 py-2 text-sm text-black hover:bg-gray-100">
+                          <div className="flex items-center">
+                            <FiSettings className="mr-2" />
+                            Settings
+                          </div>
+                        </Link>
+                      </div>
+                      <div className="py-1">
+                        <button
+                          onClick={handleLogout}
+                          className="block w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-gray-100"
+                        >
+                          <div className="flex items-center">
+                            <FiLogOut className="mr-2" />
+                            Logout
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
             ) : (
-              <span>👤</span>
+              <>
+                <Link to="/signin" className="px-4 py-2" style={{ color: "black" }}>
+                  Sign In
+                </Link>
+                <Link
+                  to="/signup"
+                  className="px-4 py-2 text-white bg-black border border-black rounded-md hover:bg-opacity-90"
+                >
+                  Sign Up
+                </Link>
+              </>
             )}
-          </button>
+          </div>
 
-          <button
-            onClick={toggleMenu}
-            className="text-gray-900 hover:text-green-600 focus:outline-none"
-            aria-label="Toggle menu"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              className="w-6 h-6"
+          {/* Mobile menu button */}
+          <div className="flex items-center md:hidden">
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="inline-flex items-center justify-center p-2 rounded-md hover:bg-black hover:bg-opacity-20 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-black"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d={isMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"}
-              />
-            </svg>
-          </button>
-
-          {/* Avatar Dropdown - Mobile */}
-          {isAvatarOpen && (
-            <div className="absolute z-20 w-48 p-2 space-y-1 text-sm -translate-x-1/2 bg-white rounded shadow-md top-full left-1/2 sm:w-56 md:w-64">
-              {currentUser ? (
-                <>
-                  <div className="font-medium">@{currentUser.username}</div>
-                  <div className="mb-1 text-xs text-gray-600">{currentUser.email}</div>
-                  <Link 
-                    to="/profile" 
-                    className={`block text-green-700 hover:text-green-900 ${isActive('/profile') ? 'border-b-2 border-green-600' : 'hover:border-b-2 hover:border-green-400'}`} 
-                    onClick={() => setIsAvatarOpen(false)}
-                  >
-                    Profile
-                  </Link>
-                  <button
-                    onClick={handleLogout}
-                    className="block w-full text-left text-red-600 hover:text-red-800"
-                  >
-                    Logout
-                  </button>
-                </>
+              <span className="sr-only">Open main menu</span>
+              {isMenuOpen ? (
+                <FiX className="block w-6 h-6" style={{ color: "black" }} />
               ) : (
-                <>
-                  <Link 
-                    to="/signin" 
-                    className={`block text-green-700 hover:text-green-900 ${isActive('/signin') ? 'border-b-2 border-green-600' : 'hover:border-b-2 hover:border-green-400'}`} 
-                    onClick={() => setIsAvatarOpen(false)}
-                  >
-                    Sign In
-                  </Link>
-                  <Link 
-                    to="/signup" 
-                    className={`block text-green-700 hover:text-green-900 ${isActive('/signup') ? 'border-b-2 border-green-600' : 'hover:border-b-2 hover:border-green-400'}`} 
-                    onClick={() => setIsAvatarOpen(false)}
-                  >
-                    Sign Up
-                  </Link>
-                  <Link 
-                    to="/profile" 
-                    className={`block text-green-700 hover:text-green-900 ${isActive('/profile') ? 'border-b-2 border-green-600' : 'hover:border-b-2 hover:border-green-400'}`} 
-                    onClick={() => setIsAvatarOpen(false)}
-                  >
-                    Profile
-                  </Link>
-                </>
+                <FiMenu className="block w-6 h-6" style={{ color: "black" }} />
               )}
-            </div>
-          )}
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Mobile Navigation Links */}
+      {/* Mobile menu */}
       {isMenuOpen && (
-        <div className="mt-2 md:hidden">
-          <nav className="px-2 pt-2 pb-4">
-            <ul className="flex flex-col space-y-3">
-              <li>
-                <Link 
-                  to="/" 
-                  className={`block hover:text-green-600 ${isActive('/') ? 'border-b-2 border-green-600' : 'hover:border-b-2 hover:border-green-400'}`} 
-                  onClick={toggleMenu}
+        <div className="bg-white shadow-lg md:hidden">
+          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            {["/", "/marketplace", "/aboutus", "/contactus"].map((path) => (
+              <Link
+                key={path}
+                to={path}
+                className="block px-3 py-2 text-base font-medium rounded-md hover:bg-gray-100"
+                onClick={closeMenu}
+                style={{ color: "black" }}
+              >
+                {path === "/" ? "Home" : path.slice(1).replace("us", " Us")}
+              </Link>
+            ))}
+          </div>
+
+          {/* Mobile search */}
+          <div className="px-2 py-3">
+            <form onSubmit={handleSearch} className="w-full">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search products..."
+                  className="w-full py-2 pl-10 pr-4 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                <button type="submit" className="absolute inset-y-0 left-0 flex items-center pl-3">
+                  <FiSearch className="w-5 h-5" style={{ color: "black" }} />
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Mobile user menu */}
+          <div className="pt-4 pb-3 border-t border-gray-200">
+            {isAuthenticated ? (
+              <div className="px-2 space-y-1">
+                <div className="px-3 py-2 text-base font-medium text-black rounded-md">
+                  {currentUser?.name || "User"}
+                </div>
+                {["/profile", "/cart", "/wishlist", "/myitems", "/myposts", "/myreviews", "/settings"].map((path) => (
+                  <Link
+                    key={path}
+                    to={path}
+                    className="block px-3 py-2 text-base font-medium rounded-md hover:bg-gray-100"
+                    onClick={closeMenu}
+                    style={{ color: "black" }}
+                  >
+                    {path
+                      .slice(1)
+                      .replace(/my/, "My ")
+                      .replace(/([a-z])([A-Z])/g, "$1 $2")}
+                  </Link>
+                ))}
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    closeMenu();
+                  }}
+                  className="block w-full px-3 py-2 text-base font-medium text-left rounded-md hover:bg-gray-100"
+                  style={{ color: "red" }}
                 >
-                  Home
-                </Link>
-              </li>
-              <li>
-                <Link 
-                  to="/marketplace" 
-                  className={`block hover:text-green-600 ${isActive('/marketplace') ? 'border-b-2 border-green-600' : 'hover:border-b-2 hover:border-green-400'}`} 
-                  onClick={toggleMenu}
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <div className="px-2 space-y-1">
+                <Link
+                  to="/signin"
+                  className="block px-3 py-2 text-base font-medium rounded-md hover:bg-gray-100"
+                  onClick={closeMenu}
+                  style={{ color: "black" }}
                 >
-                  Marketplace
+                  Sign In
                 </Link>
-              </li>
-              <li>
-                <Link 
-                  to="/contactus" 
-                  className={`block hover:text-green-600 ${isActive('/contactus') ? 'border-b-2 border-green-600' : 'hover:border-b-2 hover:border-green-400'}`} 
-                  onClick={toggleMenu}
+                <Link
+                  to="/signup"
+                  className="block px-3 py-2 text-base font-medium text-white bg-black border border-black rounded-md hover:bg-opacity-90"
+                  onClick={closeMenu}
                 >
-                  Contact Us
+                  Sign Up
                 </Link>
-              </li>
-              <li>
-                <Link 
-                  to="/aboutus" 
-                  className={`block hover:text-green-600 ${isActive('/aboutus') ? 'border-b-2 border-green-600' : 'hover:border-b-2 hover:border-green-400'}`} 
-                  onClick={toggleMenu}
-                >
-                  About Us
-                </Link>
-              </li>
-              <li>
-                <Link 
-                  to="/chatbot" 
-                  className={`block hover:text-green-600 ${isActive('/chatbot') ? 'border-b-2 border-green-600' : 'hover:border-b-2 hover:border-green-400'}`} 
-                  onClick={toggleMenu}
-                >
-                  Chatbot
-                </Link>
-              </li>
-              <li>
-                <Link 
-                  to="/faq" 
-                  className={`block hover:text-green-600 ${isActive('/faq') ? 'border-b-2 border-green-600' : 'hover:border-b-2 hover:border-green-400'}`} 
-                  onClick={toggleMenu}
-                >
-                  FAQ
-                </Link>
-              </li>
-            </ul>
-          </nav>
+              </div>
+            )}
+          </div>
         </div>
       )}
-      
-      {/* FAQ Button in the bottom-right corner with position: fixed */}
-      <div
-        className="fixed cursor-pointer bottom-4 right-4"
-        onClick={handleFaqClick}
-        style={{
-          width: "60px",
-          height: "60px",
-          backgroundImage: `url("/faq1.jpg")`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          borderRadius: "50%",
-          boxShadow: "0 4px 10px rgba(0, 0, 0, 0.2)",
-        }}
-      />
     </header>
   );
 };

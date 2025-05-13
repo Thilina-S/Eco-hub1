@@ -5,10 +5,8 @@ import Review from '../models/reviewModel.js';  // Import Review model
 // Add new product
 export const addProduct = async (req, res) => {
   const { title, price, discount, stock } = req.body;
-  
-  // Update this line to include the full URL path
-  const imageUrl = req.file 
-    ? `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}` 
+  const imageUrl = req.file
+    ? `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`
     : null;
 
   try {
@@ -37,24 +35,33 @@ export const getProducts = async (req, res) => {
   }
 };
 
+// Get a product by ID
+export const getProductById = async (req, res) => {
+  const { id } = req.params; // Get productId from params
+  try {
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+    res.status(200).json(product);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to retrieve product', error: err.message });
+  }
+};
+
 // Update product by ID
 export const updateProduct = async (req, res) => {
   const { id } = req.params;
   const { title, price, discount, stock } = req.body;
-  
-  // Handle image update if there's a new file
+
   let updateData = { title, price, discount, stock };
-  
+
   if (req.file) {
     updateData.imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
   }
 
   try {
-    const updatedProduct = await Product.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true }
-    );
+    const updatedProduct = await Product.findByIdAndUpdate(id, updateData, { new: true });
     res.status(200).json(updatedProduct);
   } catch (err) {
     res.status(500).json({ message: 'Failed to update product', error: err.message });
@@ -78,31 +85,28 @@ export const deleteProduct = async (req, res) => {
 export const addReview = async (req, res) => {
   try {
     const { productId } = req.params;
-    const { userId, name, text, rating } = req.body;
+    const { name, text, rating } = req.body;
 
-    // Ensure required fields are present
-    if (!userId || !name || !text || !rating) {
+    if (!name || !text || !rating) {
       return res.status(400).json({ message: 'Missing required fields' });
     }
 
-    // Create a new review with the current date automatically set
     const newReview = await Review.create({
       productId,
-      userId,
+      userId: req.userId, // use authenticated user
       name,
       text,
       rating,
-      date: new Date().toISOString(),  // Automatically set the current date
-      isCurrentUser: true
+      date: new Date().toISOString(),
     });
 
-    // Return success response
     res.status(201).json({ message: 'Review added successfully', newReview });
   } catch (err) {
-    console.error(err);  // Log the error for better insight
+    console.error(err);
     res.status(500).json({ message: 'Failed to add review', error: err.message });
   }
 };
+
 
 // Get reviews for a product
 export const getReviews = async (req, res) => {
@@ -118,20 +122,20 @@ export const getReviews = async (req, res) => {
 // Update review
 export const updateReview = async (req, res) => {
   try {
-    const updatedReview = await Review.findByIdAndUpdate(
-      req.params.reviewId,
-      { 
-        text: req.body.text, 
-        rating: req.body.rating,
-        date: 'Edited just now' 
-      },
-      { new: true }
-    );
-    
-    res.status(200).json({ 
-      message: 'Review updated successfully',
-      updatedReview 
-    });
+    const review = await Review.findById(req.params.reviewId);
+    if (!review) return res.status(404).json({ message: 'Review not found' });
+
+    if (review.userId.toString() !== req.userId) {
+      return res.status(403).json({ message: 'You can only update your own review' });
+    }
+
+    review.text = req.body.text;
+    review.rating = req.body.rating;
+    review.date = 'Edited just now';
+
+    const updatedReview = await review.save();
+
+    res.status(200).json({ message: 'Review updated successfully', updatedReview });
   } catch (err) {
     res.status(500).json({ message: 'Failed to update review', error: err.message });
   }
@@ -140,12 +144,17 @@ export const updateReview = async (req, res) => {
 // Delete review
 export const deleteReview = async (req, res) => {
   try {
-    const deletedReview = await Review.findByIdAndDelete(req.params.reviewId);
-    res.status(200).json({ 
-      message: 'Review deleted successfully', 
-      deletedReview 
-    });
+    const review = await Review.findById(req.params.reviewId);
+    if (!review) return res.status(404).json({ message: 'Review not found' });
+
+    if (review.userId.toString() !== req.userId) {
+      return res.status(403).json({ message: 'You can only delete your own review' });
+    }
+
+    await Review.findByIdAndDelete(req.params.reviewId);
+    res.status(200).json({ message: 'Review deleted successfully' });
   } catch (err) {
     res.status(500).json({ message: 'Failed to delete review', error: err.message });
   }
 };
+

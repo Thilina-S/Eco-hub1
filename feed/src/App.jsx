@@ -13,7 +13,7 @@ import Profile from "../src/components/pages/Profile.jsx";
 import Faq from "./components/pages/Faq.jsx";
 import Cart from "./components/pages/Cart.jsx";
 import Checkout from "./components/pages/Checkout.jsx";
-import ItemView from "./components/pages/ItemView.jsx";
+import ItemView from "./components/pages/ItemView.jsx";  // Import ItemView
 import MyItems from "./components/pages/MyItems.jsx";
 import MyPosts from "./components/pages/MyPosts.jsx";
 import Wishlist from "./components/pages/Wishlist.jsx";
@@ -21,8 +21,9 @@ import AdminDashboard from "./components/pages/AdminDashboard.jsx";
 import Logout from "./components/pages/logout.jsx";
 import ForgotPassword from "./components/pages/ForgotPassword.jsx";
 import ResetPassword from "./components/pages/ResetPassword.jsx";
-import MyReviews from "./components/pages/MyReviews.jsx"
-
+import MyReviews from "./components/pages/MyReviews.jsx";
+import AdminNotice from "./components/pages/AdminComponents/AdminNotice.jsx";
+import Notices from "./components/pages/Notices.jsx";
 function App() {
   return (
     <Router>
@@ -42,7 +43,7 @@ function App() {
             <Route path="/faq" element={<Faq />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
-            <Route path="/itemview" element={<ItemView />} />
+            <Route path="/itemview/:productId" element={<ItemView />} /> {/* Update the route to include :productId */}
             <Route path="/myitems" element={<MyItems />} />
             <Route path="/myposts" element={<MyPosts />} />
             <Route path="/wishlist" element={<Wishlist />} />
@@ -51,6 +52,9 @@ function App() {
             <Route path="/myreviews" element={<MyReviews />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password/:token" element={<ResetPassword />} />
+            <Route path="/adminnotice" element={<AdminNotice />} />
+            <Route path="/notices" element={<Notices />} />
+            
           </Routes>
         </main>
         <Footer />

@@ -77,8 +77,8 @@ export default function ProductGrid() {
     localStorage.setItem("cart", JSON.stringify(updatedCart));
   };
 
-  const navigateToItemView = (product) => {
-    navigate("/itemview", { state: { product } });
+  const navigateToItemView = (productId) => {
+    navigate(`/itemview/${productId}`);
   };
 
   if (loading) {
@@ -97,41 +97,6 @@ export default function ProductGrid() {
         </div>
       )}
 
-      <div className="flex flex-col items-center justify-between mb-6 space-y-4 sm:flex-row sm:space-y-0">
-        <h1 className="text-3xl font-extrabold text-emerald-800 drop-shadow-sm">🌿 Marketplace</h1>
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <Link
-              to="/wishlist"
-              onClick={() => localStorage.setItem("wishlist", JSON.stringify(wishlist))}
-            >
-              <FaHeart className="text-2xl text-red-500 cursor-pointer" />
-            </Link>
-            {wishlist.length > 0 && (
-              <span className="absolute px-1 text-xs text-white bg-red-600 rounded-full -top-2 -right-2">
-                {wishlist.length}
-              </span>
-            )}
-          </div>
-          <div className="relative">
-            <Link to="/cart">
-              <FaShoppingCart className="text-2xl text-blue-600 cursor-pointer" />
-            </Link>
-            {cart.length > 0 && (
-              <span className="absolute px-1 text-xs text-white bg-blue-600 rounded-full -top-2 -right-2">
-                {cart.length}
-              </span>
-            )}
-          </div>
-          <button
-            onClick={() => navigate("/myitems")}
-            className="px-4 py-2 text-white rounded shadow bg-emerald-600 hover:bg-emerald-700"
-          >
-            My Items
-          </button>
-        </div>
-      </div>
-
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {products.map((product) => {
           const isInWishlist = wishlist.some((item) => item._id === product._id);
@@ -143,7 +108,7 @@ export default function ProductGrid() {
               key={product._id}
               className="relative p-4 transition-transform duration-300 bg-white rounded-xl shadow-md hover:scale-[1.02]"
             >
-              <div onClick={() => navigateToItemView(product)} className="cursor-pointer">
+              <div onClick={() => navigateToItemView(product._id)} className="cursor-pointer">
                 <img
                   src={product.imageUrl || "/placeholder-product.jpg"}
                   alt={product.title}
@@ -171,7 +136,7 @@ export default function ProductGrid() {
                 </span>
               </div>
 
-              <div onClick={() => navigateToItemView(product)} className="mt-3 cursor-pointer">
+              <div onClick={() => navigateToItemView(product._id)} className="mt-3 cursor-pointer">
                 <h2 className="text-base font-semibold text-emerald-900 line-clamp-2">
                   {product.title}
                 </h2>
