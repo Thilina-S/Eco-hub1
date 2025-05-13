@@ -63,7 +63,12 @@ export default function SignIn() {
 
         setShowSuccessPopup(true);
         setTimeout(() => {
-          navigate("/");
+          // Redirect to admin dashboard if the email is ecobinadmin@gmail.com
+          if (formData.email === "ecobinadmin@gmail.com") {
+            navigate("/admindashboard");
+          } else {
+            navigate("/");
+          }
         }, 1500);
       } else {
         setErrors({ server: data.message || "Invalid credentials" });

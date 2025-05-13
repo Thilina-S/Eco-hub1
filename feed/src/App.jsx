@@ -22,7 +22,8 @@ import Logout from "./components/pages/logout.jsx";
 import ForgotPassword from "./components/pages/ForgotPassword.jsx";
 import ResetPassword from "./components/pages/ResetPassword.jsx";
 import MyReviews from "./components/pages/MyReviews.jsx";
-
+import AdminNotice from "./components/pages/AdminComponents/AdminNotice.jsx";
+import Notices from "./components/pages/Notices.jsx";
 function App() {
   return (
     <Router>
@@ -51,6 +52,9 @@ function App() {
             <Route path="/myreviews" element={<MyReviews />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password/:token" element={<ResetPassword />} />
+            <Route path="/adminnotice" element={<AdminNotice />} />
+            <Route path="/notices" element={<Notices />} />
+            
           </Routes>
         </main>
         <Footer />

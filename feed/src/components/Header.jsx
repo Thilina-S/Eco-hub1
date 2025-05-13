@@ -132,8 +132,14 @@ const Header = () => {
               Contact
             </Link>
             <Link to="/chatbot" className={isActive("/contactus")} style={{ color: "black" }}>
-              chatbot
+              Chatbot
             </Link>
+            {/* Admin Dashboard Link */}
+            {isAuthenticated && currentUser?.name === "admin" && (
+              <Link to="/admindashboard" className={isActive("/admindashboard")} style={{ color: "black" }}>
+                Admin Dashboard
+              </Link>
+            )}
           </nav>
 
           {/* Search Bar */}

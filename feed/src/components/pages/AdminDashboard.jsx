@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import AdminNotice from './AdminComponents/AdminNotice';
+
 import { 
   ChevronRight, 
   ChevronLeft, 
@@ -153,7 +155,7 @@ const AdminDashboard = () => {
           {activeMenu === 'users' && <UsersContent />}
           {activeMenu === 'posts' && <PostsContent />}
           {activeMenu === 'orders' && <OrdersContent />}
-          {activeMenu === 'notice' && <NoticeContent />}
+          {activeMenu === 'notice' && <AdminNotice />}
         </main>
       </div>
     </div>
@@ -579,61 +581,7 @@ const OrdersContent = () => {
           </button>
         </div>
         
-        {/* Create Notice Modal */}
-        <dialog id="create-notice-modal" className="modal">
-          <div className="max-w-2xl bg-white modal-box dark:bg-gray-800">
-            <h3 className="mb-4 text-lg font-bold">Create New Notice</h3>
-            <form onSubmit={handleSubmit}>
-              <div className="space-y-4">
-                <div>
-                  <label className="block mb-1 text-sm font-medium">Title</label>
-                  <input
-                    type="text"
-                    name="title"
-                    value={newNotice.title}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block mb-1 text-sm font-medium">Content</label>
-                  <textarea
-                    name="content"
-                    value={newNotice.content}
-                    onChange={handleInputChange}
-                    rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block mb-1 text-sm font-medium">Status</label>
-                  <select
-                    name="status"
-                    value={newNotice.status}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700"
-                  >
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
-                  </select>
-                </div>
-              </div>
-              <div className="mt-6 modal-action">
-                <button type="button" className="mr-2 btn" onClick={() => document.getElementById('create-notice-modal').close()}>
-                  Cancel
-                </button>
-                <button type="submit" className="text-white bg-green-600 btn hover:bg-green-700">
-                  Create Notice
-                </button>
-              </div>
-            </form>
-          </div>
-          <form method="dialog" className="modal-backdrop">
-            <button>close</button>
-          </form>
-        </dialog>
+        < AdminNotice />
         
         <div className="overflow-hidden bg-white rounded-lg shadow-md dark:bg-gray-800">
           <div className="p-4 border-b border-gray-200 dark:border-gray-700">

@@ -13,6 +13,7 @@ import profileRoutes from './routes/profileRoutes.js';
 import productRoutes from './routes/productRoutes.js';
 import postRoutes from './routes/postRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
+import noticeRoutes from './routes/noticeRoutes.js';
 
 // Get __dirname equivalent in ES module
 const __filename = fileURLToPath(import.meta.url);
@@ -42,6 +43,7 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/posts', postRoutes);  // Added post routes
 app.use('/api/ai', aiRoutes);
+app.use('/api/notices', noticeRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

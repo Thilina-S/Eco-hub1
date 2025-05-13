@@ -715,6 +715,24 @@ export default function PostFeed() {
     </svg>
     My Posts
   </a>
+  
+  <a href="/notices" className="flex items-center px-4 py-2 text-gray-600 rounded-md hover:bg-gray-100">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className="w-5 h-5 mr-3"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M12 22c4.418 0 8-3.582 8-8s-3.582-8-8-8-8 3.582-8 8 3.582 8 8 8zM12 4a1 1 0 011 1v6a1 1 0 01-1 1H8a1 1 0 01-1-1V5a1 1 0 011-1h4z"
+    />
+  </svg>
+ Notices
+</a>
 
   <a href="/myitems" className="flex items-center px-4 py-2 text-gray-600 rounded-md hover:bg-gray-100">
     <svg
