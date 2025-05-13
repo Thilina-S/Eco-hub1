@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { 
-  FaHeart, 
-  FaShoppingCart, 
-  FaArrowLeft, 
+import {
+  FaHeart,
+  FaShoppingCart,
+  FaArrowLeft,
   FaStar,
   FaBars,
   FaTimes
@@ -62,9 +62,9 @@ export default function ItemView() {
           setLoading(false);
           return; // No token, no authenticated user
         }
-        
+
         const response = await apiClient.get('/profile');
-        
+
         // Update user state with consistent structure
         setCurrentUser({
           id: response.data.user.id,
@@ -73,20 +73,20 @@ export default function ItemView() {
           userName: response.data.user.name, // Adding both for compatibility
           profilePhoto: response.data.user.profilePhoto
         });
-        
+
         setLoading(false);
       } catch (err) {
         console.error("Error fetching current user:", err);
         setError("Failed to load user data");
         setLoading(false);
-        
+
         // Check for 401 unauthorized specifically
         if (err.response && err.response.status === 401) {
           // Token might be invalid or expired
         }
       }
     };
-    
+
     fetchCurrentUser();
   }, []);
 
@@ -112,27 +112,27 @@ export default function ItemView() {
       const fetchReviews = async () => {
         try {
           const response = await apiClient.get(`/products/${productId}/reviews`);
-          
+
           // Process reviews to mark those belonging to current user
           const processedReviews = response.data.map((review) => {
             // For debugging
             console.log("Review:", review);
             console.log("Current User:", currentUser);
-            
+
             // Check ID match in multiple formats to ensure compatibility
-            const isUsersReview = 
-              currentUser && 
-              (review.userId === currentUser.id || 
-               review.userId === currentUser.userId || 
-               review.user_id === currentUser.id ||
-               review._id === currentUser.id);
-            
+            const isUsersReview =
+              currentUser &&
+              (review.userId === currentUser.id ||
+                review.userId === currentUser.userId ||
+                review.user_id === currentUser.id ||
+                review._id === currentUser.id);
+
             return {
               ...review,
               isCurrentUser: isUsersReview,
             };
           });
-          
+
           console.log("Processed Reviews:", processedReviews);
           setReviews(processedReviews);
         } catch (error) {
@@ -196,7 +196,7 @@ export default function ItemView() {
     const updatedWishlist = isInWishlist
       ? wishlist.filter((item) => item.id !== product._id)
       : [...wishlist, { ...product, quantity: 1 }];
-    
+
     setWishlist(updatedWishlist);
     showPopup(isInWishlist ? "Removed from wishlist" : "Added to wishlist");
   };
@@ -206,7 +206,7 @@ export default function ItemView() {
     const updatedCart = isInCart
       ? cart.filter((item) => item.id !== product._id)
       : [...cart, { ...product, quantity: 1 }];
-    
+
     setCart(updatedCart);
     showPopup(isInCart ? "Removed from cart" : "Added to cart");
   };
@@ -236,14 +236,14 @@ export default function ItemView() {
 
       // After adding the review, fetch the updated reviews
       const updatedReviewsResponse = await apiClient.get(`/products/${productId}/reviews`);
-      
+
       const processedReviews = updatedReviewsResponse.data.map((review) => ({
         ...review,
         isCurrentUser: currentUser && review.userId === currentUser.id,
       }));
-      
+
       setReviews(processedReviews);
-      setNewReview(""); 
+      setNewReview("");
       setRating(5);
       showPopup("Review added successfully");
     } catch (error) {
@@ -273,22 +273,22 @@ export default function ItemView() {
 
       // After updating, fetch the updated reviews
       const updatedReviewsResponse = await apiClient.get(`/products/${productId}/reviews`);
-      
+
       // Process reviews with the same logic as in the fetch function
       const processedReviews = updatedReviewsResponse.data.map((review) => {
-        const isUsersReview = 
-          currentUser && 
-          (review.userId === currentUser.id || 
-           review.userId === currentUser.userId || 
-           review.user_id === currentUser.id ||
-           review._id === currentUser.id);
-        
+        const isUsersReview =
+          currentUser &&
+          (review.userId === currentUser.id ||
+            review.userId === currentUser.userId ||
+            review.user_id === currentUser.id ||
+            review._id === currentUser.id);
+
         return {
           ...review,
           isCurrentUser: isUsersReview,
         };
       });
-      
+
       setReviews(processedReviews);
       setEditingId(null); // Reset editing state
       setEditText(""); // Clear edit input
@@ -312,22 +312,22 @@ export default function ItemView() {
 
       // After deletion, fetch the updated reviews
       const updatedReviewsResponse = await apiClient.get(`/products/${productId}/reviews`);
-      
+
       // Process reviews with the same logic as in the fetch function
       const processedReviews = updatedReviewsResponse.data.map((review) => {
-        const isUsersReview = 
-          currentUser && 
-          (review.userId === currentUser.id || 
-           review.userId === currentUser.userId || 
-           review.user_id === currentUser.id ||
-           review._id === currentUser.id);
-        
+        const isUsersReview =
+          currentUser &&
+          (review.userId === currentUser.id ||
+            review.userId === currentUser.userId ||
+            review.user_id === currentUser.id ||
+            review._id === currentUser.id);
+
         return {
           ...review,
           isCurrentUser: isUsersReview,
         };
       });
-      
+
       setReviews(processedReviews);
       showPopup("Review deleted successfully");
     } catch (error) {
@@ -351,8 +351,8 @@ export default function ItemView() {
   const averageRating =
     reviews.length > 0
       ? (
-          reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
-        ).toFixed(1)
+        reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
+      ).toFixed(1)
       : 0;
 
   return (
@@ -518,11 +518,10 @@ export default function ItemView() {
               <div className="flex gap-4 mb-6">
                 <button
                   onClick={toggleWishlist}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                    isInWishlist
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${isInWishlist
                       ? "bg-green-100 text-green-800 border border-green-300"
                       : "bg-gray-100 text-gray-700 border border-gray-300 hover:bg-green-50"
-                  }`}
+                    }`}
                 >
                   <FaHeart className={isInWishlist ? "text-red-500" : ""} />
                   {isInWishlist ? "In Wishlist" : "Add to Wishlist"}
@@ -530,11 +529,10 @@ export default function ItemView() {
 
                 <button
                   onClick={toggleCart}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                    isInCart
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${isInCart
                       ? "bg-green-100 text-green-800 border border-green-300"
                       : "bg-gray-100 text-gray-700 border border-gray-300 hover:bg-green-50"
-                  }`}
+                    }`}
                 >
                   <FaShoppingCart /> {isInCart ? "In Cart" : "Add to Cart"}
                 </button>
@@ -604,7 +602,7 @@ export default function ItemView() {
             ) : (
               <div className="p-4 mb-8 text-center bg-gray-100 rounded">
                 <p>Please log in to leave a review</p>
-                <button 
+                <button
                   onClick={() => navigate('/login')}
                   className="px-4 py-2 mt-2 text-white bg-green-600 rounded hover:bg-green-700"
                 >
@@ -659,9 +657,9 @@ export default function ItemView() {
                             {new Date(review.date).toLocaleString()}
                           </div>
                         </div>
-                        
+
                         {/* Show edit/delete options */}
-                        {isAuthenticated && (
+                        {isAuthenticated && review.isCurrentUser && (
                           <div className="flex space-x-2">
                             {editingId === review._id ? (
                               <>
@@ -696,6 +694,7 @@ export default function ItemView() {
                             )}
                           </div>
                         )}
+
                       </div>
 
                       {editingId === review._id ? (
