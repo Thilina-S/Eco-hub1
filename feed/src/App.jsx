@@ -25,7 +25,7 @@ import MyReviews from "./components/pages/MyReviews.jsx";
 import AdminNotice from "./components/pages/AdminComponents/AdminNotice.jsx";
 import Notices from "./components/pages/Notices.jsx";
 import AdminUsers from "./components/pages/AdminComponents/AdminUsers.jsx";
-
+import AdminPosts from "./components/pages/AdminComponents/AdminPosts.jsx";
 
 function App() {
   return (
@@ -58,7 +58,8 @@ function App() {
             <Route path="/adminnotice" element={<AdminNotice />} />
             <Route path="/notices" element={<Notices />} />
             <Route path="/adminusers" element={<AdminUsers />} />
-
+            <Route path="/adminusers" element={<AdminUsers />} />
+            <Route path="/adminposts" element={<AdminPosts />} />
             
             
           </Routes>

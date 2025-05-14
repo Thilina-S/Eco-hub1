@@ -13,6 +13,7 @@ import {
   Home, 
   BarChart2 
 } from 'lucide-react';
+import AdminPosts from './AdminComponents/AdminPosts';
 
 // Main App Component
 const AdminDashboard = () => {
@@ -153,7 +154,7 @@ const AdminDashboard = () => {
         <main className="flex-1 p-6 overflow-y-auto">
           {activeMenu === 'dashboard' && <DashboardContent />}
           {activeMenu === 'users' && <AdminUsers />}
-          {activeMenu === 'posts' && <PostsContent />}
+          {activeMenu === 'posts' && <AdminPosts />}
           {activeMenu === 'orders' && <OrdersContent />}
           {activeMenu === 'notice' && <AdminNotice />}
         </main>
@@ -257,101 +258,6 @@ const DashboardContent = () => {
 
 < AdminUsers />
 
-const PostsContent = () => {
-  const posts = [
-    { id: 1, title: 'Sustainable Living Tips', category: 'Environment', status: 'Published', date: '2025-04-01' },
-    { id: 2, title: 'Renewable Energy Solutions', category: 'Energy', status: 'Draft', date: '2025-03-28' },
-    { id: 3, title: 'Zero Waste Lifestyle', category: 'Lifestyle', status: 'Published', date: '2025-03-25' },
-    { id: 4, title: 'Recycling Guidelines', category: 'Environment', status: 'Published', date: '2025-03-22' },
-    { id: 5, title: 'Eco-friendly Products', category: 'Products', status: 'Draft', date: '2025-03-20' },
-  ];
-  
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold">Posts Management</h2>
-        <button className="flex items-center px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700">
-          <FileText size={16} className="mr-2" /> Create New Post
-        </button>
-      </div>
-      
-      <div className="overflow-hidden bg-white rounded-lg shadow-md dark:bg-gray-800">
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-          <div className="w-64">
-            <input
-              type="text"
-              placeholder="Search posts..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-md dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700"
-            />
-          </div>
-          <div className="flex space-x-2">
-            <select className="px-3 py-2 border border-gray-300 rounded-md dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700">
-              <option>All Categories</option>
-              <option>Environment</option>
-              <option>Energy</option>
-              <option>Lifestyle</option>
-              <option>Products</option>
-            </select>
-            <select className="px-3 py-2 border border-gray-300 rounded-md dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700">
-              <option>All Status</option>
-              <option>Published</option>
-              <option>Draft</option>
-            </select>
-          </div>
-        </div>
-        
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead className="bg-gray-50 dark:bg-gray-700">
-              <tr>
-                <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">ID</th>
-                <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">Title</th>
-                <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">Category</th>
-                <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">Status</th>
-                <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">Date</th>
-                <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
-              {posts.map((post) => (
-                <tr key={post.id} className="hover:bg-gray-100 dark:hover:bg-gray-750">
-                  <td className="px-6 py-4 text-sm whitespace-nowrap">{post.id}</td>
-                  <td className="px-6 py-4 text-sm font-medium whitespace-nowrap">{post.title}</td>
-                  <td className="px-6 py-4 text-sm whitespace-nowrap">{post.category}</td>
-                  <td className="px-6 py-4 text-sm whitespace-nowrap">
-                    <span className={`px-2 py-1 rounded-full text-xs ${
-                      post.status === 'Published' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 
-                      'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                    }`}>
-                      {post.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm whitespace-nowrap">{post.date}</td>
-                  <td className="flex px-6 py-4 space-x-2 text-sm font-medium whitespace-nowrap">
-                    <button className="text-blue-600 hover:text-blue-900 dark:hover:text-blue-400">View</button>
-                    <button className="text-green-600 hover:text-green-900 dark:hover:text-green-400">Edit</button>
-                    <button className="text-red-600 hover:text-red-900 dark:hover:text-red-400">Delete</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        
-        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            Showing <span className="font-medium">1</span> to <span className="font-medium">5</span> of <span className="font-medium">5</span> results
-          </div>
-          <div className="flex space-x-2">
-            <button className="px-3 py-1 border border-gray-300 rounded-md dark:border-gray-600 disabled:opacity-50">Previous</button>
-            <button className="px-3 py-1 text-white bg-green-600 border border-gray-300 rounded-md dark:border-gray-600">1</button>
-            <button className="px-3 py-1 border border-gray-300 rounded-md dark:border-gray-600 disabled:opacity-50">Next</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 
 const OrdersContent = () => {

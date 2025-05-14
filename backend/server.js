@@ -8,6 +8,7 @@ import connectDB from './config/db.js';
 import multer from 'multer';
 
 // Route imports
+import adminPostRoutes from './routes/AdminPostRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import profileRoutes from './routes/profileRoutes.js';
 import productRoutes from './routes/productRoutes.js';
@@ -45,6 +46,7 @@ app.use('/api/posts', postRoutes);  // Added post routes
 app.use('/api/ai', aiRoutes);
 app.use('/api/notices', noticeRoutes);
 app.use('/api/users', userRoutes); 
+app.use('/api/posts', adminPostRoutes);
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.status(200).json({
