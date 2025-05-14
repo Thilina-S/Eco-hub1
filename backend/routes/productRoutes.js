@@ -10,14 +10,17 @@ import {
   getReviews,
   updateReview,
   deleteReview,
-  getProductById  // Add the new controller function to get product by ID
+  getProductById,  // Add the new controller function to get product by ID
+  getUserProducts
 } from '../controllers/productController.js';
 
 
 const router = express.Router();
 
 // Product Routes
-router.post('/', postUpload, addProduct); // Add new product
+router.post('/', authMiddleware, postUpload, addProduct); // Protect route
+router.get('/my-products', authMiddleware, getUserProducts); // Route for logged-in user's products
+ // Add new product
 router.get('/', getProducts); // Get all products
 router.get('/:id', getProductById); // Get product by ID
 router.put('/:id', postUpload, updateProduct); // Update product by ID

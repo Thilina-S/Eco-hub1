@@ -1,3 +1,4 @@
+import e from 'express';
 import Product from '../models/productModel.js';
 import Review from '../models/reviewModel.js';  // Import Review model
 
@@ -16,6 +17,7 @@ export const addProduct = async (req, res) => {
       discount,
       imageUrl,
       stock,
+      userId: req.userId, // Associate product with logged-in user
     });
 
     await newProduct.save();
@@ -24,6 +26,16 @@ export const addProduct = async (req, res) => {
     res.status(500).json({ message: 'Failed to add product', error: err.message });
   }
 };
+
+export const getUserProducts = async (req, res) => {
+  try {
+    const products = await Product.find({ userId: req.userId });
+    res.status(200).json(products);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch user products', error: err.message });
+  }
+};
+
 
 // Get all products
 export const getProducts = async (req, res) => {
@@ -48,6 +60,7 @@ export const getProductById = async (req, res) => {
     res.status(500).json({ message: 'Failed to retrieve product', error: err.message });
   }
 };
+
 
 // Update product by ID
 export const updateProduct = async (req, res) => {

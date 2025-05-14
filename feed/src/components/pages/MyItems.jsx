@@ -22,19 +22,29 @@ export default function MyItems() {
   const [searchQuery, setSearchQuery] = useState("");
 
   // Fetch products from backend
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/products`);
-        if (!response.ok) throw new Error('Failed to fetch products');
-        const data = await response.json();
-        setProducts(data);
-      } catch (error) {
-        showPopup(error.message);
-      }
-    };
-    fetchProducts();
-  }, []);
+useEffect(() => {
+  const fetchProducts = async () => {
+    try {
+      const token = localStorage.getItem('token'); // 👈 get the token
+
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/products/my-products`, {
+        headers: {
+          'Authorization': `Bearer ${token}` // 👈 include the token
+        }
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch products');
+
+      const data = await response.json();
+      setProducts(data);
+    } catch (error) {
+      showPopup(error.message);
+    }
+  };
+
+  fetchProducts();
+}, []);
+
 
   // Clear message after 3 seconds
   useEffect(() => {
@@ -51,9 +61,9 @@ export default function MyItems() {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/products/${id}`, {
         method: 'DELETE'
       });
-      
+
       if (!response.ok) throw new Error('Failed to delete product');
-      
+
       setProducts(products.filter(product => product._id !== id));
       showPopup("Product deleted successfully!");
     } catch (error) {
@@ -65,7 +75,7 @@ export default function MyItems() {
     const originalPrice = Math.round(
       product.price / (1 - product.discount / 100)
     );
-    
+
     setFormData({
       title: product.title,
       price: originalPrice,
@@ -73,7 +83,7 @@ export default function MyItems() {
       imageUrl: product.imageUrl,
       stock: product.stock,
     });
-    
+
     setSelectedProduct(product);
     setShowUpdateModal(true);
     setFormErrors({});
@@ -110,27 +120,27 @@ export default function MyItems() {
 
   const validateForm = () => {
     const errors = {};
-    
+
     if (!formData.title.trim()) {
       errors.title = "Title is required";
     }
-    
+
     if (!formData.price) {
       errors.price = "Price is required";
     } else if (isNaN(formData.price) || parseFloat(formData.price) <= 0) {
       errors.price = "Price must be a positive number";
     }
-    
+
     if (!formData.discount) {
       errors.discount = "Discount is required";
     } else if (
-      isNaN(formData.discount) || 
-      parseFloat(formData.discount) < 0 || 
+      isNaN(formData.discount) ||
+      parseFloat(formData.discount) < 0 ||
       parseFloat(formData.discount) > 100
     ) {
       errors.discount = "Discount must be between 0 and 100";
     }
-    
+
     if (!formData.imageUrl && !formData.image) {
       errors.image = "Image is required";
     }
@@ -140,18 +150,18 @@ export default function MyItems() {
     } else if (isNaN(formData.stock) || parseInt(formData.stock) < 0) {
       errors.stock = "Stock must be a non-negative integer";
     }
-    
+
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
   const handleUpdate = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
-    
+
     try {
       const updatedData = {
         title: formData.title,
@@ -171,11 +181,11 @@ export default function MyItems() {
       if (!response.ok) throw new Error('Failed to update product');
 
       const updatedProduct = await response.json();
-      
-      setProducts(products.map(p => 
+
+      setProducts(products.map(p =>
         p._id === updatedProduct._id ? updatedProduct : p
       ));
-      
+
       setShowUpdateModal(false);
       showPopup("Product updated successfully!");
     } catch (error) {
@@ -185,11 +195,11 @@ export default function MyItems() {
 
   const handleAddProduct = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
-    
+
     try {
       const formDataToSend = new FormData();
       formDataToSend.append('title', formData.title);
@@ -200,19 +210,24 @@ export default function MyItems() {
         formDataToSend.append('image', formData.image);
       }
 
+      const token = localStorage.getItem('token'); // Or from context/state
+
       const response = await fetch(`${import.meta.env.VITE_API_URL}/products`, {
         method: 'POST',
         body: formDataToSend,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        }
       });
 
       if (!response.ok) throw new Error('Failed to add product');
 
       const newProduct = await response.json();
-      
+
       setProducts([...products, newProduct]);
       setShowAddModal(false);
       showPopup("Product added successfully!");
-      
+
       // Reset form
       setFormData({
         title: "",
@@ -321,7 +336,7 @@ export default function MyItems() {
                 const originalPrice = Math.round(
                   product.price / (1 - product.discount / 100)
                 );
-                
+
                 return (
                   <tr key={product._id} className="border-b hover:bg-green-50">
                     <td className="p-3">
@@ -425,7 +440,7 @@ export default function MyItems() {
                   htmlFor="discount"
                   className="block text-sm font-medium text-gray-700"
                 >
-                  Discount (%) 
+                  Discount (%)
                 </label>
                 <input
                   type="number"
@@ -476,9 +491,9 @@ export default function MyItems() {
 
               {formData.imageUrl && (
                 <div className="mb-4">
-                  <img 
-                    src={formData.imageUrl} 
-                    alt="Preview" 
+                  <img
+                    src={formData.imageUrl}
+                    alt="Preview"
                     className="object-cover w-16 h-16 rounded"
                   />
                 </div>
