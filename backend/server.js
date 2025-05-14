@@ -14,7 +14,7 @@ import productRoutes from './routes/productRoutes.js';
 import postRoutes from './routes/postRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
 import noticeRoutes from './routes/noticeRoutes.js';
-
+import userRoutes from './routes/userRoutes.js';
 // Get __dirname equivalent in ES module
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -44,7 +44,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/posts', postRoutes);  // Added post routes
 app.use('/api/ai', aiRoutes);
 app.use('/api/notices', noticeRoutes);
-
+app.use('/api/users', userRoutes); 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.status(200).json({
