@@ -25,7 +25,8 @@ import MyReviews from "./components/pages/MyReviews.jsx";
 import AdminNotice from "./components/pages/AdminComponents/AdminNotice.jsx";
 import Notices from "./components/pages/Notices.jsx";
 import AdminUsers from "./components/pages/AdminComponents/AdminUsers.jsx";
-
+import AdminPosts from "./components/pages/AdminComponents/AdminPosts.jsx";
+import AdminProducts from "./components/pages/AdminComponents/AdminProducts.jsx";
 
 function App() {
   return (
@@ -46,7 +47,7 @@ function App() {
             <Route path="/faq" element={<Faq />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
-            <Route path="/itemview/:productId" element={<ItemView />} /> {/* Update the route to include :productId */}
+            <Route path="/itemview/:productId" element={<ItemView />} /> 
             <Route path="/myitems" element={<MyItems />} />
             <Route path="/myposts" element={<MyPosts />} />
             <Route path="/wishlist" element={<Wishlist />} />
@@ -58,7 +59,9 @@ function App() {
             <Route path="/adminnotice" element={<AdminNotice />} />
             <Route path="/notices" element={<Notices />} />
             <Route path="/adminusers" element={<AdminUsers />} />
-
+            <Route path="/adminusers" element={<AdminUsers />} />
+            <Route path="/adminposts" element={<AdminPosts />} />
+            <Route path="/adminproducts" element={<AdminProducts />} />
             
             
           </Routes>
