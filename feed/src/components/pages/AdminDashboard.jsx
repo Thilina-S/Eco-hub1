@@ -14,6 +14,7 @@ import {
   BarChart2 
 } from 'lucide-react';
 import AdminPosts from './AdminComponents/AdminPosts';
+import AdminProducts from './AdminComponents/AdminProducts';
 
 // Main App Component
 const AdminDashboard = () => {
@@ -109,9 +110,9 @@ const AdminDashboard = () => {
             />
             <NavItem 
               icon={<ShoppingBag />} 
-              title="Orders" 
-              active={activeMenu === 'orders'} 
-              onClick={() => setActiveMenu('orders')} 
+              title="Products" 
+              active={activeMenu === 'products'} 
+              onClick={() => setActiveMenu('products')} 
               sidebarOpen={sidebarOpen} 
             />
             <NavItem 
@@ -155,7 +156,7 @@ const AdminDashboard = () => {
           {activeMenu === 'dashboard' && <DashboardContent />}
           {activeMenu === 'users' && <AdminUsers />}
           {activeMenu === 'posts' && <AdminPosts />}
-          {activeMenu === 'orders' && <OrdersContent />}
+          {activeMenu === 'products' && <AdminProducts />}
           {activeMenu === 'notice' && <AdminNotice />}
         </main>
       </div>
@@ -256,205 +257,4 @@ const DashboardContent = () => {
   );
 };
 
-< AdminUsers />
-
-
-
-const OrdersContent = () => {
-    const orders = [
-      { id: '1001', customer: 'John Smith', date: '2025-04-01', amount: '$245.00', status: 'Completed' },
-      { id: '1002', customer: 'Sarah Johnson', date: '2025-04-01', amount: '$125.50', status: 'Processing' },
-      { id: '1003', customer: 'Michael Brown', date: '2025-03-31', amount: '$349.99', status: 'Completed' },
-      { id: '1004', customer: 'Emily Davis', date: '2025-03-31', amount: '$89.00', status: 'Pending' },
-      { id: '1005', customer: 'David Wilson', date: '2025-03-30', amount: '$178.25', status: 'Completed' },
-      { id: '1006', customer: 'Jessica Taylor', date: '2025-03-30', amount: '$220.00', status: 'Processing' },
-    ];
-    
-    return (
-      <div>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold">Orders Management</h2>
-          <button className="flex items-center px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700">
-            <ShoppingBag size={16} className="mr-2" /> Create New Order
-          </button>
-        </div>
-        
-        <div className="overflow-hidden bg-white rounded-lg shadow-md dark:bg-gray-800">
-          <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-            <div className="w-64">
-              <input
-                type="text"
-                placeholder="Search orders..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-md dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700"
-              />
-            </div>
-            <div className="flex space-x-2">
-              <select className="px-3 py-2 border border-gray-300 rounded-md dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700">
-                <option>All Status</option>
-                <option>Pending</option>
-                <option>Processing</option>
-                <option>Completed</option>
-                <option>Cancelled</option>
-              </select>
-              <input
-                type="date"
-                className="px-3 py-2 border border-gray-300 rounded-md dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700"
-              />
-            </div>
-          </div>
-          
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead className="bg-gray-50 dark:bg-gray-700">
-                <tr>
-                  <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">Order ID</th>
-                  <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">Customer</th>
-                  <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">Date</th>
-                  <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">Amount</th>
-                  <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">Status</th>
-                  <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
-                {orders.map((order) => (
-                  <tr key={order.id} className="hover:bg-gray-100 dark:hover:bg-gray-750">
-                    <td className="px-6 py-4 text-sm font-medium whitespace-nowrap">#{order.id}</td>
-                    <td className="px-6 py-4 text-sm whitespace-nowrap">{order.customer}</td>
-                    <td className="px-6 py-4 text-sm whitespace-nowrap">{order.date}</td>
-                    <td className="px-6 py-4 text-sm whitespace-nowrap">{order.amount}</td>
-                    <td className="px-6 py-4 text-sm whitespace-nowrap">
-                      <span className={`px-2 py-1 rounded-full text-xs ${
-                        order.status === 'Completed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 
-                        order.status === 'Processing' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : 
-                        'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                      }`}>
-                        {order.status}
-                      </span>
-                    </td>
-                    <td className="flex px-6 py-4 space-x-2 text-sm font-medium whitespace-nowrap">
-                      <button className="text-blue-600 hover:text-blue-900 dark:hover:text-blue-400">View</button>
-                      <button className="text-green-600 hover:text-green-900 dark:hover:text-green-400">Edit</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          
-          <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-            <div className="text-sm text-gray-500 dark:text-gray-400">
-              Showing <span className="font-medium">1</span> to <span className="font-medium">6</span> of <span className="font-medium">6</span> results
-            </div>
-            <div className="flex space-x-2">
-              <button className="px-3 py-1 border border-gray-300 rounded-md dark:border-gray-600 disabled:opacity-50">Previous</button>
-              <button className="px-3 py-1 text-white bg-green-600 border border-gray-300 rounded-md dark:border-gray-600">1</button>
-              <button className="px-3 py-1 border border-gray-300 rounded-md dark:border-gray-600 disabled:opacity-50">Next</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-  
-  const NoticeContent = () => {
-    const notices = [
-      { id: 1, title: 'System Maintenance', content: 'Scheduled maintenance on April 5th, 2025 from 2:00 AM to 4:00 AM', status: 'Active', date: '2025-04-01' },
-      { id: 2, title: 'New Features', content: 'New dashboard features have been deployed', status: 'Active', date: '2025-03-28' },
-      { id: 3, title: 'Holiday Notice', content: 'Office will be closed on April 10th for holiday', status: 'Inactive', date: '2025-03-25' },
-      { id: 4, title: 'Policy Update', content: 'Updated privacy policy effective April 15th', status: 'Active', date: '2025-03-22' },
-    ];
-    
-    const [newNotice, setNewNotice] = useState({
-      title: '',
-      content: '',
-      status: 'Active'
-    });
-    
-    const handleInputChange = (e) => {
-      const { name, value } = e.target;
-      setNewNotice(prev => ({ ...prev, [name]: value }));
-    };
-    
-    const handleSubmit = (e) => {
-      e.preventDefault();
-      alert(`New notice created: ${JSON.stringify(newNotice)}`);
-      setNewNotice({ title: '', content: '', status: 'Active' });
-    };
-    
-    return (
-      <div>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold">Notice Management</h2>
-          <button 
-            className="flex items-center px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700"
-            onClick={() => document.getElementById('create-notice-modal').showModal()}
-          >
-            <Bell size={16} className="mr-2" /> Create New Notice
-          </button>
-        </div>
-        
-        < AdminNotice />
-        
-        <div className="overflow-hidden bg-white rounded-lg shadow-md dark:bg-gray-800">
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-            <input
-              type="text"
-              placeholder="Search notices..."
-              className="w-full max-w-md px-3 py-2 border border-gray-300 rounded-md dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700"
-            />
-          </div>
-          
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead className="bg-gray-50 dark:bg-gray-700">
-                <tr>
-                  <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">ID</th>
-                  <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">Title</th>
-                  <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">Content</th>
-                  <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">Status</th>
-                  <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">Date</th>
-                  <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-300">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
-                {notices.map((notice) => (
-                  <tr key={notice.id} className="hover:bg-gray-100 dark:hover:bg-gray-750">
-                    <td className="px-6 py-4 text-sm whitespace-nowrap">{notice.id}</td>
-                    <td className="px-6 py-4 text-sm font-medium whitespace-nowrap">{notice.title}</td>
-                    <td className="max-w-xs px-6 py-4 text-sm truncate">{notice.content}</td>
-                    <td className="px-6 py-4 text-sm whitespace-nowrap">
-                      <span className={`px-2 py-1 rounded-full text-xs ${
-                        notice.status === 'Active' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 
-                        'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-                      }`}>
-                        {notice.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm whitespace-nowrap">{notice.date}</td>
-                    <td className="flex px-6 py-4 space-x-2 text-sm font-medium whitespace-nowrap">
-                      <button className="text-blue-600 hover:text-blue-900 dark:hover:text-blue-400">View</button>
-                      <button className="text-green-600 hover:text-green-900 dark:hover:text-green-400">Edit</button>
-                      <button className="text-red-600 hover:text-red-900 dark:hover:text-red-400">Delete</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          
-          <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-            <div className="text-sm text-gray-500 dark:text-gray-400">
-              Showing <span className="font-medium">1</span> to <span className="font-medium">4</span> of <span className="font-medium">4</span> results
-            </div>
-            <div className="flex space-x-2">
-              <button className="px-3 py-1 border border-gray-300 rounded-md dark:border-gray-600 disabled:opacity-50">Previous</button>
-              <button className="px-3 py-1 text-white bg-green-600 border border-gray-300 rounded-md dark:border-gray-600">1</button>
-              <button className="px-3 py-1 border border-gray-300 rounded-md dark:border-gray-600 disabled:opacity-50">Next</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-  
-  export default AdminDashboard;
+export default AdminDashboard;
