@@ -6,6 +6,7 @@ const productSchema = new mongoose.Schema({
   discount: { type: Number, required: true },
   imageUrl: { type: String, required: false }, // Store image URL here
   stock: { type: Number, required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 });
 
 const Product = mongoose.model('Product', productSchema);
